@@ -10,6 +10,7 @@ Gem::Specification.new do |s|
 
   s.author = 'Stefan Kroes'
   s.email  = 's.a.kroes@gmail.com'
+  s.homepage = 'http://github.com/stefankroes/ancestry'
 
   s.files = FileList['ancestry.gemspec', '*.rb', 'lib/**/*.rb', 'rails/*', 'test/*', 'Rakefile', 'MIT-LICENSE', 'README']
   
