@@ -7,17 +7,17 @@ Ancestry allows the records of a ActiveRecord model to be organised in a tree st
 To apply Ancestry to any ActiveRecord model, follow these simple steps:
 
 == Install Gem
- * Add to config/environment.rb: config.gem 'ancestry'
- * Install required gems: sudo rake gems:install
- * Alternatively: sudo gem install ancestry 
+* Add to config/environment.rb: config.gem 'ancestry'
+* Install required gems: sudo rake gems:install
+* Alternatively: sudo gem install ancestry 
 
 == Add Ancestry Column to Your Table
- * Create migration: ./script/generate migration add_ancestry_to_[table] ancestry:string
- * Add index to migration: add_index [table], :ancestry / remove_index [table], :ancestry
- * Migrate your database: rake db:migrate
+* Create migration: ./script/generate migration add_ancestry_to_[table] ancestry:string
+* Add index to migration: add_index [table], :ancestry / remove_index [table], :ancestry
+* Migrate your database: rake db:migrate
 
 == Add Ancestry to Your Model
- * Add to app/models/[model].rb: acts_as_tree
+* Add to app/models/[model].rb: acts_as_tree
 
 Your model is now a tree!
 
@@ -25,7 +25,7 @@ Your model is now a tree!
 
 You can use the parent attribute to organise your records into a tree. If you have the id of the record you want to use as a parent and don't want to fetch it, you can also use parent_id. Like any virtual model attributes, parent and parent_id can be set using parent= and parent_id= on a record or by including them in the hash passed to new, create, create!, update_attributes and update_attributes!. For example:
 
-TreeNode.create!(:name => 'Stinky', :parent => TreeNode.create!(:name => 'Squeeky'))
+  TreeNode.create!(:name => 'Stinky', :parent => TreeNode.create!(:name => 'Squeeky'))
 
 = Navigating Your Tree
 
@@ -56,17 +56,19 @@ To navigate an Ancestry model, use the following methods on any instance / recor
 
 Where possible, the navigation methods return scopes instead of records, this means additional ordering, conditions, limits, etc. can be applied and that the result can be either retrieved, counted or checked for existence. For example:
 
-node.children.exists?(:name => 'Mary')
-node.subtree.all(:order => :name, :limit => 10).each do; ...; end
-node.descendants.count
+  node.children.exists?(:name => 'Mary')
+  
+  node.subtree.all(:order => :name, :limit => 10).each do; ...; end
+  
+  node.descendants.count
 
 = Named Scopes
 
 For convenience, a couple of named scopes are included as class level:
 
 [root]                Only root nodes
-ancestor_of([node)]   Only ancestors of node, node can be either a record or an id
-child_of([node)]      Only children of node, node can be either a record or an id
+[ancestor_of(node)]   Only ancestors of node, node can be either a record or an id
+[child_of(node)]      Only children of node, node can be either a record or an id
 [descendant_of(node)] Only descendants of node, node can be either a record or an id
 [sibling_of(node)]    Only siblings of node, node can be either a record or an id
 
@@ -76,25 +78,25 @@ The acts_as_tree methods supports two options:
 
 [ancestry_column]     Pass in a symbol to instruct Ancestry to use a different column name to store record ancestry
 [orphan_strategy]     Instruct Ancestry what to do with children of a node that is destroyed:
-                      :destroy       All children are destroyed as well (default)
-                      :rootify       The children of the destroyed node become root nodes
-                      :restrict      An AncestryException is raised if any children exist
+  [:destroy]       All children are destroyed as well (default)
+  [:rootify]       The children of the destroyed node become root nodes
+  [:restrict]      An AncestryException is raised if any children exist
 
 = Arrangement
 
 Ancestry can arrange an entire subtree into nested hashes for easy navigation after retrieval from the database.  TreeNode.arrange could for example return:
 
-{ #<TreeNode id: 100018, name: "Stinky", ancestry: nil>
-  => { #<TreeNode id: 100019, name: "Crunchy", ancestry: "100018">
-    => { #<TreeNode id: 100020, name: "Squeeky", ancestry: "100018/100019">
-      => {}
+  { #<TreeNode id: 100018, name: "Stinky", ancestry: nil>
+    => { #<TreeNode id: 100019, name: "Crunchy", ancestry: "100018">
+      => { #<TreeNode id: 100020, name: "Squeeky", ancestry: "100018/100019">
+        => {}
+      }
     }
   }
-}
 
 The arrange method also works on a scoped class, for example:
 
-TreeNode.find_by_name('Crunchy').subtree.arrange
+  TreeNode.find_by_name('Crunchy').subtree.arrange
 
 = Integrity Checking and Restoration
 
@@ -102,18 +104,18 @@ I currently don't see any way Ancestry tree integrity could get compromised with
 
 For example, from IRB:
 
->> stinky = TreeNode.create :name => 'Stinky'
- $ #<TreeNode id: 1, name: "Stinky", ancestry: nil>
->> squeeky = TreeNode.create :name => 'Squeeky', :parent => stinky
- $ #<TreeNode id: 2, name: "Squeeky", ancestry: "1">
->> stinky.update_attribute :parent, squeeky
- $ true
->> TreeNode.all
- $ [#<TreeNode id: 1, name: "Stinky", ancestry: "1/2">, #<TreeNode id: 2, name: "Squeeky", ancestry: "1/2/1">]
->> TreeNode.check_ancestry_integrity
-!! Ancestry::AncestryIntegrityException: Conflicting parent id in node 1: 2 for node 1, expecting nil
->> TreeNode.restore_ancestry_integrity
- $ [#<TreeNode id: 1, name: "Stinky", ancestry: 2>, #<TreeNode id: 2, name: "Squeeky", ancestry: nil>]
+  >> stinky = TreeNode.create :name => 'Stinky'
+  $ #<TreeNode id: 1, name: "Stinky", ancestry: nil>
+  >> squeeky = TreeNode.create :name => 'Squeeky', :parent => stinky
+  $ #<TreeNode id: 2, name: "Squeeky", ancestry: "1">
+  >> stinky.update_attribute :parent, squeeky
+  $ true
+  >> TreeNode.all
+  $ [#<TreeNode id: 1, name: "Stinky", ancestry: "1/2">, #<TreeNode id: 2, name: "Squeeky", ancestry: "1/2/1">]
+  >> TreeNode.check_ancestry_integrity
+  !! Ancestry::AncestryIntegrityException: Conflicting parent id in node 1: 2 for node 1, expecting nil
+  >> TreeNode.restore_ancestry_integrity
+  $ [#<TreeNode id: 1, name: "Stinky", ancestry: 2>, #<TreeNode id: 2, name: "Squeeky", ancestry: nil>]
 
 = Testing
 
