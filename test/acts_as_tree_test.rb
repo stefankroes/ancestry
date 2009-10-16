@@ -1,0 +1,360 @@
+require File.dirname(__FILE__) + '/test_helper.rb'
+
+class TestNode < ActiveRecord::Base
+  acts_as_tree
+end
+
+class AlternativeTestNode < ActiveRecord::Base
+  acts_as_tree :ancestry_column => :alternative_ancestry, :orphan_strategy => :rootify
+end
+
+class ActsAsTreeTest < ActiveSupport::TestCase
+  load_schema
+  
+  def setup_test_nodes model, level, quantity
+    model.delete_all
+    create_test_nodes model, nil, level, quantity
+  end
+
+  def create_test_nodes model, parent, level, quantity
+    unless level == 0
+      (1..quantity).map do |i|
+        node = model.create!(:parent => parent)
+        [node, create_test_nodes(model, node, level - 1, quantity)]
+      end
+    else; []; end
+  end
+
+  def test_default_ancestry_column
+    assert_equal :ancestry, TestNode.ancestry_column
+  end
+  
+  def test_non_default_ancestry_column
+    assert_equal :alternative_ancestry, AlternativeTestNode.ancestry_column
+  end
+  
+  def test_setting_ancestry_column
+    TestNode.ancestry_column = :ancestors
+    assert_equal :ancestors, TestNode.ancestry_column
+    TestNode.ancestry_column = :ancestry
+    assert_equal :ancestry, TestNode.ancestry_column
+  end
+  
+  def test_default_orphan_strategy
+    assert_equal :destroy, TestNode.orphan_strategy
+  end
+  
+  def test_non_default_orphan_strategy
+    assert_equal :rootify, AlternativeTestNode.orphan_strategy
+  end
+  
+  def test_setting_orphan_strategy
+    TestNode.orphan_strategy = :rootify
+    assert_equal :rootify, TestNode.orphan_strategy
+    TestNode.orphan_strategy = :destroy
+    assert_equal :destroy, TestNode.orphan_strategy
+  end
+
+  def test_setting_invalid_orphan_strategy
+    assert_raise Ancestry::AncestryException do
+      TestNode.orphan_strategy = :non_existent_orphan_strategy
+    end
+  end
+
+  def test_setup_test_nodes
+    [TestNode, AlternativeTestNode].each do |model|
+      roots = setup_test_nodes model, 3, 3
+      assert_equal Array, roots.class
+      assert_equal 3, roots.length
+      roots.each do |node, children|
+        assert_equal model, node.class
+        assert_equal Array, children.class
+        assert_equal 3, children.length
+        children.each do |node, children|
+          assert_equal model, node.class
+          assert_equal Array, children.class
+          assert_equal 3, children.length
+          children.each do |node, children|
+            assert_equal model, node.class
+            assert_equal Array, children.class
+            assert_equal 0, children.length
+          end
+        end
+      end
+    end
+  end
+
+  def test_tree_navigation
+    roots = setup_test_nodes TestNode, 3, 3
+    roots.each do |lvl0_node, lvl0_children|
+      # Ancestors assertions
+      assert_equal [], lvl0_node.ancestor_ids
+      assert_equal [], lvl0_node.ancestors
+      assert_equal [lvl0_node.id], lvl0_node.path_ids
+      assert_equal [lvl0_node], lvl0_node.path
+      # Parent assertions
+      assert_equal nil, lvl0_node.parent_id
+      assert_equal nil, lvl0_node.parent
+      # Root assertions
+      assert_equal lvl0_node.id, lvl0_node.root_id
+      assert_equal lvl0_node, lvl0_node.root
+      assert lvl0_node.is_root?
+      # Children assertions
+      assert_equal lvl0_children.map(&:first).map(&:id), lvl0_node.child_ids
+      assert_equal lvl0_children.map(&:first), lvl0_node.children
+      assert lvl0_node.has_children?
+      assert !lvl0_node.is_childless?
+      # Siblings assertions
+      assert_equal roots.map(&:first).map(&:id), lvl0_node.sibling_ids
+      assert_equal roots.map(&:first), lvl0_node.siblings
+      assert lvl0_node.has_siblings?
+      assert !lvl0_node.is_only_child?
+      # Descendants assertions
+      descendants = TestNode.all.find_all do |node|
+        node.ancestor_ids.include? lvl0_node.id
+      end
+      assert_equal descendants.map(&:id), lvl0_node.descendant_ids
+      assert_equal descendants, lvl0_node.descendants
+      assert_equal [lvl0_node] + descendants, lvl0_node.subtree
+      
+      lvl0_children.each do |lvl1_node, lvl1_children|
+        # Ancestors assertions
+        assert_equal [lvl0_node.id], lvl1_node.ancestor_ids
+        assert_equal [lvl0_node], lvl1_node.ancestors
+        assert_equal [lvl0_node.id, lvl1_node.id], lvl1_node.path_ids
+        assert_equal [lvl0_node, lvl1_node], lvl1_node.path
+        # Parent assertions
+        assert_equal lvl0_node.id, lvl1_node.parent_id
+        assert_equal lvl0_node, lvl1_node.parent
+        # Root assertions
+        assert_equal lvl0_node.id, lvl1_node.root_id
+        assert_equal lvl0_node, lvl1_node.root
+        assert !lvl1_node.is_root?
+        # Children assertions
+        assert_equal lvl1_children.map(&:first).map(&:id), lvl1_node.child_ids
+        assert_equal lvl1_children.map(&:first), lvl1_node.children
+        assert lvl1_node.has_children?
+        assert !lvl1_node.is_childless?
+        # Siblings assertions
+        assert_equal lvl0_children.map(&:first).map(&:id), lvl1_node.sibling_ids
+        assert_equal lvl0_children.map(&:first), lvl1_node.siblings
+        assert lvl1_node.has_siblings?
+        assert !lvl1_node.is_only_child?
+        # Descendants assertions
+        descendants = TestNode.all.find_all do |node|
+          node.ancestor_ids.include? lvl1_node.id
+        end
+        assert_equal descendants.map(&:id), lvl1_node.descendant_ids
+        assert_equal descendants, lvl1_node.descendants
+        assert_equal [lvl1_node] + descendants, lvl1_node.subtree
+
+        lvl1_children.each do |lvl2_node, lvl2_children|
+          # Ancestors assertions
+          assert_equal [lvl0_node.id, lvl1_node.id], lvl2_node.ancestor_ids
+          assert_equal [lvl0_node, lvl1_node], lvl2_node.ancestors
+          assert_equal [lvl0_node.id, lvl1_node.id, lvl2_node.id], lvl2_node.path_ids
+          assert_equal [lvl0_node, lvl1_node, lvl2_node], lvl2_node.path
+          # Parent assertions
+          assert_equal lvl1_node.id, lvl2_node.parent_id
+          assert_equal lvl1_node, lvl2_node.parent
+          # Root assertions
+          assert_equal lvl0_node.id, lvl2_node.root_id
+          assert_equal lvl0_node, lvl2_node.root
+          assert !lvl2_node.is_root?
+          # Children assertions
+          assert_equal [], lvl2_node.child_ids
+          assert_equal [], lvl2_node.children
+          assert !lvl2_node.has_children?
+          assert lvl2_node.is_childless?
+          # Siblings assertions
+          assert_equal lvl1_children.map(&:first).map(&:id), lvl2_node.sibling_ids
+          assert_equal lvl1_children.map(&:first), lvl2_node.siblings
+          assert lvl2_node.has_siblings?
+          assert !lvl2_node.is_only_child?
+          # Descendants assertions
+          descendants = TestNode.all.find_all do |node|
+            node.ancestor_ids.include? lvl2_node.id
+          end
+          assert_equal descendants.map(&:id), lvl2_node.descendant_ids
+          assert_equal descendants, lvl2_node.descendants
+          assert_equal [lvl2_node] + descendants, lvl2_node.subtree
+        end
+      end
+    end
+  end
+  
+  def test_named_scopes
+    roots = setup_test_nodes TestNode, 3, 3
+
+    # Roots assertion
+    assert_equal roots.map(&:first), TestNode.root.all
+    
+    TestNode.all.each do |test_node|
+      # Assertions for ancestor_of named scope
+      assert_equal test_node.ancestors, TestNode.ancestor_of(test_node)
+      assert_equal test_node.ancestors, TestNode.ancestor_of(test_node.id)
+      # Assertions for child_of named scope
+      assert_equal test_node.children, TestNode.child_of(test_node)
+      assert_equal test_node.children, TestNode.child_of(test_node.id)
+      # Assertions for descendant_of named scope
+      assert_equal test_node.descendants, TestNode.descendant_of(test_node)
+      assert_equal test_node.descendants, TestNode.descendant_of(test_node.id)
+      # Assertions for sibling_of named scope
+      assert_equal test_node.siblings, TestNode.sibling_of(test_node)
+      assert_equal test_node.siblings, TestNode.sibling_of(test_node.id)
+    end
+  end
+  
+  def test_ancestroy_column_validation
+    node = setup_test_nodes(TestNode, 1, 1).first.first
+    ['3', '10/2', '1/4/30', nil].each do |value|
+      node.write_attribute TestNode.ancestry_column, value
+      assert node.save
+    end
+    ['1/3/', '/2/3', 'a', 'a/b', '-34', '/54'].each do |value|
+      node.write_attribute TestNode.ancestry_column, value
+      assert !node.save
+    end
+  end
+  
+  def test_descendants_move_with_node
+    root1, root2, root3 = setup_test_nodes(TestNode, 3, 3).map(&:first)
+     assert_no_difference 'root1.descendants.size' do
+      assert_difference 'root2.descendants.size', root1.subtree.size do
+        root1.parent = root2
+        root1.save!
+      end
+    end
+    assert_no_difference 'root2.descendants.size' do
+      assert_difference 'root3.descendants.size', root2.subtree.size do
+        root2.parent = root3
+        root2.save!
+      end
+    end
+    assert_no_difference 'root1.descendants.size' do
+      assert_difference 'root2.descendants.size', -root1.subtree.size do
+        assert_difference 'root3.descendants.size', -root1.subtree.size do
+          root1.parent = nil
+          root1.save!
+        end
+      end
+    end
+  end
+  
+  def test_orphan_rootify_strategy
+    TestNode.orphan_strategy = :rootify
+    root = setup_test_nodes(TestNode, 3, 3).first.first
+    children = root.children.all
+    root.destroy
+    children.each do |child|
+      child.reload
+      assert child.is_root?
+      assert_equal 3, child.children.size
+    end
+  end
+
+  def test_orphan_destroy_strategy
+    TestNode.orphan_strategy = :destroy
+    root = setup_test_nodes(TestNode, 3, 3).first.first
+    assert_difference 'TestNode.count', -root.subtree.size do
+      root.destroy
+    end
+    node = TestNode.root.first.children.first
+    assert_difference 'TestNode.count', -node.subtree.size do
+      node.destroy
+    end
+  end
+
+  def test_orphan_restrict_strategy
+    TestNode.orphan_strategy = :restrict
+    setup_test_nodes(TestNode, 3, 3)
+    root = TestNode.root.first
+    assert_raise Ancestry::AncestryException do
+      root.destroy
+    end
+    assert_nothing_raised Ancestry::AncestryException do
+      root.children.first.children.first.destroy
+    end
+    
+  end
+  
+  def test_integrity_checking
+    # Check that there are no errors on a valid data set
+    setup_test_nodes(TestNode, 3, 3)
+    assert_nothing_raised do
+      TestNode.check_ancestry_integrity
+    end
+
+    # Check detection of invalid format for ancestry column
+    setup_test_nodes(TestNode, 3, 3).first.first.update_attribute TestNode.ancestry_column, 'invalid_ancestry'
+    assert_raise Ancestry::AncestryIntegrityException do
+      TestNode.check_ancestry_integrity
+    end
+    
+    # Check detection of non-existent ancestor
+    setup_test_nodes(TestNode, 3, 3).first.first.update_attribute TestNode.ancestry_column, 35
+    assert_raise Ancestry::AncestryIntegrityException do
+      TestNode.check_ancestry_integrity
+    end
+
+    # Check detection of cyclic ancestry
+    node = setup_test_nodes(TestNode, 3, 3).first.first
+    node.update_attribute TestNode.ancestry_column, node.id
+    assert_raise Ancestry::AncestryIntegrityException do
+      TestNode.check_ancestry_integrity
+    end
+
+    # Check detection of conflicting parent id
+    TestNode.destroy_all
+    TestNode.create!(TestNode.ancestry_column => TestNode.create!(TestNode.ancestry_column => TestNode.create!(TestNode.ancestry_column => nil).id).id)
+    assert_raise Ancestry::AncestryIntegrityException do
+      TestNode.check_ancestry_integrity
+    end
+  end
+
+  def assert_integrity_restoration
+    assert_raise Ancestry::AncestryIntegrityException do
+      TestNode.check_ancestry_integrity
+    end
+    TestNode.restore_ancestry_integrity
+    assert_nothing_raised do
+      TestNode.check_ancestry_integrity
+    end
+  end    
+
+  def test_integrity_restoration
+    # Check that integrity is restored for invalid format for ancestry column
+    setup_test_nodes(TestNode, 3, 3).first.first.update_attribute TestNode.ancestry_column, 'invalid_ancestry'
+    assert_integrity_restoration
+    
+    # Check that integrity is restored for non-existent ancestor
+    setup_test_nodes(TestNode, 3, 3).first.first.update_attribute TestNode.ancestry_column, 35
+    assert_integrity_restoration
+
+    # Check that integrity is restored for cyclic ancestry
+    node = setup_test_nodes(TestNode, 3, 3).first.first
+    node.update_attribute TestNode.ancestry_column, node.id
+    assert_integrity_restoration
+
+    # Check that integrity is restored for conflicting parent id
+    TestNode.destroy_all
+    TestNode.create!(TestNode.ancestry_column => TestNode.create!(TestNode.ancestry_column => TestNode.create!(TestNode.ancestry_column => nil).id).id)
+    assert_integrity_restoration
+  end
+  
+  def test_arrangement
+    id_sorter = Proc.new do |a, b|; a.id <=> b.id; end
+    setup_test_nodes(TestNode, 3, 3)
+    arranged_nodes = TestNode.arrange
+    assert_equal 3, arranged_nodes.size
+    arranged_nodes.each do |node, children|
+      assert_equal node.children.sort(&id_sorter), children.keys.sort(&id_sorter)
+      children.each do |node, children|
+        assert_equal node.children.sort(&id_sorter), children.keys.sort(&id_sorter)
+        children.each do |node, children|
+          assert_equal 0, children.size
+        end
+      end
+    end
+  end
+end
