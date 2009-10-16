@@ -1,10 +1,8 @@
-Ancestry
-========
+= Ancestry
 
 Ancestry allows the records of a ActiveRecord model to be organised in a tree structure, using a single, intuitively formatted database column. It exposes all the standard tree structure relations (ancestors, parent, root, children, siblings, descendants) and all of them can be fetched in a single sql query. Additional features are named_scopes, integrity checking, integrity restoration, arrangement of (sub)tree into hashes and different strategies for dealing with orphaned records.
 
-Installation
-=======
+= Installation
 
 To apply Ancestry to any ActiveRecord model, follow these simple steps:
 
@@ -23,15 +21,13 @@ To apply Ancestry to any ActiveRecord model, follow these simple steps:
 
 Your model is now a tree!
 
-Organising Records Into A Tree
-==============================
+= Organising Records Into A Tree
 
 You can use the parent attribute to organise your records into a tree. If you have the id of the record you want to use as a parent and don't want to fetch it, you can also use parent_id. Like any virtual model attributes, parent and parent_id can be set using parent= and parent_id= on a record or by including them in the hash passed to new, create, create!, update_attributes and update_attributes!. For example:
 
 TreeNode.create!(:name => 'Stinky', :parent => TreeNode.create!(:name => 'Squeeky'))
 
-Navigating Your Tree
-====================
+= Navigating Your Tree
 
 To navigate an Ancestry model, use the following methods on any instance / record:
 
@@ -56,8 +52,7 @@ descendant_ids      Returns a list of a descendant ids
 subtree             Scopes the model on descendants and itself
 subtree_ids         Returns a list of all ids in the record's subtree
 
-Scopes
-======
+= Scopes
 
 Where possible, the navigation methods return scopes instead of records, this means additional ordering, conditions, limits, etc. can be applied and that the result can be either retrieved, counted or checked for existence. For example:
 
@@ -65,8 +60,7 @@ node.children.exists?(:name => 'Mary')
 node.subtree.all(:order => :name, :limit => 10).each do; ...; end
 node.descendants.count
 
-Named Scopes
-============
+= Named Scopes
 
 For convenience, a couple of named scopes are included as class level:
 
@@ -76,8 +70,7 @@ child_of(node)      Only children of node, node can be either a record or an id
 descendant_of(node) Only descendants of node, node can be either a record or an id
 sibling_of(node)    Only siblings of node, node can be either a record or an id
 
-acts_as_tree Options
-====================
+= acts_as_tree Options
 
 The acts_as_tree methods supports two options:
 
@@ -87,8 +80,7 @@ orphan_strategy     Instruct Ancestry what to do with children of a node that is
                     :rootify       The children of the destroyed node become root nodes
                     :restrict      An AncestryException is raised if any children exist
 
-Arrangement
-===========
+= Arrangement
 
 Ancestry can arrange an entire subtree into nested hashes for easy navigation after retrieval from the database.  TreeNode.arrange could for example return:
 
@@ -104,8 +96,7 @@ The arrange method also works on a scoped class, for example:
 
 TreeNode.find_by_name('Crunchy').subtree.arrange
 
-Integrity Checking and Restoration
-==================================
+= Integrity Checking and Restoration
 
 I currently don't see any way Ancestry tree integrity could get compromised without explicitly setting cyclic parents but I included code for detecting integrity problems and restoring integrity just to be sure. To check integrity use: [Model].check_ancestry_integrity. An AncestryIntegrityException will be raised if there are any problems. To restore integrity use: [Model].restore_ancestry_integrity.
 
@@ -124,25 +115,21 @@ For example, from IRB:
 >> TreeNode.restore_ancestry_integrity
 => [#<TreeNode id: 1, name: "Stinky", ancestry: 2>, #<TreeNode id: 2, name: "Squeeky", ancestry: nil>]
 
-Testing
-=======
+= Testing
 
 The Ancestry gem comes with a unit test suite consisting of about 1400 assertions in 18 tests. It takes about 4 seconds to run on sqlite. To run it yourself, install Ancestry as a plugin, go to the ancestry folder and type 'rake'. The test suite is located in 'test/acts_as_tree_test.rb'.
 
-Internals
-=========
+= Internals
 
 As can be seen in the previous section, Ancestry stores a path from the root to the parent for every node. This is a variation on the materialised path database pattern. It allows Ancestry to fetch any relation (siblings, descendants, etc.) in a single sql query without the complicated algorithms and incomprehensibility associated with left and right values. Additionally, any inserts, deletes and updates only affect nodes within the affected node's own subtree.
 
 In the example above, the ancestry column is created as a string. This puts a limitation on the depth of the tree of about 40 or 50 levels, which I think may be enough for most users. To increase the maximum depth of the tree, increase the size of the string that is being used or change it to a text to remove the limitation entirely. Changing it to a text will however decrease performance because a index cannot be put on the column in that case.
 
-Future Work
-===========
+= Future Work
 
 I will try to keep Ancestry up to date with changing versions of Rails and Ruby and also with any bug reports I might receive. I will implement new features on request and only as I see fit. Something that definitely needs to be added in the future is constraints on depth, something like: tree_node.subtree.to_depth(4)
 
-Feedback
-========
+= Feedback
 
 For questions, bug reports and feature requests, please contact me at s.a.kroes[at]gmail.com
 
