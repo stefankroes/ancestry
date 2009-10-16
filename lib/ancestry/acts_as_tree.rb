@@ -1,16 +1,3 @@
-class Hash
-  def ppp indent = 0
-    each do |k,v|
-      puts "#{' ' * indent}#{k.inspect}:"
-      if v.is_a? Hash
-        v.ppp indent + 2
-      else
-        puts "#{' ' * indent}  #{v.inspect}"
-      end
-    end
-  end
-end
-
 module Ancestry
   class AncestryException < RuntimeError
   end
