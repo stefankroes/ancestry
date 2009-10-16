@@ -6,18 +6,18 @@ Ancestry allows the records of a ActiveRecord model to be organised in a tree st
 
 To apply Ancestry to any ActiveRecord model, follow these simple steps:
 
-== Install Gem
-* Add to config/environment.rb: config.gem 'ancestry'
-* Install required gems: sudo rake gems:install
-* Alternatively: sudo gem install ancestry 
+1. Install Gem
+   - Add to config/environment.rb: config.gem 'ancestry'
+   - Install required gems: sudo rake gems:install
+   - Alternatively: sudo gem install ancestry 
 
-== Add Ancestry Column to Your Table
-* Create migration: ./script/generate migration add_ancestry_to_[table] ancestry:string
-* Add index to migration: add_index [table], :ancestry / remove_index [table], :ancestry
-* Migrate your database: rake db:migrate
+2. Add Ancestry Column to Your Table
+   - Create migration: ./script/generate migration add_ancestry_to_[table] ancestry:string
+   - Add index to migration: add_index [table], :ancestry / remove_index [table], :ancestry
+   - Migrate your database: rake db:migrate
 
-== Add Ancestry to Your Model
-* Add to app/models/[model].rb: acts_as_tree
+3. Add Ancestry to Your Model
+   - Add to app/models/[model].rb: acts_as_tree
 
 Your model is now a tree!
 
@@ -105,17 +105,17 @@ I currently don't see any way Ancestry tree integrity could get compromised with
 For example, from IRB:
 
   >> stinky = TreeNode.create :name => 'Stinky'
-  $ #<TreeNode id: 1, name: "Stinky", ancestry: nil>
+  $  #<TreeNode id: 1, name: "Stinky", ancestry: nil>
   >> squeeky = TreeNode.create :name => 'Squeeky', :parent => stinky
-  $ #<TreeNode id: 2, name: "Squeeky", ancestry: "1">
+  $  #<TreeNode id: 2, name: "Squeeky", ancestry: "1">
   >> stinky.update_attribute :parent, squeeky
-  $ true
+  $  true
   >> TreeNode.all
-  $ [#<TreeNode id: 1, name: "Stinky", ancestry: "1/2">, #<TreeNode id: 2, name: "Squeeky", ancestry: "1/2/1">]
+  $  [#<TreeNode id: 1, name: "Stinky", ancestry: "1/2">, #<TreeNode id: 2, name: "Squeeky", ancestry: "1/2/1">]
   >> TreeNode.check_ancestry_integrity
   !! Ancestry::AncestryIntegrityException: Conflicting parent id in node 1: 2 for node 1, expecting nil
   >> TreeNode.restore_ancestry_integrity
-  $ [#<TreeNode id: 1, name: "Stinky", ancestry: 2>, #<TreeNode id: 2, name: "Squeeky", ancestry: nil>]
+  $  [#<TreeNode id: 1, name: "Stinky", ancestry: 2>, #<TreeNode id: 2, name: "Squeeky", ancestry: nil>]
 
 = Testing
 
