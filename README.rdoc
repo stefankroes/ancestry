@@ -6,17 +6,21 @@ Ancestry allows the records of a ActiveRecord model to be organised in a tree st
 
 To apply Ancestry to any ActiveRecord model, follow these simple steps:
 
-1. Install Gem
+1. Install gem
+   - Install gemcutter gem: sudo gem install gemcutter (maybe you need: gem update --system)
+   - Add gemcutter.org as default gem source: gem tumble
    - Add to config/environment.rb: config.gem 'ancestry'
    - Install required gems: sudo rake gems:install
-   - Alternatively: sudo gem install ancestry 
+   - Alternatively: sudo gem install ancestry
+   - If you don't want gemcutter: config.gem 'ancestry', :source => 'gemcutter.org'
+   - Alternatively: sudo gem install ancestry --source gemcutter.org
 
-2. Add Ancestry Column to Your Table
+2. Add ancestry column to your table
    - Create migration: ./script/generate migration add_ancestry_to_[table] ancestry:string
    - Add index to migration: add_index [table], :ancestry / remove_index [table], :ancestry
    - Migrate your database: rake db:migrate
 
-3. Add Ancestry to Your Model
+3. Add ancestry to your model
    - Add to app/models/[model].rb: acts_as_tree
 
 Your model is now a tree!
@@ -52,25 +56,28 @@ To navigate an Ancestry model, use the following methods on any instance / recor
 [subtree]             Scopes the model on descendants and itself
 [subtree_ids]         Returns a list of all ids in the record's subtree
 
-= Scopes
+= (Named) Scopes
 
 Where possible, the navigation methods return scopes instead of records, this means additional ordering, conditions, limits, etc. can be applied and that the result can be either retrieved, counted or checked for existence. For example:
 
   node.children.exists?(:name => 'Mary')
-  
   node.subtree.all(:order => :name, :limit => 10).each do; ...; end
-  
   node.descendants.count
 
-= Named Scopes
+For convenience, a couple of named scopes are included at the class level:
 
-For convenience, a couple of named scopes are included as class level:
+[roots]                Only root nodes
+[ancestors_of(node)]   Only ancestors of node, node can be either a record or an id
+[children_of(node)]    Only children of node, node can be either a record or an id
+[descendants_of(node)] Only descendants of node, node can be either a record or an id
+[siblings_of(node)]    Only siblings of node, node can be either a record or an id
 
-[root]                Only root nodes
-[ancestor_of(node)]   Only ancestors of node, node can be either a record or an id
-[child_of(node)]      Only children of node, node can be either a record or an id
-[descendant_of(node)] Only descendants of node, node can be either a record or an id
-[sibling_of(node)]    Only siblings of node, node can be either a record or an id
+Thanks to some convenient rails magic, it is even possible to create nodes through the children and siblings scopes:
+
+node.children.create
+node.siblings.create!
+TestNode.children_of(node_id).new
+TestNode.siblings_of(node_id).create
 
 = acts_as_tree Options
 
@@ -78,9 +85,9 @@ The acts_as_tree methods supports two options:
 
 [ancestry_column]     Pass in a symbol to instruct Ancestry to use a different column name to store record ancestry
 [orphan_strategy]     Instruct Ancestry what to do with children of a node that is destroyed:
-  [:destroy]       All children are destroyed as well (default)
-  [:rootify]       The children of the destroyed node become root nodes
-  [:restrict]      An AncestryException is raised if any children exist
+  :destroy       All children are destroyed as well (default)
+  :rootify       The children of the destroyed node become root nodes
+  :restrict      An AncestryException is raised if any children exist
 
 = Arrangement
 
@@ -129,7 +136,7 @@ In the example above, the ancestry column is created as a string. This puts a li
 
 = Future Work
 
-I will try to keep Ancestry up to date with changing versions of Rails and Ruby and also with any bug reports I might receive. I will implement new features on request and only as I see fit. Something that definitely needs to be added in the future is constraints on depth, something like: tree_node.subtree.to_depth(4)
+I will try to keep Ancestry up to date with changing versions of Rails and Ruby and also with any bug reports I might receive. I will implement new features on request as I see fit. Something that definitely needs to be added in the future is constraints on depth, something like: tree_node.subtree.to_depth(4)
 
 = Feedback
 

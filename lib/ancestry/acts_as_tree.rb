@@ -29,11 +29,11 @@ module Ancestry
       validates_format_of ancestry_column, :with => /^[0-9]+(\/[0-9]+)*$/, :allow_nil => true
       
       # Named scopes
-      named_scope :root, :conditions => {ancestry_column => nil}
-      named_scope :ancestor_of, lambda{ |object| {:conditions => to_node(object).ancestor_conditions} }
-      named_scope :child_of, lambda{ |object| {:conditions => to_node(object).child_conditions} }
-      named_scope :descendant_of, lambda{ |object| {:conditions => to_node(object).descendant_conditions} }
-      named_scope :sibling_of, lambda{ |object| {:conditions => to_node(object).sibling_conditions} }
+      named_scope :roots, :conditions => {ancestry_column => nil}
+      named_scope :ancestors_of, lambda{ |object| {:conditions => to_node(object).ancestor_conditions} }
+      named_scope :children_of, lambda{ |object| {:conditions => to_node(object).child_conditions} }
+      named_scope :descendants_of, lambda{ |object| {:conditions => to_node(object).descendant_conditions} }
+      named_scope :siblings_of, lambda{ |object| {:conditions => to_node(object).sibling_conditions} }
       
       # Update descendants with new ancestry before save
       before_save :update_descendants_with_new_ancestry

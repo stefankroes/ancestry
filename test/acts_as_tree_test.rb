@@ -187,21 +187,21 @@ class ActsAsTreeTest < ActiveSupport::TestCase
     roots = setup_test_nodes TestNode, 3, 3
 
     # Roots assertion
-    assert_equal roots.map(&:first), TestNode.root.all
+    assert_equal roots.map(&:first), TestNode.roots.all
     
     TestNode.all.each do |test_node|
-      # Assertions for ancestor_of named scope
-      assert_equal test_node.ancestors, TestNode.ancestor_of(test_node)
-      assert_equal test_node.ancestors, TestNode.ancestor_of(test_node.id)
-      # Assertions for child_of named scope
-      assert_equal test_node.children, TestNode.child_of(test_node)
-      assert_equal test_node.children, TestNode.child_of(test_node.id)
-      # Assertions for descendant_of named scope
-      assert_equal test_node.descendants, TestNode.descendant_of(test_node)
-      assert_equal test_node.descendants, TestNode.descendant_of(test_node.id)
-      # Assertions for sibling_of named scope
-      assert_equal test_node.siblings, TestNode.sibling_of(test_node)
-      assert_equal test_node.siblings, TestNode.sibling_of(test_node.id)
+      # Assertions for ancestors_of named scope
+      assert_equal test_node.ancestors, TestNode.ancestors_of(test_node)
+      assert_equal test_node.ancestors, TestNode.ancestors_of(test_node.id)
+      # Assertions for children_of named scope
+      assert_equal test_node.children, TestNode.children_of(test_node)
+      assert_equal test_node.children, TestNode.children_of(test_node.id)
+      # Assertions for descendants_of named scope
+      assert_equal test_node.descendants, TestNode.descendants_of(test_node)
+      assert_equal test_node.descendants, TestNode.descendants_of(test_node.id)
+      # Assertions for siblings_of named scope
+      assert_equal test_node.siblings, TestNode.siblings_of(test_node)
+      assert_equal test_node.siblings, TestNode.siblings_of(test_node.id)
     end
   end
   
@@ -259,7 +259,7 @@ class ActsAsTreeTest < ActiveSupport::TestCase
     assert_difference 'TestNode.count', -root.subtree.size do
       root.destroy
     end
-    node = TestNode.root.first.children.first
+    node = TestNode.roots.first.children.first
     assert_difference 'TestNode.count', -node.subtree.size do
       node.destroy
     end
@@ -268,7 +268,7 @@ class ActsAsTreeTest < ActiveSupport::TestCase
   def test_orphan_restrict_strategy
     TestNode.orphan_strategy = :restrict
     setup_test_nodes(TestNode, 3, 3)
-    root = TestNode.root.first
+    root = TestNode.roots.first
     assert_raise Ancestry::AncestryException do
       root.destroy
     end
@@ -356,5 +356,22 @@ class ActsAsTreeTest < ActiveSupport::TestCase
         end
       end
     end
+  end
+  
+  def test_node_creation_though_scope
+    node = TestNode.create!
+    child = node.children.create
+    assert_equal node, child.parent 
+
+    other_child = child.siblings.create!
+    assert_equal node, other_child.parent
+
+    grandchild = TestNode.children_of(child).new
+    grandchild.save
+    assert_equal child, grandchild.parent
+
+    other_grandchild = TestNode.siblings_of(grandchild).new
+    other_grandchild.save!
+    assert_equal child, other_grandchild.parent
   end
 end
