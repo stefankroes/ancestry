@@ -31,30 +31,34 @@ You can use the parent attribute to organise your records into a tree. If you ha
 
   TreeNode.create!(:name => 'Stinky', :parent => TreeNode.create!(:name => 'Squeeky'))
 
+You can also create children through the children relation on a node:
+
+  node.children.create
+
 = Navigating Your Tree
 
 To navigate an Ancestry model, use the following methods on any instance / record:
 
-[parent]              Returns the parent of the record
-[root]                Returns the root of the tree the record is in
-[root_id]             Returns the id of the root of the tree the record is in
-[is_root?]            Returns true if the record is a root node, false otherwise
-[ancestor_ids]        Returns a list of ancestor ids, starting with the root id and ending with the parent id
-[ancestors]           Scopes the model on ancestors of the record
-[path_ids]            Returns a list the path ids, starting with the root is and ending with the node's own id
-[path]                Scopes model on path records of the record
-[children]            Scopes the model on children of the record
-[child_ids]           Returns a list of child ids
-[has_children?]       Returns true if the record has any children, false otherwise
-[is_childless?]       Returns true is the record has no childen, false otherwise
-[siblings]            Scopes the model on siblings of the record, the record itself is included
-[sibling_ids]         Returns a list of sibling ids
-[has_siblings?]       Returns true if the record's parent has more than one child
-[is_only_child?]      Returns true if the record is the only child of its parent
-[descendants]         Scopes the model on direct and indirect children of the record
-[descendant_ids]      Returns a list of a descendant ids
-[subtree]             Scopes the model on descendants and itself
-[subtree_ids]         Returns a list of all ids in the record's subtree
+  <b>parent</b>         Returns the parent of the record
+  <b>root</b>           Returns the root of the tree the record is in
+  <b>root_id</b>        Returns the id of the root of the tree the record is in
+  <b>is_root?</b>       Returns true if the record is a root node, false otherwise
+  <b>ancestor_ids</b>   Returns a list of ancestor ids, starting with the root id and ending with the parent id
+  <b>ancestors</b>      Scopes the model on ancestors of the record
+  <b>path_ids</b>       Returns a list the path ids, starting with the root is and ending with the node's own id
+  <b>path</b>           Scopes model on path records of the record
+  <b>children</b>       Scopes the model on children of the record
+  <b>child_ids</b>      Returns a list of child ids
+  <b>has_children?</b>  Returns true if the record has any children, false otherwise
+  <b>is_childless?</b>  Returns true is the record has no childen, false otherwise
+  <b>siblings</b>       Scopes the model on siblings of the record, the record itself is included
+  <b>sibling_ids</b>    Returns a list of sibling ids
+  <b>has_siblings?</b>  Returns true if the record's parent has more than one child
+  <b>is_only_child?</b> Returns true if the record is the only child of its parent
+  <b>descendants</b>    Scopes the model on direct and indirect children of the record
+  <b>descendant_ids</b> Returns a list of a descendant ids
+  <b>subtree</b>        Scopes the model on descendants and itself
+  <b>subtree_ids</b>    Returns a list of all ids in the record's subtree
 
 = (Named) Scopes
 
@@ -66,28 +70,28 @@ Where possible, the navigation methods return scopes instead of records, this me
 
 For convenience, a couple of named scopes are included at the class level:
 
-[roots]                Only root nodes
-[ancestors_of(node)]   Only ancestors of node, node can be either a record or an id
-[children_of(node)]    Only children of node, node can be either a record or an id
-[descendants_of(node)] Only descendants of node, node can be either a record or an id
-[siblings_of(node)]    Only siblings of node, node can be either a record or an id
+  <b>roots</b>                Only root nodes
+  <b>ancestors_of(node)</b>   Only ancestors of node, node can be either a record or an id
+  <b>children_of(node)</b>    Only children of node, node can be either a record or an id
+  <b>descendants_of(node)</b> Only descendants of node, node can be either a record or an id
+  <b>siblings_of(node)</b>    Only siblings of node, node can be either a record or an id
 
 Thanks to some convenient rails magic, it is even possible to create nodes through the children and siblings scopes:
 
-node.children.create
-node.siblings.create!
-TestNode.children_of(node_id).new
-TestNode.siblings_of(node_id).create
+  node.children.create
+  node.siblings.create!
+  TestNode.children_of(node_id).new
+  TestNode.siblings_of(node_id).create
 
 = acts_as_tree Options
 
 The acts_as_tree methods supports two options:
 
-[ancestry_column]     Pass in a symbol to instruct Ancestry to use a different column name to store record ancestry
-[orphan_strategy]     Instruct Ancestry what to do with children of a node that is destroyed:
-  :destroy       All children are destroyed as well (default)
-  :rootify       The children of the destroyed node become root nodes
-  :restrict      An AncestryException is raised if any children exist
+  <b>ancestry_column</b>     Pass in a symbol to instruct Ancestry to use a different column name to store record ancestry
+  <b>orphan_strategy</b>     Instruct Ancestry what to do with children of a node that is destroyed:
+    <b>:destroy</b>  All children are destroyed as well (default)
+    <b>:rootify</b>  The children of the destroyed node become root nodes
+    <b>:restrict</b> An AncestryException is raised if any children exist
 
 = Arrangement
 
