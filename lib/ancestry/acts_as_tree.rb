@@ -28,6 +28,9 @@ module Ancestry
       # Validate format of ancestry column value
       validates_format_of ancestry_column, :with => /^[0-9]+(\/[0-9]+)*$/, :allow_nil => true
       
+      # Validate that the ancestor ids don't include own id
+      validate :ancestry_exclude_self
+      
       # Named scopes
       named_scope :roots, :conditions => {ancestry_column => nil}
       named_scope :ancestors_of, lambda{ |object| {:conditions => to_node(object).ancestor_conditions} }
@@ -57,8 +60,8 @@ module Ancestry
       else
         raise AncestryException.new("Invalid orphan strategy, valid ones are :rootify, :restrict and :destroy.")
       end
-    end 
-
+    end
+    
     # Arrangement
     def arrange
       # Get all nodes ordered by ancestry and start sorting them into an empty hash
@@ -105,9 +108,9 @@ module Ancestry
       all.each do |node|
         # ... set its ancestry to nil if invalid
         if node.errors.invalid? node.class.ancestry_column
-          node.update_attribute :ancestry, nil
+          node.update_attributes :ancestry => nil
         end
-        # ... save parent of this node in parents array if it actually exists
+        # ... save parent of this node in parents array if it exists
         parents[node.id] = node.parent_id if exists? node.parent_id
 
         # Reset parent id in array to nil if it introduces a cycle
@@ -124,16 +127,16 @@ module Ancestry
         until parent.nil?
           ancestry, parent = ancestry.nil? ? parent : "#{parent}/#{ancestry}", parents[parent]
         end
-        node.update_attribute node.ancestry_column, ancestry
+        node.update_attributes node.ancestry_column => ancestry
       end
     end
   end
 
   module InstanceMethods 
-    # Fetch tree node if necessary
-    def self.to_node object
-      object.is_a?(self) ? object : find(object)
-    end 
+    # Validate that the ancestors don't include itself
+    def ancestry_exclude_self
+      errors.add_to_base "#{self.class.name.humanize} cannot be a descendant of itself." if ancestor_ids.include? self.id
+    end
 
     # Update descendants with new ancestry
     def update_descendants_with_new_ancestry

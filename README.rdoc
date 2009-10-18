@@ -111,7 +111,7 @@ The arrange method also works on a scoped class, for example:
 
 = Integrity Checking and Restoration
 
-I currently don't see any way Ancestry tree integrity could get compromised without explicitly setting cyclic parents but I included code for detecting integrity problems and restoring integrity just to be sure. To check integrity use: [Model].check_ancestry_integrity. An AncestryIntegrityException will be raised if there are any problems. To restore integrity use: [Model].restore_ancestry_integrity.
+I don't see any way Ancestry tree integrity could get compromised without explicitly setting cyclic parents or invalid ancestry and circumventing validation with update_attribute, if you do, please let me know. I did include methods for detecting integrity problems and restoring integrity just to be sure. To check integrity use: [Model].check_ancestry_integrity. An AncestryIntegrityException will be raised if there are any problems. To restore integrity use: [Model].restore_ancestry_integrity.
 
 For example, from IRB:
 
@@ -130,7 +130,7 @@ For example, from IRB:
 
 = Testing
 
-The Ancestry gem comes with a unit test suite consisting of about 1400 assertions in 18 tests. It takes about 4 seconds to run on sqlite. To run it yourself, install Ancestry as a plugin, go to the ancestry folder and type 'rake'. The test suite is located in 'test/acts_as_tree_test.rb'.
+The Ancestry gem comes with a unit test suite consisting of about 1500 assertions in 20 tests. It takes about 4 seconds to run on sqlite. To run it yourself, install Ancestry as a plugin, go to the ancestry folder and type 'rake'. The test suite is located in 'test/acts_as_tree_test.rb'.
 
 = Internals
 
@@ -144,7 +144,7 @@ I will try to keep Ancestry up to date with changing versions of Rails and Ruby 
 
 = Feedback
 
-For questions, bug reports and feature requests, please contact me at s.a.kroes[at]gmail.com
+Question? Bug report? Faulty/incomplete documentation? Feature request? Please contact me at s.a.kroes[at]gmail.com
 
 
 

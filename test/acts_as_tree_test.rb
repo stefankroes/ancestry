@@ -206,14 +206,14 @@ class ActsAsTreeTest < ActiveSupport::TestCase
   end
   
   def test_ancestroy_column_validation
-    node = setup_test_nodes(TestNode, 1, 1).first.first
+    node = TestNode.create
     ['3', '10/2', '1/4/30', nil].each do |value|
       node.write_attribute TestNode.ancestry_column, value
-      assert node.save
+      node.valid?; assert !node.errors.invalid?(TestNode.ancestry_column)
     end
     ['1/3/', '/2/3', 'a', 'a/b', '-34', '/54'].each do |value|
       node.write_attribute TestNode.ancestry_column, value
-      assert !node.save
+      node.valid?; assert node.errors.invalid?(TestNode.ancestry_column)
     end
   end
   
@@ -373,5 +373,13 @@ class ActsAsTreeTest < ActiveSupport::TestCase
     other_grandchild = TestNode.siblings_of(grandchild).new
     other_grandchild.save!
     assert_equal child, other_grandchild.parent
+  end
+  
+  def test_validate_ancestry_exclude_self
+    parent = TestNode.create!
+    child = parent.children.create!
+    assert_raise ActiveRecord::RecordInvalid do
+      parent.update_attributes! :parent => child
+    end
   end
 end
