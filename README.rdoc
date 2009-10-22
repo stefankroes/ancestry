@@ -64,7 +64,7 @@ To navigate an Ancestry model, use the following methods on any instance / recor
 
 = acts_as_tree Options
 
-The acts_as_tree methods supports two options:
+The acts_as_tree methods supports the following options:
 
   :ancestry_column       Pass in a symbol to store ancestry in a different column
   :orphan_strategy       Instruct Ancestry what to do with children of a node that is destroyed:
