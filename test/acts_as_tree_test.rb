@@ -1,11 +1,14 @@
 require File.dirname(__FILE__) + '/test_helper.rb'
 
 class TestNode < ActiveRecord::Base
-  acts_as_tree
+  acts_as_tree :cache_depth => true, :depth_cache_column => :depth_cache
 end
 
 class AlternativeTestNode < ActiveRecord::Base
   acts_as_tree :ancestry_column => :alternative_ancestry, :orphan_strategy => :rootify
+end
+
+class ParentIdTestNode < ActiveRecord::Base
 end
 
 class ActsAsTreeTest < ActiveSupport::TestCase
@@ -92,6 +95,7 @@ class ActsAsTreeTest < ActiveSupport::TestCase
       assert_equal [], lvl0_node.ancestors
       assert_equal [lvl0_node.id], lvl0_node.path_ids
       assert_equal [lvl0_node], lvl0_node.path
+      assert_equal 0, lvl0_node.depth
       # Parent assertions
       assert_equal nil, lvl0_node.parent_id
       assert_equal nil, lvl0_node.parent
@@ -123,6 +127,7 @@ class ActsAsTreeTest < ActiveSupport::TestCase
         assert_equal [lvl0_node], lvl1_node.ancestors
         assert_equal [lvl0_node.id, lvl1_node.id], lvl1_node.path_ids
         assert_equal [lvl0_node, lvl1_node], lvl1_node.path
+        assert_equal 1, lvl1_node.depth
         # Parent assertions
         assert_equal lvl0_node.id, lvl1_node.parent_id
         assert_equal lvl0_node, lvl1_node.parent
@@ -154,6 +159,7 @@ class ActsAsTreeTest < ActiveSupport::TestCase
           assert_equal [lvl0_node, lvl1_node], lvl2_node.ancestors
           assert_equal [lvl0_node.id, lvl1_node.id, lvl2_node.id], lvl2_node.path_ids
           assert_equal [lvl0_node, lvl1_node, lvl2_node], lvl2_node.path
+          assert_equal 2, lvl2_node.depth
           # Parent assertions
           assert_equal lvl1_node.id, lvl2_node.parent_id
           assert_equal lvl1_node, lvl2_node.parent
@@ -282,43 +288,43 @@ class ActsAsTreeTest < ActiveSupport::TestCase
     # Check that there are no errors on a valid data set
     setup_test_nodes(TestNode, 3, 3)
     assert_nothing_raised do
-      TestNode.check_ancestry_integrity
+      TestNode.check_ancestry_integrity!
     end
 
     # Check detection of invalid format for ancestry column
     setup_test_nodes(TestNode, 3, 3).first.first.update_attribute TestNode.ancestry_column, 'invalid_ancestry'
     assert_raise Ancestry::AncestryIntegrityException do
-      TestNode.check_ancestry_integrity
+      TestNode.check_ancestry_integrity!
     end
     
     # Check detection of non-existent ancestor
     setup_test_nodes(TestNode, 3, 3).first.first.update_attribute TestNode.ancestry_column, 35
     assert_raise Ancestry::AncestryIntegrityException do
-      TestNode.check_ancestry_integrity
+      TestNode.check_ancestry_integrity!
     end
 
     # Check detection of cyclic ancestry
     node = setup_test_nodes(TestNode, 3, 3).first.first
     node.update_attribute TestNode.ancestry_column, node.id
     assert_raise Ancestry::AncestryIntegrityException do
-      TestNode.check_ancestry_integrity
+      TestNode.check_ancestry_integrity!
     end
 
     # Check detection of conflicting parent id
     TestNode.destroy_all
     TestNode.create!(TestNode.ancestry_column => TestNode.create!(TestNode.ancestry_column => TestNode.create!(TestNode.ancestry_column => nil).id).id)
     assert_raise Ancestry::AncestryIntegrityException do
-      TestNode.check_ancestry_integrity
+      TestNode.check_ancestry_integrity!
     end
   end
 
   def assert_integrity_restoration
     assert_raise Ancestry::AncestryIntegrityException do
-      TestNode.check_ancestry_integrity
+      TestNode.check_ancestry_integrity!
     end
-    TestNode.restore_ancestry_integrity
+    TestNode.restore_ancestry_integrity!
     assert_nothing_raised do
-      TestNode.check_ancestry_integrity
+      TestNode.check_ancestry_integrity!
     end
   end    
 
@@ -380,6 +386,167 @@ class ActsAsTreeTest < ActiveSupport::TestCase
     child = parent.children.create!
     assert_raise ActiveRecord::RecordInvalid do
       parent.update_attributes! :parent => child
+    end
+  end
+  
+  def test_depth_caching
+    roots = setup_test_nodes TestNode, 3, 3
+    roots.each do |lvl0_node, lvl0_children|
+      assert_equal 0, lvl0_node.depth_cache
+      lvl0_children.each do |lvl1_node, lvl1_children|
+        assert_equal 1, lvl1_node.depth_cache
+        lvl1_children.each do |lvl2_node, lvl2_children|
+          assert_equal 2, lvl2_node.depth_cache
+        end
+      end
+    end
+  end
+  
+  def test_depth_scopes
+    setup_test_nodes TestNode, 4, 4
+    TestNode.before_depth(2).all? { |node| assert node.depth < 2 }
+    TestNode.to_depth(2).all?     { |node| assert node.depth <= 2 }
+    TestNode.at_depth(2).all?     { |node| assert node.depth == 2 }
+    TestNode.from_depth(2).all?   { |node| assert node.depth >= 2 }
+    TestNode.after_depth(2).all?  { |node| assert node.depth > 2 }
+  end
+  
+  def test_depth_scopes_unavailable
+    assert_raise Ancestry::AncestryException do
+      AlternativeTestNode.before_depth(1)
+      AlternativeTestNode.to_depth(1)
+      AlternativeTestNode.at_depth(1)
+      AlternativeTestNode.from_depth(1)
+      AlternativeTestNode.after_depth(1)
+    end
+  end
+  
+  def test_invalid_acts_as_tree_options
+    assert_raise Ancestry::AncestryException do
+      Class.new(ActiveRecord::Base).acts_as_tree :this_option_doesnt_exist => 42
+    end
+    assert_raise Ancestry::AncestryException do
+      Class.new(ActiveRecord::Base).acts_as_tree :not_a_hash
+    end
+  end
+  
+  def test_build_ancestry_from_parent_ids
+    [ParentIdTestNode.create!].each do |parent|
+      (Array.new(5) { ParentIdTestNode.create! :parent_id => parent.id }).each do |parent|
+        (Array.new(5) { ParentIdTestNode.create! :parent_id => parent.id }).each do |parent|
+          (Array.new(5) { ParentIdTestNode.create! :parent_id => parent.id })
+        end
+      end
+    end
+    
+    # Assert all nodes where created
+    assert_equal 156, ParentIdTestNode.count
+
+    ParentIdTestNode.acts_as_tree
+    ParentIdTestNode.build_ancestry_from_parent_ids!
+
+    # Assert ancestry integirty
+    assert_nothing_raised do
+      ParentIdTestNode.check_ancestry_integrity!
+    end
+
+    roots = ParentIdTestNode.roots.all
+    # Assert single root node
+    assert_equal 1, roots.size
+
+    # Assert it has 5 children
+    roots.each do |parent|
+      assert 5, parent.children.count
+      parent.children.each do |parent|
+        assert 5, parent.children.count
+        parent.children.each do |parent|
+          assert 5, parent.children.count
+          parent.children.each do |parent|
+            assert 0, parent.children.count
+          end
+        end
+      end
+    end
+  end
+  
+  def test_rebuild_depth_cache
+    setup_test_nodes TestNode, 3, 3
+    TestNode.find_by_sql("update test_nodes set depth_cache = null;")
+    
+    # Assert cache was emptied correctly
+    TestNode.all.each do |test_node|
+      assert_equal nil, test_node.depth_cache
+    end
+    
+    # Rebuild cache
+    TestNode.rebuild_depth_cache!
+    
+    # Assert cache was rebuild correctly
+    TestNode.all.each do |test_node|
+      assert_equal test_node.depth, test_node.depth_cache
+    end
+  end
+  
+  def test_exception_when_rebuilding_depth_cache_for_model_without_depth_caching
+    assert_raise Ancestry::AncestryException do
+      AlternativeTestNode.rebuild_depth_cache!
+    end
+  end
+  
+  def test_descendants_with_depth_constraints
+    setup_test_nodes TestNode, 4, 4
+
+    assert_equal 4, TestNode.roots.first.descendants(:before_depth => 2).count
+    assert_equal 20, TestNode.roots.first.descendants(:to_depth => 2).count
+    assert_equal 16, TestNode.roots.first.descendants(:at_depth => 2).count
+    assert_equal 80, TestNode.roots.first.descendants(:from_depth => 2).count
+    assert_equal 64, TestNode.roots.first.descendants(:after_depth => 2).count
+  end
+
+  def test_subtree_with_depth_constraints
+    setup_test_nodes TestNode, 4, 4
+
+    assert_equal 5, TestNode.roots.first.subtree(:before_depth => 2).count
+    assert_equal 21, TestNode.roots.first.subtree(:to_depth => 2).count
+    assert_equal 16, TestNode.roots.first.subtree(:at_depth => 2).count
+    assert_equal 80, TestNode.roots.first.subtree(:from_depth => 2).count
+    assert_equal 64, TestNode.roots.first.subtree(:after_depth => 2).count
+  end
+
+
+  def test_ancestors_with_depth_constraints
+    node1 = TestNode.create!
+    node2 = node1.children.create!
+    node3 = node2.children.create!
+    node4 = node3.children.create!
+    node5 = node4.children.create!
+    leaf  = node5.children.create!
+
+    assert_equal [node1, node2, node3],        leaf.ancestors(:before_depth => -2)
+    assert_equal [node1, node2, node3, node4], leaf.ancestors(:to_depth => -2)
+    assert_equal [node4],                      leaf.ancestors(:at_depth => -2)
+    assert_equal [node4, node5],               leaf.ancestors(:from_depth => -2)
+    assert_equal [node5],                      leaf.ancestors(:after_depth => -2)
+  end
+
+  def test_path_with_depth_constraints
+    node1 = TestNode.create!
+    node2 = node1.children.create!
+    node3 = node2.children.create!
+    node4 = node3.children.create!
+    node5 = node4.children.create!
+    leaf  = node5.children.create!
+
+    assert_equal [node1, node2, node3],        leaf.path(:before_depth => -2)
+    assert_equal [node1, node2, node3, node4], leaf.path(:to_depth => -2)
+    assert_equal [node4],                      leaf.path(:at_depth => -2)
+    assert_equal [node4, node5, leaf],         leaf.path(:from_depth => -2)
+    assert_equal [node5, leaf],                leaf.path(:after_depth => -2)
+  end
+  
+  def test_exception_on_unknown_depth_column
+    assert_raise Ancestry::AncestryException do
+      TestNode.create!.subtree(:this_is_not_a_valid_depth_option => 42)
     end
   end
 end

@@ -1,6 +1,6 @@
 = Ancestry
 
-Ancestry allows the records of a ActiveRecord model to be organised in a tree structure, using a single, intuitively formatted database column. It exposes all the standard tree structure relations (ancestors, parent, root, children, siblings, descendants) and all of them can be fetched in a single sql query. Additional features are named_scopes, integrity checking, integrity restoration, arrangement of (sub)tree into hashes and different strategies for dealing with orphaned records.
+Ancestry allows the records of a ActiveRecord model to be organised as a tree structure, using a single, intuitively formatted database column, using a variation on the materialised path pattern. It exposes all the standard tree structure relations (ancestors, parent, root, children, siblings, descendants) and all of them can be fetched in a single sql query. Additional features are named_scopes, integrity checking, integrity restoration, arrangement of (sub)tree into hashes and different strategies for dealing with orphaned records.
 
 = Installation
 
@@ -17,7 +17,7 @@ To apply Ancestry to any ActiveRecord model, follow these simple steps:
 
 2. Add ancestry column to your table
    - Create migration: ./script/generate migration add_ancestry_to_[table] ancestry:string
-   - Add index to migration: add_index [table], :ancestry / remove_index [table], :ancestry
+   - Add index to migration: add_index [table], :ancestry (UP) / remove_index [table], :ancestry (DOWN)
    - Migrate your database: rake db:migrate
 
 3. Add ancestry to your model
@@ -39,26 +39,41 @@ You can also create children through the children relation on a node:
 
 To navigate an Ancestry model, use the following methods on any instance / record:
 
-  parent         Returns the parent of the record
-  root           Returns the root of the tree the record is in
-  root_id        Returns the id of the root of the tree the record is in
-  is_root?       Returns true if the record is a root node, false otherwise
-  ancestor_ids   Returns a list of ancestor ids, starting with the root id and ending with the parent id
-  ancestors      Scopes the model on ancestors of the record
-  path_ids       Returns a list the path ids, starting with the root is and ending with the node's own id
-  path           Scopes model on path records of the record
-  children       Scopes the model on children of the record
-  child_ids      Returns a list of child ids
-  has_children?  Returns true if the record has any children, false otherwise
-  is_childless?  Returns true is the record has no childen, false otherwise
-  siblings       Scopes the model on siblings of the record, the record itself is included
-  sibling_ids    Returns a list of sibling ids
-  has_siblings?  Returns true if the record's parent has more than one child
-  is_only_child? Returns true if the record is the only child of its parent
-  descendants    Scopes the model on direct and indirect children of the record
-  descendant_ids Returns a list of a descendant ids
-  subtree        Scopes the model on descendants and itself
-  subtree_ids    Returns a list of all ids in the record's subtree
+  parent           Returns the parent of the record, nil for a root node
+  parent_id        Returns the id of the parent of the record, nil for a root node
+  root             Returns the root of the tree the record is in, self for a root node
+  root_id          Returns the id of the root of the tree the record is in
+  is_root?         Returns true if the record is a root node, false otherwise
+  ancestor_ids     Returns a list of ancestor ids, starting with the root id and ending with the parent id
+  ancestors        Scopes the model on ancestors of the record
+  path_ids         Returns a list the path ids, starting with the root is and ending with the node's own id
+  path             Scopes model on path records of the record
+  children         Scopes the model on children of the record
+  child_ids        Returns a list of child ids
+  has_children?    Returns true if the record has any children, false otherwise
+  is_childless?    Returns true is the record has no childen, false otherwise
+  siblings         Scopes the model on siblings of the record, the record itself is included
+  sibling_ids      Returns a list of sibling ids
+  has_siblings?    Returns true if the record's parent has more than one child
+  is_only_child?   Returns true if the record is the only child of its parent
+  descendants      Scopes the model on direct and indirect children of the record
+  descendant_ids   Returns a list of a descendant ids
+  subtree          Scopes the model on descendants and itself
+  subtree_ids      Returns a list of all ids in the record's subtree
+  depth            Return the depth of the node, root nodes are at depth 0
+
+= acts_as_tree Options
+
+The acts_as_tree methods supports two options:
+
+  :ancestry_column       Pass in a symbol to store ancestry in a different column
+  :orphan_strategy       Instruct Ancestry what to do with children of a node that is destroyed:
+                         :destroy   All children are destroyed as well (default)
+                         :rootify   The children of the destroyed node become root nodes
+                         :restrict  An AncestryException is raised if any children exist
+  :cache_depth           Cache the depth of each node in the 'ancestry_depth' column (default: false)
+                         If you turn depth_caching on for an existing model, use: TreeNode.rebuild_depth_cache!
+  :depth_cache_column    Pass in a symbol to store depth cache in a different column
 
 = (Named) Scopes
 
@@ -70,11 +85,11 @@ Where possible, the navigation methods return scopes instead of records, this me
 
 For convenience, a couple of named scopes are included at the class level:
 
-  roots                Only root nodes
-  ancestors_of(node)   Only ancestors of node, node can be either a record or an id
-  children_of(node)    Only children of node, node can be either a record or an id
-  descendants_of(node) Only descendants of node, node can be either a record or an id
-  siblings_of(node)    Only siblings of node, node can be either a record or an id
+  roots                   Root nodes
+  ancestors_of(node)      Ancestors of node, node can be either a record or an id
+  children_of(node)       Children of node, node can be either a record or an id
+  descendants_of(node)    Descendants of node, node can be either a record or an id
+  siblings_of(node)       Siblings of node, node can be either a record or an id
 
 Thanks to some convenient rails magic, it is even possible to create nodes through the children and siblings scopes:
 
@@ -83,15 +98,31 @@ Thanks to some convenient rails magic, it is even possible to create nodes throu
   TestNode.children_of(node_id).new
   TestNode.siblings_of(node_id).create
 
-= acts_as_tree Options
+= Selecting nodes by depth
 
-The acts_as_tree methods supports two options:
+When depth caching is enabled (see acts_as_tree options), five more named scopes can be used to select nodes on their depth:
 
-  ancestry_column     Pass in a symbol to instruct Ancestry to use a different column name to store record ancestry
-  orphan_strategy     Instruct Ancestry what to do with children of a node that is destroyed:
-    :destroy  All children are destroyed as well (default)
-    :rootify  The children of the destroyed node become root nodes
-    :restrict An AncestryException is raised if any children exist
+  before_depth(depth)     Return nodes that are less deep than depth (node.depth < depth)
+  to_depth(depth)         Return nodes up to a certain depth (node.depth <= depth)
+  at_depth(depth)         Return nodes that are at depth (node.depth == depth)
+  from_depth(depth)       Return nodes starting from a certain depth (node.depth >= depth)
+  after_depth(depth)      Return nodes that are deeper than depth (node.depth > depth)
+  
+The depth scopes are also available through calls to descendants, descendant_ids, subtree, subtree_ids, path and ancestors. In this case, depth values are interpreted relatively. Some examples:
+
+  node.subtree(:to_depth => 2)      Subtree of node, to a depth of node.depth + 2 (self, children and grandchildren)
+  node.subtree.to_depth(5)          Subtree of node to an absolute depth of 5
+  node.descendants(:at_depth => 2)  Descendant of node, at depth node.depth + 2 (grandchildren)
+  node.descendants.at_depth(10)     Descendants of node at an absolute depth of 10
+  node.ancestors.to_depth(3)        The oldest 4 ancestors of node (its root and 3 more)
+  node.path(:from_depth => -2)      The node's grandparent, parent and the node itself
+
+  node.ancestors(:from_depth => -6, :to_depth => -4)
+  node.path.from_depth(3).to_depth(4)
+  node.descendants(:from_depth => 2, :to_depth => 4)
+  node.subtree.from_depth(10).to_depth(12)
+
+Please note that depth constraints cannot be passed to ancestor_ids and path_ids. The reason for this is that both these relations can be fetched directly from the ancestry column without performing a database query. It would require an entirely different method of applying the depth constraints which isn't worth the effort of implementing. You can use ancestors(depth_options).map(&:id) or ancestor_ids.slice(min_depth..max_depth) instead.
 
 = Arrangement
 
@@ -109,9 +140,44 @@ The arrange method also works on a scoped class, for example:
 
   TreeNode.find_by_name('Crunchy').subtree.arrange
 
+= Migrating from plugin that uses parent_id column
+
+Most current tree plugins use a parent_id column (acts_as_tree, awesome_nested_set, better_nested_set, acts_as_nested_set). With ancestry its easy to migrate from any of these plugins, to do so, follow these steps:
+
+1. Add ancestry column to your table
+   - Create migration: ./script/generate migration add_ancestry_to_[table] ancestry:string
+   - Add index to migration: add_index [table], :ancestry (UP) / remove_index [table], :ancestry (DOWN)
+   - Migrate your database: rake db:migrate
+
+2. Remove old tree plugin or gem and add in Ancestry
+   - Remove plugin: rm -Rf vendor/plugins/[old plugin]
+   - Remove gem config line from environment.rb: config.gem [old gem]
+   - Add Ancestry to environment.rb: config.gem :ancestry
+   - See 'Installation' for more info on installing and configuring gems
+  
+3. Change your model
+   - Remove any macros required by old plugin/gem from app/models/[model].rb
+   - Add to app/models/[model].rb: acts_as_tree
+
+4. Migrate database
+   - In './script.console': [model].build_ancestry_from_parent_ids!
+   - Make sure it worked ok: [model].check_ancestry_integrity!
+
+5. Change your code
+   - Most tree calls will probably work fine with ancestry
+   - Others must be changed or proxied
+   - Check if all your data is intact and all tests pass
+
+6. Drop parent_id column:
+   - Create migration: ./script/generate migration remove_parent_id_from_[table]
+   - Add to migration: remove_column [table], :parent_id (UP) / add_column [table], :parent_id, :integer (DOWN)
+   - Migrate your database: rake db:migrate
+
 = Integrity Checking and Restoration
 
-I don't see any way Ancestry tree integrity could get compromised without explicitly setting cyclic parents or invalid ancestry and circumventing validation with update_attribute, if you do, please let me know. I did include methods for detecting integrity problems and restoring integrity just to be sure. To check integrity use: [Model].check_ancestry_integrity. An AncestryIntegrityException will be raised if there are any problems. To restore integrity use: [Model].restore_ancestry_integrity.
+I don't see any way Ancestry tree integrity could get compromised without explicitly setting cyclic parents or invalid ancestry and circumventing validation with update_attribute, if you do, please let me know. 
+
+Ancestry includes some methods for detecting integrity problems and restoring integrity just to be sure. To check integrity use: [Model].check_ancestry_integrity!. An AncestryIntegrityException will be raised if there are any problems. To restore integrity use: [Model].restore_ancestry_integrity!.
 
 For example, from IRB:
 
@@ -123,29 +189,68 @@ For example, from IRB:
   $  true
   >> TreeNode.all
   $  [#<TreeNode id: 1, name: "Stinky", ancestry: "1/2">, #<TreeNode id: 2, name: "Squeeky", ancestry: "1/2/1">]
-  >> TreeNode.check_ancestry_integrity
+  >> TreeNode.check_ancestry_integrity!
   !! Ancestry::AncestryIntegrityException: Conflicting parent id in node 1: 2 for node 1, expecting nil
-  >> TreeNode.restore_ancestry_integrity
+  >> TreeNode.restore_ancestry_integrity!
   $  [#<TreeNode id: 1, name: "Stinky", ancestry: 2>, #<TreeNode id: 2, name: "Squeeky", ancestry: nil>]
 
-= Testing
+Additionally, if you think something is wrong with your depth cache:
 
-The Ancestry gem comes with a unit test suite consisting of about 1500 assertions in 20 tests. It takes about 4 seconds to run on sqlite. To run it yourself, install Ancestry as a plugin, go to the ancestry folder and type 'rake'. The test suite is located in 'test/acts_as_tree_test.rb'.
+  >> TreeNode.rebuild_depth_cache!
+
+= Tests
+
+The Ancestry gem comes with a unit test suite consisting of about 1800 assertions in about 30 tests. It takes about 10 seconds to run on sqlite. To run it yourself, install Ancestry as a plugin into a Rails application, go to the ancestry folder and type 'rake'. The test suite is located in 'test/acts_as_tree_test.rb'.
 
 = Internals
 
 As can be seen in the previous section, Ancestry stores a path from the root to the parent for every node. This is a variation on the materialised path database pattern. It allows Ancestry to fetch any relation (siblings, descendants, etc.) in a single sql query without the complicated algorithms and incomprehensibility associated with left and right values. Additionally, any inserts, deletes and updates only affect nodes within the affected node's own subtree.
 
-In the example above, the ancestry column is created as a string. This puts a limitation on the depth of the tree of about 40 or 50 levels, which I think may be enough for most users. To increase the maximum depth of the tree, increase the size of the string that is being used or change it to a text to remove the limitation entirely. Changing it to a text will however decrease performance because a index cannot be put on the column in that case.
+In the example above, the ancestry column is created as a string. This puts a limitation on the depth of the tree of about 40 or 50 levels, which I think may be enough for most users. To increase the maximum depth of the tree, increase the size of the string that is being used or change it to a text to remove the limitation entirely. Changing it to a text will however decrease performance because an index cannot be put on the column in that case.
+
+The materialised path pattern requires Ancestry to use a 'like' condition in order to fetch descendants. This should not be particularly slow however since the the condition never starts with a wildcard which allows the DBMS to use the column index. If you have any data on performance with a large number of records, please drop me line.
+
+= Version history
+
+The latest and recommended version of ancestry is 1.1.0. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
+
+- Version 1.1.0 (2009-10-22)
+  - Depth caching (and cache rebuilding)
+  - Depth method for nodes
+  - Named scopes for selecting by depth
+  - Relative depth options for tree navigation methods: 
+    - ancestors
+    - path
+    - descendants
+    - descendant_ids
+    - subtree
+    - subtree_ids
+  - Updated README
+  - Easy migration from existing plugins/gems
+  - acts_as_tree checks unknown options
+  - acts_as_tree checks that options are hash
+  - Added a bang (!) to the integrity functions
+    - Since these functions should only be used from ./script/console and not from your appliction, this change is not considered as breaking backwards compatibility and the major version wasn't bumped.
+  - Updated install script to point to documentation
+  - Removed rails specific init
+  - Removed uninstall script
+- Version 1.0.0 (2009-10-16)
+  - Initial version
+  - Tree building
+  - Tree navigation
+  - Integrity checking / restoration
+  - Arrangement
+  - Orphan strategies
+  - Subtree movement
+  - Named scopes
+  - Validations
 
 = Future Work
 
-I will try to keep Ancestry up to date with changing versions of Rails and Ruby and also with any bug reports I might receive. I will implement new features on request as I see fit. Something that definitely needs to be added in the future is constraints on depth, something like: tree_node.subtree.to_depth(4)
+I will try to keep Ancestry up to date with changing versions of Rails and Ruby and also with any bug reports I might receive. I will implement new features on request as I see fit. One thing I definitely want to do soon is some proper performance testing.
 
-= Feedback
+= Contact and Copyright
 
-Question? Bug report? Faulty/incomplete documentation? Feature request? Please contact me at s.a.kroes[at]gmail.com
-
-
+Question? Bug report? Faulty/incomplete documentation? Feature request? Please post an issue on 'http://github.com/stefankroes/ancestry/issues'. Please also contact me at s.a.kroes[at]gmail.com if it's urgent.
 
 Copyright (c) 2009 Stefan Kroes, released under the MIT license

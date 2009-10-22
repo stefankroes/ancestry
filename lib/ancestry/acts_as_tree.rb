@@ -11,6 +11,14 @@ module Ancestry
   
   module ClassMethods
     def acts_as_tree options = {}
+      # Check options
+      raise AncestryException.new("Options for acts_as_tree must be in a hash.") unless options.is_a? Hash
+      options.each do |key, value|
+        unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column].include? key
+          raise AncestryException.new("Unknown options for acts_as_tree: #{key.inspect} => #{value.inspect}.")
+        end
+      end
+      
       # Include instance methods
       send :include, InstanceMethods
 
@@ -28,15 +36,46 @@ module Ancestry
       # Validate format of ancestry column value
       validates_format_of ancestry_column, :with => /^[0-9]+(\/[0-9]+)*$/, :allow_nil => true
       
+      # Create ancestry column accessor and set to option or default
+      if options[:cache_depth]
+        self.cattr_accessor :depth_cache_column
+        self.depth_cache_column = options[:depth_cache_column] || :ancestry_depth
+        # Cache depth in depth cache column before save
+        before_save :cache_depth
+        # Named scopes for depth
+      end
+      
+      # Create named scopes for depth
+      named_scope :before_depth, lambda { |depth|
+        raise AncestryException.new("Named scope 'before_depth' is only available when depth caching is enabled.") unless options[:cache_depth]
+        {:conditions => ["#{depth_cache_column} < ?", depth]}
+      }
+      named_scope :to_depth, lambda { |depth|
+        raise AncestryException.new("Named scope 'to_depth' is only available when depth caching is enabled.") unless options[:cache_depth]
+        {:conditions => ["#{depth_cache_column} <= ?", depth]}
+      }
+      named_scope :at_depth, lambda { |depth|
+        raise AncestryException.new("Named scope 'at_depth' is only available when depth caching is enabled.") unless options[:cache_depth]
+        {:conditions => ["#{depth_cache_column} = ?",  depth]}
+      }
+      named_scope :from_depth, lambda { |depth|
+        raise AncestryException.new("Named scope 'from_depth' is only available when depth caching is enabled.") unless options[:cache_depth]
+        {:conditions => ["#{depth_cache_column} >= ?", depth]}
+      }
+      named_scope :after_depth, lambda { |depth|
+        raise AncestryException.new("Named scope 'after_depth' is only available when depth caching is enabled.") unless options[:cache_depth]
+        {:conditions => ["#{depth_cache_column} > ?", depth]}
+      }
+
       # Validate that the ancestor ids don't include own id
       validate :ancestry_exclude_self
       
       # Named scopes
       named_scope :roots, :conditions => {ancestry_column => nil}
-      named_scope :ancestors_of, lambda{ |object| {:conditions => to_node(object).ancestor_conditions} }
-      named_scope :children_of, lambda{ |object| {:conditions => to_node(object).child_conditions} }
-      named_scope :descendants_of, lambda{ |object| {:conditions => to_node(object).descendant_conditions} }
-      named_scope :siblings_of, lambda{ |object| {:conditions => to_node(object).sibling_conditions} }
+      named_scope :ancestors_of, lambda { |object| {:conditions => to_node(object).ancestor_conditions} }
+      named_scope :children_of, lambda { |object| {:conditions => to_node(object).child_conditions} }
+      named_scope :descendants_of, lambda { |object| {:conditions => to_node(object).descendant_conditions} }
+      named_scope :siblings_of, lambda { |object| {:conditions => to_node(object).sibling_conditions} }
       
       # Update descendants with new ancestry before save
       before_save :update_descendants_with_new_ancestry
@@ -49,10 +88,22 @@ module Ancestry
   module DynamicClassMethods
     # Fetch tree node if necessary
     def to_node object
-      object.is_a?(self) ? object : find(object)
+      if object.is_a?(self) then object else find(object) end
     end 
     
-    # Orhpan strategy writer
+    # Scope on relative depth options
+    def scope_depth depth_options, depth
+      depth_options.inject(self) do |scope, option|
+        scope_name, relative_depth = option
+        if [:before_depth, :to_depth, :at_depth, :from_depth, :after_depth].include? scope_name
+          scope.send scope_name, depth + relative_depth
+        else
+          raise Ancestry::AncestryException.new("Unknown depth option: #{scope_name}.")
+        end
+      end
+    end
+
+    # Orphan strategy writer
     def orphan_strategy= orphan_strategy
       # Check value of orphan strategy, only rootify, restrict or destroy is allowed
       if [:rootify, :restrict, :destroy].include? orphan_strategy
@@ -77,7 +128,7 @@ module Ancestry
     end
 
     # Integrity checking
-    def check_ancestry_integrity
+    def check_ancestry_integrity!
       parents = {}
       # For each node ...
       all.each do |node|
@@ -102,7 +153,7 @@ module Ancestry
     end
 
     # Integrity restoration
-    def restore_ancestry_integrity
+    def restore_ancestry_integrity!
       parents = {}
       # For each node ...
       all.each do |node|
@@ -125,9 +176,25 @@ module Ancestry
         # ... rebuild ancestry from parents array
         ancestry, parent = nil, parents[node.id]
         until parent.nil?
-          ancestry, parent = ancestry.nil? ? parent : "#{parent}/#{ancestry}", parents[parent]
+          ancestry, parent = if ancestry.nil? then parent else "#{parent}/#{ancestry}" end, parents[parent]
         end
         node.update_attributes node.ancestry_column => ancestry
+      end
+    end
+    
+    # Build ancestry from parent id's for migration purposes
+    def build_ancestry_from_parent_ids! parent_id = nil, ancestry = nil
+      all(:conditions => {:parent_id => parent_id}).each do |node|
+        node.update_attribute ancestry_column, ancestry
+        build_ancestry_from_parent_ids! node.id, if ancestry.nil? then "#{node.id}" else "#{ancestry}/#{node.id}" end
+      end
+    end
+    
+    # Build ancestry from parent id's for migration purposes
+    def rebuild_depth_cache!
+      raise Ancestry::AncestryException.new("Cannot rebuild depth cache for model without depth caching.") unless respond_to? :depth_cache_column
+      all.each do |node|
+        node.update_attribute depth_cache_column, node.depth
       end
     end
   end
@@ -149,7 +216,7 @@ module Ancestry
             self.class.ancestry_column =>
             descendant.read_attribute(descendant.class.ancestry_column).gsub(
               /^#{self.child_ancestry}/, 
-              (read_attribute(self.class.ancestry_column).blank? ? id.to_s : "#{read_attribute self.class.ancestry_column }/#{id}")
+              if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
             )
           )
         end
@@ -163,7 +230,7 @@ module Ancestry
         # ... make al children root if orphan strategy is rootify
         if self.class.orphan_strategy == :rootify
           descendants.each do |descendant|
-            descendant.update_attributes descendant.class.ancestry_column => descendant.ancestry == child_ancestry ? nil : descendant.ancestry.gsub(/^#{child_ancestry}\//, '')
+            descendant.update_attributes descendant.class.ancestry_column => (if descendant.ancestry == child_ancestry then nil else descendant.ancestry.gsub(/^#{child_ancestry}\//, '') end)
           end
         # ... destroy all descendants if orphan strategy is destroy
         elsif self.class.orphan_strategy == :destroy
@@ -180,7 +247,7 @@ module Ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
 
-      self.send("#{self.class.ancestry_column}_was").blank? ? id.to_s : "#{self.send "#{self.class.ancestry_column}_was"}/#{id}"
+      if self.send("#{self.class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.class.ancestry_column}_was"}/#{id}" end
     end
 
     # Ancestors
@@ -192,42 +259,54 @@ module Ancestry
       {:id => ancestor_ids}
     end
 
-    def ancestors
-      self.class.scoped :conditions => ancestor_conditions
+    def ancestors depth_options = {}
+      self.class.scope_depth(depth_options, depth).scoped :conditions => ancestor_conditions, :order => self.class.ancestry_column
     end
     
     def path_ids
       ancestor_ids + [id]
     end
 
-    def path
-      ancestors + [self]
+    def path_conditions
+      {:id => path_ids}
+    end
+
+    def path depth_options = {}
+      self.class.scope_depth(depth_options, depth).scoped :conditions => path_conditions, :order => self.class.ancestry_column
+    end
+    
+    def depth
+      ancestor_ids.size
+    end
+    
+    def cache_depth
+      write_attribute self.class.depth_cache_column, depth
     end
 
     # Parent
     def parent= parent
-      write_attribute(self.class.ancestry_column, parent.blank? ? nil : parent.child_ancestry)
+      write_attribute(self.class.ancestry_column, if parent.blank? then nil else parent.child_ancestry end)
     end
 
     def parent_id= parent_id
-      self.parent = parent_id.blank? ? nil : self.class.find(parent_id)
+      self.parent = if parent_id.blank? then nil else self.class.find(parent_id) end
     end
 
     def parent_id
-      ancestor_ids.empty? ? nil : ancestor_ids.last
+      if ancestor_ids.empty? then nil else ancestor_ids.last end
     end
 
     def parent
-      parent_id.blank? ? nil : self.class.find(parent_id)
+      if parent_id.blank? then nil else self.class.find(parent_id) end
     end
 
     # Root
     def root_id
-      ancestor_ids.empty? ? id : ancestor_ids.first
+      if ancestor_ids.empty? then id else ancestor_ids.first end
     end
 
     def root
-      root_id == id ? self : self.class.find(root_id)
+      if root_id == id then self else self.class.find(root_id) end
     end
 
     def is_root?
@@ -281,20 +360,25 @@ module Ancestry
       ["#{self.class.ancestry_column} like ? or #{self.class.ancestry_column} = ?", "#{child_ancestry}/%", child_ancestry]
     end
 
-    def descendants
-      self.class.scoped :conditions => descendant_conditions
+    def descendants depth_options = {}
+      self.class.scope_depth(depth_options, depth).scoped :conditions => descendant_conditions
     end
 
-    def descendant_ids
-      descendants.all(:select => :id).collect(&:id)
+    def descendant_ids depth_options = {}
+      descendants(depth_options).all(:select => :id).collect(&:id)
     end
     
-    def subtree
-      [self] + descendants
+    # Subtree
+    def subtree_conditions
+      ["id = ? or #{self.class.ancestry_column} like ? or #{self.class.ancestry_column} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
     end
 
-    def subtree_ids
-      [self.id] + descendant_ids
+    def subtree depth_options = {}
+      self.class.scope_depth(depth_options, depth).scoped :conditions => subtree_conditions
+    end
+
+    def subtree_ids depth_options = {}
+      subtree(depth_options).all(:select => :id).collect(&:id)
     end
   end
 end
