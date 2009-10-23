@@ -15,7 +15,7 @@ module Ancestry
       raise AncestryException.new("Options for acts_as_tree must be in a hash.") unless options.is_a? Hash
       options.each do |key, value|
         unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column].include? key
-          raise AncestryException.new("Unknown options for acts_as_tree: #{key.inspect} => #{value.inspect}.")
+          raise AncestryException.new("Unknown option for acts_as_tree: #{key.inspect} => #{value.inspect}.")
         end
       end
       
