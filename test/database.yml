@@ -5,11 +5,10 @@ sqlite3:
   adapter: sqlite3 
   database: vendor/plugins/ancestry/test/ancestry_plugin.sqlite3.db 
 postgresql: 
-  adapter: postgresql 
-  username: ancestry_plugin_test 
-  password: ancestry_plugin_test 
-  database: ancestry_plugin_test 
-  min_messages: ERROR 
+  adapter: postgresql
+  database: ancestry_performance
+  username: ancestry_performance
+  password: ancestry_performance
 mysql: 
   adapter: mysql 
   host: localhost 

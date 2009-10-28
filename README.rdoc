@@ -214,6 +214,11 @@ The materialised path pattern requires Ancestry to use a 'like' condition in ord
 
 The latest and recommended version of ancestry is 1.1.0. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
 
+- Version 1.1.1 (2009-10-28)
+  - Fixed some parentheses warnings that where reported
+  - Fixed a reported issue with arrangement
+  - Fixed issues with ancestors and path order on postgres
+  - Added ordered_by_ancestry scope (needed to fix issues)
 - Version 1.1.0 (2009-10-22)
   - Depth caching (and cache rebuilding)
   - Depth method for nodes

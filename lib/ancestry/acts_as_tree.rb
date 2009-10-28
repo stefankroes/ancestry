@@ -76,6 +76,7 @@ module Ancestry
       named_scope :children_of, lambda { |object| {:conditions => to_node(object).child_conditions} }
       named_scope :descendants_of, lambda { |object| {:conditions => to_node(object).descendant_conditions} }
       named_scope :siblings_of, lambda { |object| {:conditions => to_node(object).sibling_conditions} }
+      named_scope :ordered_by_ancestry, :order => "#{ancestry_column} is not null, #{ancestry_column}"
       
       # Update descendants with new ancestry before save
       before_save :update_descendants_with_new_ancestry
@@ -116,7 +117,7 @@ module Ancestry
     # Arrangement
     def arrange
       # Get all nodes ordered by ancestry and start sorting them into an empty hash
-      all(:order => ancestry_column).inject({}) do |arranged_nodes, node|
+      ordered_by_ancestry.all.inject({}) do |arranged_nodes, node|
         # Find the insertion point for that node by going through its ancestors
         node.ancestor_ids.inject(arranged_nodes) do |insertion_point, ancestor_id|
           insertion_point.each do |parent, children|
@@ -134,19 +135,19 @@ module Ancestry
       all.each do |node|
         # ... check validity of ancestry column
         if node.errors.invalid? node.class.ancestry_column
-          raise AncestryIntegrityException.new "Invalid format for ancestry column of node #{node.id}: #{node.read_attribute node.ancestry_column}."
+          raise AncestryIntegrityException.new("Invalid format for ancestry column of node #{node.id}: #{node.read_attribute node.ancestry_column}.")
         end
         # ... check that all ancestors exist
         node.ancestor_ids.each do |node_id|
           unless exists? node_id
-            raise AncestryIntegrityException.new "Reference to non-existent node in node #{node.id}: #{node_id}."
+            raise AncestryIntegrityException.new("Reference to non-existent node in node #{node.id}: #{node_id}.")
           end
         end
         # ... check that all node parents are consistent with values observed earlier
         node.path_ids.zip([nil] + node.path_ids).each do |node_id, parent_id|
           parents[node_id] = parent_id unless parents.has_key? node_id
           unless parents[node_id] == parent_id
-            raise AncestryIntegrityException.new "Conflicting parent id in node #{node.id}: #{parent_id || 'nil'} for node #{node_id}, expecting #{parents[node_id] || 'nil'}"
+            raise AncestryIntegrityException.new("Conflicting parent id in node #{node.id}: #{parent_id || 'nil'} for node #{node_id}, expecting #{parents[node_id] || 'nil'}")
           end
         end
       end
@@ -260,7 +261,7 @@ module Ancestry
     end
 
     def ancestors depth_options = {}
-      self.class.scope_depth(depth_options, depth).scoped :conditions => ancestor_conditions, :order => self.class.ancestry_column
+      self.class.scope_depth(depth_options, depth).ordered_by_ancestry.scoped :conditions => ancestor_conditions
     end
     
     def path_ids
@@ -272,7 +273,7 @@ module Ancestry
     end
 
     def path depth_options = {}
-      self.class.scope_depth(depth_options, depth).scoped :conditions => path_conditions, :order => self.class.ancestry_column
+      self.class.scope_depth(depth_options, depth).ordered_by_ancestry.scoped :conditions => path_conditions
     end
     
     def depth
@@ -361,7 +362,7 @@ module Ancestry
     end
 
     def descendants depth_options = {}
-      self.class.scope_depth(depth_options, depth).scoped :conditions => descendant_conditions
+      self.class.ordered_by_ancestry.scope_depth(depth_options, depth).scoped :conditions => descendant_conditions
     end
 
     def descendant_ids depth_options = {}
@@ -374,7 +375,7 @@ module Ancestry
     end
 
     def subtree depth_options = {}
-      self.class.scope_depth(depth_options, depth).scoped :conditions => subtree_conditions
+      self.class.ordered_by_ancestry.scope_depth(depth_options, depth).scoped :conditions => subtree_conditions
     end
 
     def subtree_ids depth_options = {}
