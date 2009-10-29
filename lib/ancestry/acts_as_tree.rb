@@ -133,13 +133,13 @@ module Ancestry
       # For each node ...
       all.each do |node|
         # ... check validity of ancestry column
-        if node.errors.invalid? node.class.ancestry_column
+        if !node.valid? and node.errors.invalid?(node.class.ancestry_column)
           raise AncestryIntegrityException.new("Invalid format for ancestry column of node #{node.id}: #{node.read_attribute node.ancestry_column}.")
         end
         # ... check that all ancestors exist
-        node.ancestor_ids.each do |node_id|
-          unless exists? node_id
-            raise AncestryIntegrityException.new("Reference to non-existent node in node #{node.id}: #{node_id}.")
+        node.ancestor_ids.each do |ancestor_id|
+          unless exists? ancestor_id
+            raise AncestryIntegrityException.new("Reference to non-existent node in node #{node.id}: #{ancestor_id}.")
           end
         end
         # ... check that all node parents are consistent with values observed earlier
@@ -190,7 +190,7 @@ module Ancestry
       end
     end
     
-    # Build ancestry from parent id's for migration purposes
+    # Rebuild depth cache if it got corrupted or if depth caching was just turned on
     def rebuild_depth_cache!
       raise Ancestry::AncestryException.new("Cannot rebuild depth cache for model without depth caching.") unless respond_to? :depth_cache_column
       all.each do |node|
