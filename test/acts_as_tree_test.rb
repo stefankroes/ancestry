@@ -11,6 +11,12 @@ end
 class ParentIdTestNode < ActiveRecord::Base
 end
 
+class TestNodeSub1 < TestNode
+end
+
+class TestNodeSub2 < TestNode
+end
+
 class ActsAsTreeTest < ActiveSupport::TestCase
   load_schema
   
@@ -548,5 +554,18 @@ class ActsAsTreeTest < ActiveSupport::TestCase
     assert_raise Ancestry::AncestryException do
       TestNode.create!.subtree(:this_is_not_a_valid_depth_option => 42)
     end
+  end
+  
+  def test_sti_support
+    node1 = TestNodeSub1.create!
+    node2 = TestNodeSub2.create! :parent => node1
+    node3 = TestNodeSub1.create! :parent => node2
+    node4 = TestNodeSub2.create! :parent => node3
+    node5 = TestNodeSub1.create! :parent => node4
+    
+    assert_equal [node2, node3, node4, node5], node1.descendants
+    assert_equal [node1, node2, node3, node4, node5], node1.subtree
+    assert_equal [node1, node2, node3, node4], node5.ancestors
+    assert_equal [node1, node2, node3, node4, node5], node5.path
   end
 end

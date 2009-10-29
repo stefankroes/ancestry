@@ -6,9 +6,9 @@ sqlite3:
   database: vendor/plugins/ancestry/test/ancestry_plugin.sqlite3.db 
 postgresql: 
   adapter: postgresql
-  database: ancestry_performance
-  username: ancestry_performance
-  password: ancestry_performance
+  database: ancestry_development
+  username: ancestry
+  password: ancestry
 mysql: 
   adapter: mysql 
   host: localhost 

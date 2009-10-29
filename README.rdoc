@@ -1,6 +1,6 @@
 = Ancestry
 
-Ancestry is a gem/plugin that allows the records of a Ruby on Rails ActiveRecord model to be organised as a tree structure (or hierarchy). It uses a single, intuitively formatted database column, using a variation on the materialised path pattern. It exposes all the standard tree structure relations (ancestors, parent, root, children, siblings, descendants) and all of them can be fetched in a single sql query. Additional features are named_scopes, depth caching, depth constraints, easy migration from older plugins/gems, integrity checking, integrity restoration, arrangement of (sub)tree into hashes and different strategies for dealing with orphaned records.
+Ancestry is a gem/plugin that allows the records of a Ruby on Rails ActiveRecord model to be organised as a tree structure (or hierarchy). It uses a single, intuitively formatted database column, using a variation on the materialised path pattern. It exposes all the standard tree structure relations (ancestors, parent, root, children, siblings, descendants) and all of them can be fetched in a single sql query. Additional features are STI support, named_scopes, depth caching, depth constraints, easy migration from older plugins/gems, integrity checking, integrity restoration, arrangement of (sub)tree into hashes and different strategies for dealing with orphaned records.
 
 = Installation
 
@@ -72,7 +72,9 @@ The acts_as_tree methods supports the following options:
                          :rootify   The children of the destroyed node become root nodes
                          :restrict  An AncestryException is raised if any children exist
   :cache_depth           Cache the depth of each node in the 'ancestry_depth' column (default: false)
-                         If you turn depth_caching on for an existing model, use: TreeNode.rebuild_depth_cache!
+                         If you turn depth_caching on for an existing model:
+                         - Migrate: add_column [table], :ancestry_depth, :default => 0
+                         - Build cache: TreeNode.rebuild_depth_cache!
   :depth_cache_column    Pass in a symbol to store depth cache in a different column
 
 = (Named) Scopes
@@ -123,6 +125,10 @@ The depth scopes are also available through calls to descendants, descendant_ids
   node.subtree.from_depth(10).to_depth(12)
 
 Please note that depth constraints cannot be passed to ancestor_ids and path_ids. The reason for this is that both these relations can be fetched directly from the ancestry column without performing a database query. It would require an entirely different method of applying the depth constraints which isn't worth the effort of implementing. You can use ancestors(depth_options).map(&:id) or ancestor_ids.slice(min_depth..max_depth) instead.
+
+= STI support
+
+Ancestry works fine with STI. Just create a STI inheritance hierarchy and build an Ancestry tree from the different classes/models. All Ancestry relations that where described above will return nodes of any model type. If you do only want nodes of a specific subclass you'll have to add a condition on type for that.
 
 = Arrangement
 
@@ -212,8 +218,11 @@ The materialised path pattern requires Ancestry to use a 'like' condition in ord
 
 = Version history
 
-The latest and recommended version of ancestry is 1.1.1. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
+The latest and recommended version of ancestry is 1.1.2. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
 
+- Version 1.1.2 (2009-10-29)
+  - Added validation for depth cache column
+  - Added STI support (reported broken)
 - Version 1.1.1 (2009-10-28)
   - Fixed some parentheses warnings that where reported
   - Fixed a reported issue with arrangement
