@@ -46,7 +46,7 @@ To navigate an Ancestry model, use the following methods on any instance / recor
   is_root?         Returns true if the record is a root node, false otherwise
   ancestor_ids     Returns a list of ancestor ids, starting with the root id and ending with the parent id
   ancestors        Scopes the model on ancestors of the record
-  path_ids         Returns a list the path ids, starting with the root is and ending with the node's own id
+  path_ids         Returns a list the path ids, starting with the root id and ending with the node's own id
   path             Scopes model on path records of the record
   children         Scopes the model on children of the record
   child_ids        Returns a list of child ids
@@ -212,7 +212,7 @@ The materialised path pattern requires Ancestry to use a 'like' condition in ord
 
 = Version history
 
-The latest and recommended version of ancestry is 1.1.0. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
+The latest and recommended version of ancestry is 1.1.1. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
 
 - Version 1.1.1 (2009-10-28)
   - Fixed some parentheses warnings that where reported
