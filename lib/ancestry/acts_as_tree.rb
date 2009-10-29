@@ -34,7 +34,7 @@ module Ancestry
       self.orphan_strategy = options[:orphan_strategy] || :destroy
 
       # Validate format of ancestry column value
-      validates_format_of ancestry_column, :with => /^[0-9]+(\/[0-9]+)*$/, :allow_nil => true
+      validates_format_of ancestry_column, :with => /\A[0-9]+(\/[0-9]+)*\Z/, :allow_nil => true
       
       # Create ancestry column accessor and set to option or default
       if options[:cache_depth]
@@ -42,7 +42,6 @@ module Ancestry
         self.depth_cache_column = options[:depth_cache_column] || :ancestry_depth
         # Cache depth in depth cache column before save
         before_save :cache_depth
-        # Named scopes for depth
       end
       
       # Create named scopes for depth
