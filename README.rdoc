@@ -25,7 +25,7 @@ To apply Ancestry to any ActiveRecord model, follow these simple steps:
 
 Your model is now a tree!
 
-= Organising Records Into A Tree
+= Organising records into a tree
 
 You can use the parent attribute to organise your records into a tree. If you have the id of the record you want to use as a parent and don't want to fetch it, you can also use parent_id. Like any virtual model attributes, parent and parent_id can be set using parent= and parent_id= on a record or by including them in the hash passed to new, create, create!, update_attributes and update_attributes!. For example:
 
@@ -35,7 +35,7 @@ You can also create children through the children relation on a node:
 
   node.children.create :name => 'Stinky'
 
-= Navigating Your Tree
+= Navigating your tree
 
 To navigate an Ancestry model, use the following methods on any instance / record:
 
@@ -62,7 +62,7 @@ To navigate an Ancestry model, use the following methods on any instance / recor
   subtree_ids      Returns a list of all ids in the record's subtree
   depth            Return the depth of the node, root nodes are at depth 0
 
-= acts_as_tree Options
+= Options for acts_as_tree 
 
 The acts_as_tree methods supports the following options:
 
@@ -173,7 +173,7 @@ Most current tree plugins use a parent_id column (acts_as_tree, awesome_nested_s
    - Add to migration: remove_column [table], :parent_id (UP) / add_column [table], :parent_id, :integer (DOWN)
    - Migrate your database: rake db:migrate
 
-= Integrity Checking and Restoration
+= Integrity checking and restoration
 
 I don't see any way Ancestry tree integrity could get compromised without explicitly setting cyclic parents or invalid ancestry and circumventing validation with update_attribute, if you do, please let me know. 
 
@@ -250,12 +250,14 @@ The latest and recommended version of ancestry is 1.1.1. The three numbers of ea
   - Named scopes
   - Validations
 
-= Future Work
+= Future work
 
 I will try to keep Ancestry up to date with changing versions of Rails and Ruby and also with any bug reports I might receive. I will implement new features on request as I see fit. One thing I definitely want to do soon is some proper performance testing.
 
-= Contact and Copyright
+= Contact and copyright
 
-Question? Bug report? Faulty/incomplete documentation? Feature request? Please post an issue on 'http://github.com/stefankroes/ancestry/issues'. Please also contact me at s.a.kroes[at]gmail.com if it's urgent.
+Bug report? Faulty/incomplete documentation? Feature request? Please post an issue on 'http://github.com/stefankroes/ancestry/issues'. Please also contact me at s.a.kroes[at]gmail.com if it's urgent.
+
+Question? Contact me at s.a.kroes[at]gmail.com, make sure you read the documentation.
 
 Copyright (c) 2009 Stefan Kroes, released under the MIT license
