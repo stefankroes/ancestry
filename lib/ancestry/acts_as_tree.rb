@@ -168,7 +168,9 @@ module Ancestry
       self.base_class.all.each do |node|
         # ... set its ancestry to nil if invalid
         if node.errors.invalid? node.class.ancestry_column
-          node.update_attributes :ancestry => nil
+          node.without_ancestry_callbacks do
+            node.update_attributes :ancestry => nil
+          end
         end
         # ... save parent of this node in parents array if it exists
         parents[node.id] = node.parent_id if exists? node.parent_id
@@ -187,14 +189,18 @@ module Ancestry
         until parent.nil?
           ancestry, parent = if ancestry.nil? then parent else "#{parent}/#{ancestry}" end, parents[parent]
         end
-        node.update_attributes node.ancestry_column => ancestry
+        node.without_ancestry_callbacks do
+          node.update_attributes node.ancestry_column => ancestry
+        end
       end
     end
     
     # Build ancestry from parent id's for migration purposes
     def build_ancestry_from_parent_ids! parent_id = nil, ancestry = nil
       self.base_class.all(:conditions => {:parent_id => parent_id}).each do |node|
-        node.update_attribute ancestry_column, ancestry
+        node.without_ancestry_callbacks do
+          node.update_attribute ancestry_column, ancestry
+        end
         build_ancestry_from_parent_ids! node.id, if ancestry.nil? then "#{node.id}" else "#{ancestry}/#{node.id}" end
       end
     end
@@ -216,37 +222,51 @@ module Ancestry
 
     # Update descendants with new ancestry
     def update_descendants_with_new_ancestry
-      # If node is valid, not a new record and ancestry was updated ...
-      if changed.include?(self.base_class.ancestry_column.to_s) && !new_record? && valid?
-        # ... for each descendant ...
-        descendants.each do |descendant|
-          # ... replace old ancestry with new ancestry
-          descendant.update_attributes(
-            self.base_class.ancestry_column =>
-            descendant.read_attribute(descendant.class.ancestry_column).gsub(
-              /^#{self.child_ancestry}/, 
-              if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
-            )
-          )
+      # Skip this if callbacks are disabled
+      unless ancestry_callbacks_disabled?
+        # If node is valid, not a new record and ancestry was updated ...
+        if changed.include?(self.base_class.ancestry_column.to_s) && !new_record? && valid?
+          # ... for each descendant ...
+          descendants.each do |descendant|
+            # ... replace old ancestry with new ancestry
+            descendant.without_ancestry_callbacks do
+              descendant.update_attributes(
+                self.base_class.ancestry_column =>
+                descendant.read_attribute(descendant.class.ancestry_column).gsub(
+                  /^#{self.child_ancestry}/, 
+                  if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
+                )
+              )
+            end
+          end
         end
       end
     end
 
     # Apply orphan strategy
     def apply_orphan_strategy
-      # If this isn't a new record ...
-      unless new_record?
-        # ... make al children root if orphan strategy is rootify
-        if self.base_class.orphan_strategy == :rootify
-          descendants.each do |descendant|
-            descendant.update_attributes descendant.class.ancestry_column => (if descendant.ancestry == child_ancestry then nil else descendant.ancestry.gsub(/^#{child_ancestry}\//, '') end)
+      # Skip this if callbacks are disabled
+      unless ancestry_callbacks_disabled?
+        # If this isn't a new record ...
+        unless new_record?
+          # ... make al children root if orphan strategy is rootify
+          if self.base_class.orphan_strategy == :rootify
+            descendants.each do |descendant|
+              descendant.without_ancestry_callbacks do
+                descendant.update_attributes descendant.class.ancestry_column => (if descendant.ancestry == child_ancestry then nil else descendant.ancestry.gsub(/^#{child_ancestry}\//, '') end)
+              end
+            end
+          # ... destroy all descendants if orphan strategy is destroy
+          elsif self.base_class.orphan_strategy == :destroy
+            descendants.all.each do |descendant|
+              descendant.without_ancestry_callbacks do
+                descendant.destroy
+              end
+            end
+          # ... throw an exception if it has children and orphan strategy is restrict
+          elsif self.base_class.orphan_strategy == :restrict
+            raise Ancestry::AncestryException.new('Cannot delete record because it has descendants.') unless is_childless?
           end
-        # ... destroy all descendants if orphan strategy is destroy
-        elsif self.base_class.orphan_strategy == :destroy
-          self.base_class.destroy_all descendant_conditions
-        # ... throw an exception if it has children and orphan strategy is restrict
-        elsif self.base_class.orphan_strategy == :restrict
-          raise Ancestry::AncestryException.new('Cannot delete record because it has descendants.') unless is_childless?
         end
       end
     end
@@ -388,6 +408,17 @@ module Ancestry
 
     def subtree_ids depth_options = {}
       subtree(depth_options).all(:select => :id).collect(&:id)
+    end
+    
+    # Callback disabling
+    def without_ancestry_callbacks
+      @disable_ancestry_callbacks = true
+      yield
+      @disable_ancestry_callbacks = false
+    end
+      
+    def ancestry_callbacks_disabled?
+      !!@disable_ancestry_callbacks
     end
   end
 end
