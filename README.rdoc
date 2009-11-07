@@ -218,8 +218,10 @@ The materialised path pattern requires Ancestry to use a 'like' condition in ord
 
 = Version history
 
-The latest and recommended version of ancestry is 1.1.3. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
+The latest and recommended version of ancestry is 1.1.4. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
 
+- Version 1.1.4 (2009-11-07)
+  - Thanks to a patch from tom taylor, Ancestry now works with different primary keys
 - Version 1.1.3 (2009-11-01)
   - Fixed a pretty bad bug where several operations took far too many queries
 - Version 1.1.2 (2009-10-29)
