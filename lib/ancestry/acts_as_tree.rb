@@ -285,7 +285,7 @@ module Ancestry
     end
 
     def ancestor_conditions
-      {:id => ancestor_ids}
+      {self.base_class.primary_key => ancestor_ids}
     end
 
     def ancestors depth_options = {}
@@ -297,7 +297,7 @@ module Ancestry
     end
 
     def path_conditions
-      {:id => path_ids}
+      {self.base_class.primary_key => path_ids}
     end
 
     def path depth_options = {}
@@ -352,7 +352,7 @@ module Ancestry
     end
 
     def child_ids
-      children.all(:select => :id).map(&:id)
+      children.all(:select => self.base_class.primary_key).map(&self.base_class.primary_key.to_sym)
     end
 
     def has_children?
@@ -373,7 +373,7 @@ module Ancestry
     end
 
     def sibling_ids
-       siblings.all(:select => :id).collect(&:id)
+       siblings.all(:select => self.base_class.primary_key).collect(&self.base_class.primary_key.to_sym)
     end
 
     def has_siblings?
@@ -394,12 +394,12 @@ module Ancestry
     end
 
     def descendant_ids depth_options = {}
-      descendants(depth_options).all(:select => :id).collect(&:id)
+      descendants(depth_options).all(:select => self.base_class.primary_key).collect(&self.base_class.primary_key.to_sym)
     end
     
     # Subtree
     def subtree_conditions
-      ["id = ? or #{self.base_class.ancestry_column} like ? or #{self.base_class.ancestry_column} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
+      ["#{self.base_class.primary_key} = ? or #{self.base_class.ancestry_column} like ? or #{self.base_class.ancestry_column} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
     end
 
     def subtree depth_options = {}
@@ -407,7 +407,7 @@ module Ancestry
     end
 
     def subtree_ids depth_options = {}
-      subtree(depth_options).all(:select => :id).collect(&:id)
+      subtree(depth_options).all(:select => self.base_class.primary_key).collect(&self.base_class.primary_key.to_sym)
     end
     
     # Callback disabling
