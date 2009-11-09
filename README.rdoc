@@ -7,21 +7,21 @@ Ancestry is a gem/plugin that allows the records of a Ruby on Rails ActiveRecord
 To apply Ancestry to any ActiveRecord model, follow these simple steps:
 
 1. Install gem
-   - Install gemcutter gem: sudo gem install gemcutter (maybe you need: gem update --system)
-   - Add gemcutter.org as default gem source: gem tumble
-   - Add to config/environment.rb: config.gem 'ancestry'
-   - Install required gems: sudo rake gems:install
+   - Install gemcutter gem: <b>sudo gem install gemcutter</b> (maybe you need: gem update --system)
+   - Add gemcutter.org as default gem source: <b>gem tumble</b>
+   - Add to config/environment.rb: <b>config.gem 'ancestry'</b>
+   - Install required gems: <b>sudo rake gems:install</b>
    - Alternatively: sudo gem install ancestry
    - If you don't want gemcutter: config.gem 'ancestry', :source => 'gemcutter.org'
    - Alternatively: sudo gem install ancestry --source gemcutter.org
 
 2. Add ancestry column to your table
-   - Create migration: ./script/generate migration add_ancestry_to_[table] ancestry:string
-   - Add index to migration: add_index [table], :ancestry (UP) / remove_index [table], :ancestry (DOWN)
-   - Migrate your database: rake db:migrate
+   - Create migration: <b>./script/generate migration add_ancestry_to_[table] ancestry:string</b>
+   - Add index to migration: <b>add_index [table], :ancestry</b> (UP) / <b>remove_index [table], :ancestry</b> (DOWN)
+   - Migrate your database: <b>rake db:migrate</b>
 
 3. Add ancestry to your model
-   - Add to app/models/[model].rb: acts_as_tree
+   - Add to app/models/[model].rb: <b>acts_as_tree</b>
 
 Your model is now a tree!
 
@@ -148,12 +148,12 @@ The arrange method also works on a scoped class, for example:
 
 = Migrating from plugin that uses parent_id column
 
-Most current tree plugins use a parent_id column (acts_as_tree, awesome_nested_set, better_nested_set, acts_as_nested_set). With ancestry its easy to migrate from any of these plugins, to do so, follow these steps:
+Most current tree plugins use a parent_id column (acts_as_tree, awesome_nested_set, better_nested_set, acts_as_nested_set). With ancestry its easy to migrate from any of these plugins, to do so, use the build_ancestry_from_parent_ids! method on your ancestry model. These steps provide a more detailed explanation:
 
 1. Add ancestry column to your table
-   - Create migration: ./script/generate migration add_ancestry_to_[table] ancestry:string
-   - Add index to migration: add_index [table], :ancestry (UP) / remove_index [table], :ancestry (DOWN)
-   - Migrate your database: rake db:migrate
+   - Create migration: <b>./script/generate migration add_ancestry_to_[table] ancestry:string</b>
+   - Add index to migration: <b>add_index [table], :ancestry</b> (UP) / <b>remove_index [table], :ancestry</b> (DOWN)
+   - Migrate your database: <b>rake db:migrate</b>
 
 2. Remove old tree plugin or gem and add in Ancestry
    - Remove plugin: rm -Rf vendor/plugins/[old plugin]
@@ -163,11 +163,11 @@ Most current tree plugins use a parent_id column (acts_as_tree, awesome_nested_s
   
 3. Change your model
    - Remove any macros required by old plugin/gem from app/models/[model].rb
-   - Add to app/models/[model].rb: acts_as_tree
+   - Add to app/models/[model].rb: <b>acts_as_tree</b>
 
-4. Migrate database
-   - In './script.console': [model].build_ancestry_from_parent_ids!
-   - Make sure it worked ok: [model].check_ancestry_integrity!
+4. Generate ancestry columns
+   - In './script.console': <b>[model].build_ancestry_from_parent_ids!</b>
+   - Make sure it worked ok: <b>[model].check_ancestry_integrity!</b>
 
 5. Change your code
    - Most tree calls will probably work fine with ancestry
@@ -175,9 +175,9 @@ Most current tree plugins use a parent_id column (acts_as_tree, awesome_nested_s
    - Check if all your data is intact and all tests pass
 
 6. Drop parent_id column:
-   - Create migration: ./script/generate migration remove_parent_id_from_[table]
-   - Add to migration: remove_column [table], :parent_id (UP) / add_column [table], :parent_id, :integer (DOWN)
-   - Migrate your database: rake db:migrate
+   - Create migration: <b>./script/generate migration remove_parent_id_from_[table]</b>
+   - Add to migration: <b>remove_column [table], :parent_id</b> (UP) / <b>add_column [table], :parent_id, :integer</b> (DOWN)
+   - Migrate your database: <b>rake db:migrate</b>
 
 = Integrity checking and restoration
 
