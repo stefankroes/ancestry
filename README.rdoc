@@ -271,6 +271,6 @@ I will try to keep Ancestry up to date with changing versions of Rails and Ruby 
 
 Bug report? Faulty/incomplete documentation? Feature request? Please post an issue on 'http://github.com/stefankroes/ancestry/issues'. Please also contact me at s.a.kroes[at]gmail.com if it's urgent.
 
-Question? Contact me at s.a.kroes[at]gmail.com, make sure you read the documentation.
+Question? Contact me at s.a.kroes[at]gmail.com, make sure you read the documentation. You can also join the #ancestry channel on IRC (irc.freenode.net).
 
 Copyright (c) 2009 Stefan Kroes, released under the MIT license
