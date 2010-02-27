@@ -1,11 +1,17 @@
 require File.dirname(__FILE__) + '/test_helper.rb'
 
+# Setup the required models for all test cases
+
 class TestNode < ActiveRecord::Base
-  acts_as_tree :cache_depth => true, :depth_cache_column => :depth_cache
+  has_ancestry :cache_depth => true, :depth_cache_column => :depth_cache
 end
 
 class AlternativeTestNode < ActiveRecord::Base
-  acts_as_tree :ancestry_column => :alternative_ancestry, :orphan_strategy => :rootify
+  has_ancestry :ancestry_column => :alternative_ancestry, :orphan_strategy => :rootify
+end
+
+class ActsAsTreeTestNode < ActiveRecord::Base
+  acts_as_tree
 end
 
 class ParentIdTestNode < ActiveRecord::Base
@@ -71,7 +77,7 @@ class ActsAsTreeTest < ActiveSupport::TestCase
   end
 
   def test_setup_test_nodes
-    [TestNode, AlternativeTestNode].each do |model|
+    [TestNode, AlternativeTestNode, ActsAsTreeTestNode].each do |model|
       roots = setup_test_nodes model, 3, 3
       assert_equal Array, roots.class
       assert_equal 3, roots.length
@@ -211,6 +217,9 @@ class ActsAsTreeTest < ActiveSupport::TestCase
       # Assertions for descendants_of named scope
       assert_equal test_node.descendants, TestNode.descendants_of(test_node)
       assert_equal test_node.descendants, TestNode.descendants_of(test_node.id)
+      # Assertions for subtree_of named scope
+      assert_equal test_node.subtree, TestNode.subtree_of(test_node)
+      assert_equal test_node.subtree, TestNode.subtree_of(test_node.id)
       # Assertions for siblings_of named scope
       assert_equal test_node.siblings, TestNode.siblings_of(test_node)
       assert_equal test_node.siblings, TestNode.siblings_of(test_node.id)
@@ -427,12 +436,12 @@ class ActsAsTreeTest < ActiveSupport::TestCase
     end
   end
   
-  def test_invalid_acts_as_tree_options
+  def test_invalid_has_ancestry_options
     assert_raise Ancestry::AncestryException do
-      Class.new(ActiveRecord::Base).acts_as_tree :this_option_doesnt_exist => 42
+      Class.new(ActiveRecord::Base).has_ancestry :this_option_doesnt_exist => 42
     end
     assert_raise Ancestry::AncestryException do
-      Class.new(ActiveRecord::Base).acts_as_tree :not_a_hash
+      Class.new(ActiveRecord::Base).has_ancestry :not_a_hash
     end
   end
   
@@ -448,7 +457,7 @@ class ActsAsTreeTest < ActiveSupport::TestCase
     # Assert all nodes where created
     assert_equal 156, ParentIdTestNode.count
 
-    ParentIdTestNode.acts_as_tree
+    ParentIdTestNode.has_ancestry
     ParentIdTestNode.build_ancestry_from_parent_ids!
 
     # Assert ancestry integirty
@@ -477,7 +486,7 @@ class ActsAsTreeTest < ActiveSupport::TestCase
   
   def test_rebuild_depth_cache
     setup_test_nodes TestNode, 3, 3
-    TestNode.find_by_sql("update test_nodes set depth_cache = null;")
+    TestNode.connection.execute("update test_nodes set depth_cache = null;")
     
     # Assert cache was emptied correctly
     TestNode.all.each do |test_node|
@@ -567,5 +576,33 @@ class ActsAsTreeTest < ActiveSupport::TestCase
     assert_equal [node1, node2, node3, node4, node5], node1.subtree
     assert_equal [node1, node2, node3, node4], node5.ancestors
     assert_equal [node1, node2, node3, node4, node5], node5.path
+  end
+  
+  def test_arrange_order_option
+    # In Ruby versions before 1.9 hashes aren't ordered so this doesn't make sense
+    unless RUBY_VERSION =~ /^1\.8/
+      roots = setup_test_nodes TestNode, 3, 3
+      descending_nodes_lvl0 = TestNode.arrange :order => 'id desc'
+      ascending_nodes_lvl0 = TestNode.arrange :order => 'id asc'
+
+      descending_nodes_lvl0.keys.zip(ascending_nodes_lvl0.keys.reverse).each do |descending_node, ascending_node|
+        assert_equal descending_node, ascending_node
+        descending_nodes_lvl1 = descending_nodes_lvl0[descending_node]
+        ascending_nodes_lvl1 = ascending_nodes_lvl0[ascending_node]
+        descending_nodes_lvl1.keys.zip(ascending_nodes_lvl1.keys.reverse).each do |descending_node, ascending_node|
+          assert_equal descending_node, ascending_node
+          descending_nodes_lvl2 = descending_nodes_lvl1[descending_node]
+          ascending_nodes_lvl2 = ascending_nodes_lvl1[ascending_node]
+          descending_nodes_lvl2.keys.zip(ascending_nodes_lvl2.keys.reverse).each do |descending_node, ascending_node|
+            assert_equal descending_node, ascending_node
+            descending_nodes_lvl3 = descending_nodes_lvl2[descending_node]
+            ascending_nodes_lvl3 = ascending_nodes_lvl2[ascending_node]
+            descending_nodes_lvl3.keys.zip(ascending_nodes_lvl3.keys.reverse).each do |descending_node, ascending_node|
+              assert_equal descending_node, ascending_node
+            end
+          end
+        end
+      end
+    end
   end
 end

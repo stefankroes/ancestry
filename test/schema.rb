@@ -17,4 +17,8 @@ ActiveRecord::Schema.define(:version => 0) do
     t.string :ancestry
     t.integer :parent_id
   end
+
+  create_table :acts_as_tree_test_nodes, :force => true do |t|
+    t.string :ancestry
+  end
 end

@@ -1,1 +1,1 @@
-require 'ancestry/acts_as_tree'
+require 'ancestry/has_ancestry'

@@ -21,9 +21,13 @@ To apply Ancestry to any ActiveRecord model, follow these simple steps:
    - Migrate your database: <b>rake db:migrate</b>
 
 3. Add ancestry to your model
-   - Add to app/models/[model].rb: <b>acts_as_tree</b>
+   - Add to app/models/[model].rb: <b>has_ancestry</b>
 
 Your model is now a tree!
+
+= Using acts_as_tree instead of has_ancestry
+
+In version 1.2.0 the <b>acts_as_tree</b> method was <b>renamed to has_ancestry</b> in order to allow usage of both the acts_as_tree gem and the ancestry gem in a single application. To not break backwards compatibility, the has_ancestry method is aliased with acts_as_tree if ActiveRecord::Base does not respond to acts_as_tree. acts_as_tree will continue to be supported in the future as I personally prefer it.
 
 = Organising records into a tree
 
@@ -62,9 +66,9 @@ To navigate an Ancestry model, use the following methods on any instance / recor
   subtree_ids      Returns a list of all ids in the record's subtree
   depth            Return the depth of the node, root nodes are at depth 0
 
-= Options for acts_as_tree 
+= Options for has_ancestry 
 
-The acts_as_tree methods supports the following options:
+The has_ancestry methods supports the following options:
 
   :ancestry_column       Pass in a symbol to store ancestry in a different column
   :orphan_strategy       Instruct Ancestry what to do with children of a node that is destroyed:
@@ -91,6 +95,7 @@ For convenience, a couple of named scopes are included at the class level:
   ancestors_of(node)      Ancestors of node, node can be either a record or an id
   children_of(node)       Children of node, node can be either a record or an id
   descendants_of(node)    Descendants of node, node can be either a record or an id
+  subtree_of(node)        Subtree of node, node can be either a record or an id
   siblings_of(node)       Siblings of node, node can be either a record or an id
 
 Thanks to some convenient rails magic, it is even possible to create nodes through the children and siblings scopes:
@@ -102,7 +107,7 @@ Thanks to some convenient rails magic, it is even possible to create nodes throu
 
 = Selecting nodes by depth
 
-When depth caching is enabled (see acts_as_tree options), five more named scopes can be used to select nodes on their depth:
+When depth caching is enabled (see has_ancestry options), five more named scopes can be used to select nodes on their depth:
 
   before_depth(depth)     Return nodes that are less deep than depth (node.depth < depth)
   to_depth(depth)         Return nodes up to a certain depth (node.depth <= depth)
@@ -146,9 +151,13 @@ The arrange method also works on a scoped class, for example:
 
   TreeNode.find_by_name('Crunchy').subtree.arrange
 
+The arrange method takes ActiveRecord find options. If you want your hashes to be ordered, you should pass the order to the arrange method instead of to the scope. This only works for Ruby 1.9 and later since before that hashes weren't ordered. For example:
+
+  TreeNode.find_by_name('Crunchy').subtree.arrange(:order => :name)
+
 = Migrating from plugin that uses parent_id column
 
-Most current tree plugins use a parent_id column (acts_as_tree, awesome_nested_set, better_nested_set, acts_as_nested_set). With ancestry its easy to migrate from any of these plugins, to do so, use the build_ancestry_from_parent_ids! method on your ancestry model. These steps provide a more detailed explanation:
+Most current tree plugins use a parent_id column (has_ancestry, awesome_nested_set, better_nested_set, acts_as_nested_set). With ancestry its easy to migrate from any of these plugins, to do so, use the build_ancestry_from_parent_ids! method on your ancestry model. These steps provide a more detailed explanation:
 
 1. Add ancestry column to your table
    - Create migration: <b>./script/generate migration add_ancestry_to_[table] ancestry:string</b>
@@ -163,7 +172,7 @@ Most current tree plugins use a parent_id column (acts_as_tree, awesome_nested_s
   
 3. Change your model
    - Remove any macros required by old plugin/gem from app/models/[model].rb
-   - Add to app/models/[model].rb: <b>acts_as_tree</b>
+   - Add to app/models/[model].rb: <b>has_ancestry</b>
 
 4. Generate ancestry columns
    - In './script.console': <b>[model].build_ancestry_from_parent_ids!</b>
@@ -206,7 +215,7 @@ Additionally, if you think something is wrong with your depth cache:
 
 = Tests
 
-The Ancestry gem comes with a unit test suite consisting of about 1800 assertions in about 30 tests. It takes about 10 seconds to run on sqlite. To run it yourself, install Ancestry as a plugin into a Rails application, go to the ancestry folder and type 'rake'. The test suite is located in 'test/acts_as_tree_test.rb'.
+The Ancestry gem comes with a unit test suite consisting of about 1800 assertions in about 30 tests. It takes about 10 seconds to run on sqlite. To run it yourself, install Ancestry as a plugin into a Rails application, go to the ancestry folder and type 'rake'. The test suite is located in 'test/has_ancestry_test.rb'.
 
 = Internals
 
@@ -218,8 +227,18 @@ The materialised path pattern requires Ancestry to use a 'like' condition in ord
 
 = Version history
 
-The latest and recommended version of ancestry is 1.1.4. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
+The latest and recommended version of ancestry is 1.2.0. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
 
+- Version 1.2.0 (2009-11-07)
+  - Removed some duplication in has_ancestry
+  - Cleaned up plugin pattern according to http://yehudakatz.com/2009/11/12/better-ruby-idioms/
+  - Moved parts of ancestry into seperate files
+  - Made it possible to pass options into the arrange method
+  - Renamed acts_as_tree to has_ancestry
+  - Aliased has_ancestry as acts_as_tree if acts_as_tree is available
+  - Added subtree_of scope
+  - Updated ordered_by_ancestry scope to support Microsoft SQL Server
+  - Added empty hash as parameter to exists? calls for older ActiveRecord versions
 - Version 1.1.4 (2009-11-07)
   - Thanks to a patch from tom taylor, Ancestry now works with different primary keys
 - Version 1.1.3 (2009-11-01)
@@ -248,7 +267,7 @@ The latest and recommended version of ancestry is 1.1.4. The three numbers of ea
   - acts_as_tree checks unknown options
   - acts_as_tree checks that options are hash
   - Added a bang (!) to the integrity functions
-    - Since these functions should only be used from ./script/console and not from your appliction, this change is not considered as breaking backwards compatibility and the major version wasn't bumped.
+    - Since these functions should only be used from ./script/console and not from your application, this change is not considered as breaking backwards compatibility and the major version wasn't bumped.
   - Updated install script to point to documentation
   - Removed rails specific init
   - Removed uninstall script
