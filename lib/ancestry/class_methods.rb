@@ -43,7 +43,7 @@ module Ancestry
             # Change the insertion point to children if node is a descendant of this parent
             insertion_point = children if ancestor_id == parent.id
           end; insertion_point
-        end[node] = {}; arranged_nodes
+        end[node] = ActiveSupport::OrderedHash.new; arranged_nodes
       end
     end
 
