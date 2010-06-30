@@ -141,7 +141,7 @@ module Ancestry
     end
 
     def has_children?
-      self.children.exists? {}
+      self.children.exists?({})
     end
 
     def is_childless?
