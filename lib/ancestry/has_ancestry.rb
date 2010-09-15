@@ -37,14 +37,14 @@ class << ActiveRecord::Base
     validate :ancestry_exclude_self
     
     # Named scopes
-    named_scope :roots, :conditions => {ancestry_column => nil}
-    named_scope :ancestors_of, lambda { |object| {:conditions => to_node(object).ancestor_conditions} }
-    named_scope :children_of, lambda { |object| {:conditions => to_node(object).child_conditions} }
-    named_scope :descendants_of, lambda { |object| {:conditions => to_node(object).descendant_conditions} }
-    named_scope :subtree_of, lambda { |object| {:conditions => to_node(object).subtree_conditions} }
-    named_scope :siblings_of, lambda { |object| {:conditions => to_node(object).sibling_conditions} }
-    named_scope :ordered_by_ancestry, :order => "(case when #{ancestry_column} is null then 0 else 1 end), #{ancestry_column}"
-    named_scope :ordered_by_ancestry_and, lambda { |order| {:order => "(case when #{ancestry_column} is null then 0 else 1 end), #{ancestry_column}, #{order}"} }
+    scope :roots, where(ancestry_column => nil)
+    scope :ancestors_of, lambda { |object| where(to_node(object).ancestor_conditions) }
+    scope :children_of, lambda { |object| where(to_node(object).child_conditions) }
+    scope :descendants_of, lambda { |object| where(to_node(object).descendant_conditions) }
+    scope :subtree_of, lambda { |object| where(to_node(object).subtree_conditions) }
+    scope :siblings_of, lambda { |object| where(to_node(object).sibling_conditions) }
+    scope :ordered_by_ancestry, order("(case when #{ancestry_column} is null then 0 else 1 end), #{ancestry_column}")
+    scope :ordered_by_ancestry_and, lambda { |arg| order("(case when #{ancestry_column} is null then 0 else 1 end), #{ancestry_column}, #{arg}") }
     
     # Update descendants with new ancestry before save
     before_save :update_descendants_with_new_ancestry
@@ -67,9 +67,9 @@ class << ActiveRecord::Base
     
     # Create named scopes for depth
     {:before_depth => '<', :to_depth => '<=', :at_depth => '=', :from_depth => '>=', :after_depth => '>'}.each do |scope_name, operator|
-      named_scope scope_name, lambda { |depth|
+      scope scope_name, lambda { |depth|
         raise Ancestry::AncestryException.new("Named scope '#{scope_name}' is only available when depth caching is enabled.") unless options[:cache_depth]
-        {:conditions => ["#{depth_cache_column} #{operator} ?", depth]}
+        where("#{depth_cache_column} #{operator} ?", depth)
       }
     end
   end
