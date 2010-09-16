@@ -1,31 +1,72 @@
-ENV['RAILS_ENV'] = 'test'
-ENV['RAILS_ROOT'] ||= File.dirname(__FILE__) + '/../../../..'
-
 require 'test/unit'
-require File.expand_path(File.join(ENV['RAILS_ROOT'], 'config/environment.rb'))
-require 'test_help'
+require 'rubygems'
+require 'active_record'
+require 'ancestry'
 
-def load_schema
-  config = YAML::load(IO.read(File.dirname(__FILE__) + '/database.yml'))
-  ActiveRecord::Base.logger = Logger.new(File.dirname(__FILE__) + "/debug.log")
-  db_adapter = ENV['DB']
-  # no db passed, try one of these fine config-free DBs before bombing.
-  db_adapter ||= begin
-    require 'rubygems'
-    require 'sqlite'
-    'sqlite'
-  rescue MissingSourceFile
-    begin
-      require 'sqlite3'
-      'sqlite3'
-    rescue MissingSourceFile
+ActiveRecord::Base.establish_connection :adapter  => "sqlite3",
+                                        :database => ":memory:"
+
+def setup_db
+  # AR keeps printing annoying schema statements
+  $stdout_orig = $stdout
+  $stdout = StringIO.new
+
+  ActiveRecord::Base.logger
+  ActiveRecord::Schema.define(:version => 0) do
+    create_table :test_nodes do |t|
+      t.string :ancestry
+      t.integer :depth_cache
+      t.string :type
+    end
+
+    create_table :alternative_test_nodes do |t|
+      t.string :alternative_ancestry
+    end
+
+    create_table :other_test_nodes do |t|
+      t.string :ancestry
+    end
+
+    create_table :parent_id_test_nodes do |t|
+      t.string :ancestry
+      t.integer :parent_id
+    end
+
+    create_table :acts_as_tree_test_nodes do |t|
+      t.string :ancestry
     end
   end
- 
-  if db_adapter.nil?
-    raise "No DB Adapter selected. Pass the DB= option to pick one, or install Sqlite or Sqlite3."
+
+  $stdout = $stdout_orig
+end
+
+def teardown_db
+  ActiveRecord::Base.connection.tables.each do |table|
+    ActiveRecord::Base.connection.drop_table(table)
   end
-  ActiveRecord::Base.establish_connection(config[db_adapter])
-  load(File.dirname(__FILE__) + "/schema.rb")
-  require File.dirname(__FILE__) + '/../init.rb'
+end
+
+# In order for the `has_ancestry` scopes to make use of the Rails
+# 3.1-compatible `where` method rather than use the old finder options, the
+# scopes must be initialized *after* the database has been created.
+#
+# If `has_ancestry` is declared directly in the classes above before the test
+# database has been created, ActiveRecord will complain and all tests will
+# fail. Hence the reason for the `setup_ancestry` method which can be run
+# after the database columns have been initialized.
+#
+def setup_ancestry
+  TestNode.instance_eval do
+    has_ancestry :cache_depth => true,
+                 :depth_cache_column => :depth_cache
+  end
+
+  AlternativeTestNode.instance_eval do
+    has_ancestry :ancestry_column => :alternative_ancestry,
+                 :orphan_strategy => :rootify
+  end
+
+  ActsAsTreeTestNode.instance_eval do
+    acts_as_tree
+  end
 end
