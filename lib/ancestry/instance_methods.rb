@@ -1,8 +1,8 @@
 module Ancestry
-  module InstanceMethods 
+  module InstanceMethods
     # Validate that the ancestors don't include itself
     def ancestry_exclude_self
-      errors.add_to_base "#{self.class.name.humanize} cannot be a descendant of itself." if ancestor_ids.include? self.id
+      add_error_to_base "#{self.class.name.humanize} cannot be a descendant of itself." if ancestor_ids.include? self.id
     end
 
     # Update descendants with new ancestry
@@ -204,6 +204,17 @@ module Ancestry
       
     def ancestry_callbacks_disabled?
       !!@disable_ancestry_callbacks
+    end
+    
+  private
+    
+    # Workaround to support Rails 2
+    def add_error_to_base error
+      if ActiveRecord::VERSION::MAJOR < 3
+        errors.add_to_base error
+      else
+        errors[:base] << error
+      end
     end
   end
 end

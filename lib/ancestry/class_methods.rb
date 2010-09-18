@@ -53,7 +53,7 @@ module Ancestry
       # For each node ...
       self.base_class.all.each do |node|
         # ... check validity of ancestry column
-        if !node.valid? and node.errors.invalid?(node.class.ancestry_column)
+        if !node.valid? and node.errors[node.class.ancestry_column].blank?
           raise Ancestry::AncestryIntegrityException.new("Invalid format for ancestry column of node #{node.id}: #{node.read_attribute node.ancestry_column}.")
         end
         # ... check that all ancestors exist
@@ -78,7 +78,7 @@ module Ancestry
       # For each node ...
       self.base_class.all.each do |node|
         # ... set its ancestry to nil if invalid
-        if node.errors.invalid? node.class.ancestry_column
+        if node.errors[node.class.ancestry_column].blank?
           node.without_ancestry_callbacks do
             node.update_attributes :ancestry => nil
           end
