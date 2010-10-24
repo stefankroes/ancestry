@@ -15,8 +15,8 @@ module Ancestry
           descendants.each do |descendant|
             # ... replace old ancestry with new ancestry
             descendant.without_ancestry_callbacks do
-              descendant.update_attributes(
-                self.base_class.ancestry_column =>
+              descendant.update_attribute(
+                self.base_class.ancestry_column,
                 descendant.read_attribute(descendant.class.ancestry_column).gsub(
                   /^#{self.child_ancestry}/, 
                   if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
@@ -38,7 +38,7 @@ module Ancestry
           if self.base_class.orphan_strategy == :rootify
             descendants.each do |descendant|
               descendant.without_ancestry_callbacks do
-                descendant.update_attributes descendant.class.ancestry_column => (if descendant.ancestry == child_ancestry then nil else descendant.ancestry.gsub(/^#{child_ancestry}\//, '') end)
+                descendant.update_attribute descendant.class.ancestry_column, (if descendant.ancestry == child_ancestry then nil else descendant.ancestry.gsub(/^#{child_ancestry}\//, '') end)
               end
             end
           # ... destroy all descendants if orphan strategy is destroy

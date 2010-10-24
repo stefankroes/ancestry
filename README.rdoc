@@ -227,13 +227,14 @@ The materialised path pattern requires Ancestry to use a 'like' condition in ord
 
 = Version history
 
-The latest and recommended version of ancestry is 1.2.0. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
+The latest and recommended version of ancestry is 1.2.2. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
 
-- Version 1.2.1 (2010-10-24)
+- Version 1.2.2 (2010-10-24)
   - Fixed all deprecation warnings for rails 3.0.X
   - Added :report option to check_ancestry_integrity!
   - Changed ActiveRecord dependency to 2.2.2
   - Tested and fixed for ruby 1.8.7 and 1.9.2
+  - Changed usage of update_attributes to update_attribute to allow ancestry column protection
 - Version 1.2.0 (2009-11-07)
   - Removed some duplication in has_ancestry
   - Cleaned up plugin pattern according to http://yehudakatz.com/2009/11/12/better-ruby-idioms/
