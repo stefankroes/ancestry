@@ -192,7 +192,7 @@ Most current tree plugins use a parent_id column (has_ancestry, awesome_nested_s
 
 I don't see any way Ancestry tree integrity could get compromised without explicitly setting cyclic parents or invalid ancestry and circumventing validation with update_attribute, if you do, please let me know. 
 
-Ancestry includes some methods for detecting integrity problems and restoring integrity just to be sure. To check integrity use: [Model].check_ancestry_integrity!. An AncestryIntegrityException will be raised if there are any problems. To restore integrity use: [Model].restore_ancestry_integrity!.
+Ancestry includes some methods for detecting integrity problems and restoring integrity just to be sure. To check integrity use: [Model].check_ancestry_integrity!. An AncestryIntegrityException will be raised if there are any problems. You can also specify :report => :list to return an array of exceptions or :report => :echo to echo any error messages. To restore integrity use: [Model].restore_ancestry_integrity!.
 
 For example, from IRB:
 
@@ -215,7 +215,7 @@ Additionally, if you think something is wrong with your depth cache:
 
 = Tests
 
-The Ancestry gem comes with a unit test suite consisting of about 1800 assertions in about 30 tests. It takes about 10 seconds to run on sqlite. To run it yourself, install Ancestry as a plugin into a Rails application, go to the ancestry folder and type 'rake'. The test suite is located in 'test/has_ancestry_test.rb'.
+The Ancestry gem comes with a unit test suite consisting of about 1800 assertions in about 30 tests. It takes about 10 seconds to run on sqlite. To run it yourself check out the repository from GitHub, copy test/database.example.yml to test/database.yml and type 'rake'. You can pass rake style options for ActiveRecord version to test against (e.g. ar=3.0.1) and database to test against (e.g. db=mysql). The test suite is located in test/has_ancestry_test.rb.
 
 = Internals
 
@@ -229,6 +229,11 @@ The materialised path pattern requires Ancestry to use a 'like' condition in ord
 
 The latest and recommended version of ancestry is 1.2.0. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
 
+- Version 1.2.1 (2010-10-24)
+  - Fixed all deprecation warnings for rails 3.0.X
+  - Added :report option to check_ancestry_integrity!
+  - Changed ActiveRecord dependency to 2.2.2
+  - Tested and fixed for ruby 1.8.7 and 1.9.2
 - Version 1.2.0 (2009-11-07)
   - Removed some duplication in has_ancestry
   - Cleaned up plugin pattern according to http://yehudakatz.com/2009/11/12/better-ruby-idioms/
