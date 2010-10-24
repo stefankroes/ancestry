@@ -210,10 +210,10 @@ module Ancestry
     
     # Workaround to support Rails 2
     def add_error_to_base error
-      if ActiveRecord::VERSION::MAJOR < 3
-        errors.add_to_base error
-      else
+      if rails_3
         errors[:base] << error
+      else
+        errors.add_to_base error
       end
     end
   end

@@ -1,64 +1,4 @@
-require 'rubygems'
-Gem.activate 'activerecord', ENV['ar'] || '3.0.0'
-require 'active_record'
-require 'active_support/test_case'
-require 'test/unit'
-require 'ancestry'
-
-class AncestryTestDatabase
-  def self.setup
-    ActiveRecord::Base.logger
-    ActiveRecord::Base.establish_connection YAML.load(File.open(File.join(File.dirname(__FILE__), 'database.yml')).read)[ENV['db'] || 'sqlite3']
-  end
-  
-  def self.with_model options = {}
-    depth         = options.delete(:depth) || 0
-    width         = options.delete(:width) || 0
-    extra_columns = options.delete(:extra_columns)
-    
-    ActiveRecord::Base.connection.create_table 'test_nodes' do |table|
-      table.string options[:ancestry_column] || :ancestry
-      table.integer options[:depth_cache_column] || :ancestry_depth if options[:cache_depth]
-      extra_columns.each do |name, type|
-        table.send type, name
-      end unless extra_columns.nil?
-    end
-
-    begin
-      model = Class.new(ActiveRecord::Base)
-      (class << model; self; end).send :define_method, :model_name do; Struct.new(:human, :underscore).new 'TestNode', 'test_node'; end
-      const_set 'TestNode', model
-
-      model.send :set_table_name, 'test_nodes'
-      model.has_ancestry options unless options.delete(:skip_ancestry)
-
-      if depth > 0
-        yield model, create_test_nodes(model, depth, width)
-      else
-        yield model
-      end
-    ensure
-      ActiveRecord::Base.connection.drop_table 'test_nodes'
-      remove_const "TestNode"
-    end
-  end
-  
-  def self.create_test_nodes model, depth, width, parent = nil
-    unless depth == 0
-      Array.new width do
-        node = model.create!(:parent => parent)
-        [node, create_test_nodes(model, depth - 1, width, node)]
-      end
-    else; []; end
-  end
-end
-
-AncestryTestDatabase.setup
-
-puts "\nRunning Ancestry test suite:"
-puts "  Ruby: #{RUBY_VERSION}"
-#puts "  ActiveRecord: #{ActiveRecord::VERSION::STRING}"
-puts "  Database: #{ActiveRecord::Base.connection.adapter_name}\n\n"
+require File.join(File.expand_path(File.dirname(__FILE__)), "environment")
 
 class HasAncestryTreeTest < ActiveSupport::TestCase
   def test_default_ancestry_column
@@ -348,6 +288,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_nothing_raised do
         model.check_ancestry_integrity!
       end
+      assert_equal 0, model.check_ancestry_integrity!(:report => :list).size
     end
   
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
@@ -356,6 +297,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_raise Ancestry::AncestryIntegrityException do
         model.check_ancestry_integrity!
       end
+      assert_equal 1, model.check_ancestry_integrity!(:report => :list).size
     end
     
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
@@ -364,6 +306,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_raise Ancestry::AncestryIntegrityException do
         model.check_ancestry_integrity!
       end
+      assert_equal 1, model.check_ancestry_integrity!(:report => :list).size
     end
   
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
@@ -373,6 +316,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_raise Ancestry::AncestryIntegrityException do
         model.check_ancestry_integrity!
       end
+      assert_equal 1, model.check_ancestry_integrity!(:report => :list).size
     end
   
     AncestryTestDatabase.with_model do |model|
@@ -382,6 +326,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_raise Ancestry::AncestryIntegrityException do
         model.check_ancestry_integrity!
       end
+      assert_equal 1, model.check_ancestry_integrity!(:report => :list).size
     end
   end
   
@@ -533,8 +478,8 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     
       # Assert all nodes where created
-      assert_equal 156, model.count
-  
+      assert_equal (0..3).map { |n| 5 ** n }.sum, model.count
+      
       model.has_ancestry
       model.build_ancestry_from_parent_ids!
   
@@ -549,13 +494,13 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
   
       # Assert it has 5 children
       roots.each do |parent|
-        assert 5, parent.children.count
+        assert_equal 5, parent.children.count
         parent.children.each do |parent|
-          assert 5, parent.children.count
+          assert_equal 5, parent.children.count
           parent.children.each do |parent|
-            assert 5, parent.children.count
+            assert_equal 5, parent.children.count
             parent.children.each do |parent|
-              assert 0, parent.children.count
+              assert_equal 0, parent.children.count
             end
           end
         end

@@ -36,8 +36,12 @@ class << ActiveRecord::Base
     # Validate that the ancestor ids don't include own id
     validate :ancestry_exclude_self
     
+    # Save ActiveRecord version
+    self.cattr_accessor :rails_3
+    self.rails_3 = defined?(ActiveRecord::VERSION) and ActiveRecord::VERSION::MAJOR >= 3
+    
     # Workaround to support Rails 2
-    scope_method = if ActiveRecord::VERSION::MAJOR < 3 then :named_scope else :scope end
+    scope_method = if rails_3 then :scope else :named_scope end
 
     
     # Named scopes
