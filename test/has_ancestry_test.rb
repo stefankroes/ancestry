@@ -213,6 +213,18 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
         node.valid?; assert !node.errors[model.ancestry_column].blank?
       end
     end
+
+    AncestryTestDatabase.with_model :primary_key_format => /[0-9a-z]+/ do |model|
+      node = model.create
+      ['xk7', '9x1/l4n', 'r1c/4z9/8ps', nil].each do |value|
+        node.send :write_attribute, model.ancestry_column, value
+        node.valid?; assert node.errors[model.ancestry_column].blank?
+      end
+      ['s9a/xk2/', '/s92/d92', 'X', 'X/Y', 'S23', '/xk2'].each do |value|
+        node.send :write_attribute, model.ancestry_column, value
+        node.valid?; assert !node.errors[model.ancestry_column].blank?
+      end
+    end
   end
   
   def test_descendants_move_with_node
