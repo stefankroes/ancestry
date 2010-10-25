@@ -80,6 +80,8 @@ The has_ancestry methods supports the following options:
                          - Migrate: add_column [table], :ancestry_depth, :integer, :default => 0
                          - Build cache: TreeNode.rebuild_depth_cache!
   :depth_cache_column    Pass in a symbol to store depth cache in a different column
+  :primary_key_format    Supply a regular expression that matches the format of your primary key.
+                         By default, primary keys only match integers ([0-9]+).
 
 = (Named) Scopes
 
