@@ -6,14 +6,13 @@ Ancestry is a gem/plugin that allows the records of a Ruby on Rails ActiveRecord
 
 To apply Ancestry to any ActiveRecord model, follow these simple steps:
 
-1. Install gem
-   - Install gemcutter gem: <b>sudo gem install gemcutter</b> (maybe you need: gem update --system)
-   - Add gemcutter.org as default gem source: <b>gem tumble</b>
-   - Add to config/environment.rb: <b>config.gem 'ancestry'</b>
-   - Install required gems: <b>sudo rake gems:install</b>
-   - Alternatively: sudo gem install ancestry
-   - If you don't want gemcutter: config.gem 'ancestry', :source => 'gemcutter.org'
-   - Alternatively: sudo gem install ancestry --source gemcutter.org
+1. Install
+   - <b>Rails 2</b>
+     - Add to config/environment.rb: <b>config.gem 'ancestry'</b>
+     - Install required gems: <b>sudo rake gems:install</b>
+   - <b>Rails 3</b>
+     - Add to Gemfile: <b>gem 'ancestry'</b>
+     - Install required gems: <b>bundle install</b>
 
 2. Add ancestry column to your table
    - Create migration: <b>./script/generate migration add_ancestry_to_[table] ancestry:string</b>
