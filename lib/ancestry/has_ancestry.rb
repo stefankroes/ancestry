@@ -31,8 +31,8 @@ class << ActiveRecord::Base
     self.base_class = self
     
     # Validate format of ancestry column value
-    key_format = options[:primary_key_format] || /[0-9]+/
-    validates_format_of ancestry_column, :with => /\A#{key_format.source}(\/#{key_format.source})*\Z/, :allow_nil => true
+    primary_key_format = options[:primary_key_format] || /[0-9]+/
+    validates_format_of ancestry_column, :with => /\A#{primary_key_format.source}(\/#{primary_key_format.source})*\Z/, :allow_nil => true
 
     # Validate that the ancestor ids don't include own id
     validate :ancestry_exclude_self
@@ -44,7 +44,6 @@ class << ActiveRecord::Base
     # Workaround to support Rails 2
     scope_method = if rails_3 then :scope else :named_scope end
 
-    
     # Named scopes
     send scope_method, :roots, :conditions => {ancestry_column => nil}
     send scope_method, :ancestors_of, lambda { |object| {:conditions => to_node(object).ancestor_conditions} }

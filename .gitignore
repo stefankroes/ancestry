@@ -3,3 +3,4 @@ doc
 **/*.log
 **/*.db
 test/database.yml
+coverage
