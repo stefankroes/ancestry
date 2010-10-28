@@ -39,7 +39,7 @@ class << ActiveRecord::Base
     
     # Save ActiveRecord version
     self.cattr_accessor :rails_3
-    self.rails_3 = defined?(ActiveRecord::VERSION) and ActiveRecord::VERSION::MAJOR >= 3
+    self.rails_3 = defined?(ActiveRecord::VERSION) && ActiveRecord::VERSION::MAJOR >= 3
     
     # Workaround to support Rails 2
     scope_method = if rails_3 then :scope else :named_scope end
