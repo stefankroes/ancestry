@@ -15,7 +15,7 @@ To apply Ancestry to any ActiveRecord model, follow these simple steps:
      - Install required gems: <b>bundle install</b>
 
 2. Add ancestry column to your table
-   - Create migration: <b>./script/generate migration add_ancestry_to_[table] ancestry:string</b>
+   - Create migration: <b>rails g migration add_ancestry_to_[table] ancestry:string</b>
    - Add index to migration: <b>add_index [table], :ancestry</b> (UP) / <b>remove_index [table], :ancestry</b> (DOWN)
    - Migrate your database: <b>rake db:migrate</b>
 
@@ -161,7 +161,7 @@ The arrange method takes ActiveRecord find options. If you want your hashes to b
 Most current tree plugins use a parent_id column (has_ancestry, awesome_nested_set, better_nested_set, acts_as_nested_set). With ancestry its easy to migrate from any of these plugins, to do so, use the build_ancestry_from_parent_ids! method on your ancestry model. These steps provide a more detailed explanation:
 
 1. Add ancestry column to your table
-   - Create migration: <b>./script/generate migration add_ancestry_to_[table] ancestry:string</b>
+   - Create migration: <b>rails g migration add_ancestry_to_[table] ancestry:string</b>
    - Add index to migration: <b>add_index [table], :ancestry</b> (UP) / <b>remove_index [table], :ancestry</b> (DOWN)
    - Migrate your database: <b>rake db:migrate</b>
 
@@ -185,7 +185,7 @@ Most current tree plugins use a parent_id column (has_ancestry, awesome_nested_s
    - Check if all your data is intact and all tests pass
 
 6. Drop parent_id column:
-   - Create migration: <b>./script/generate migration remove_parent_id_from_[table]</b>
+   - Create migration: <b>rails g migration remove_parent_id_from_[table]</b>
    - Add to migration: <b>remove_column [table], :parent_id</b> (UP) / <b>add_column [table], :parent_id, :integer</b> (DOWN)
    - Migrate your database: <b>rake db:migrate</b>
 
