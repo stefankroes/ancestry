@@ -6,13 +6,13 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_equal :ancestry, model.ancestry_column
     end
   end
-  
+
   def test_non_default_ancestry_column
     AncestryTestDatabase.with_model :ancestry_column => :alternative_ancestry do |model|
       assert_equal :alternative_ancestry, model.ancestry_column
     end
   end
-  
+
   def test_setting_ancestry_column
     AncestryTestDatabase.with_model do |model|
       model.ancestry_column = :ancestors
@@ -21,19 +21,19 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_equal :ancestry, model.ancestry_column
     end
   end
-  
+
   def test_default_orphan_strategy
     AncestryTestDatabase.with_model do |model|
       assert_equal :destroy, model.orphan_strategy
     end
   end
-  
+
   def test_non_default_orphan_strategy
     AncestryTestDatabase.with_model :orphan_strategy => :rootify do |model|
       assert_equal :rootify, model.orphan_strategy
     end
   end
-  
+
   def test_setting_orphan_strategy
     AncestryTestDatabase.with_model do |model|
       model.orphan_strategy = :rootify
@@ -42,7 +42,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_equal :destroy, model.orphan_strategy
     end
   end
-  
+
   def test_setting_invalid_orphan_strategy
     AncestryTestDatabase.with_model do |model|
       assert_raise Ancestry::AncestryException do
@@ -50,7 +50,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_setup_test_nodes
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       assert_equal Array, roots.class
@@ -72,7 +72,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_tree_navigation
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       roots.each do |lvl0_node, lvl0_children|
@@ -106,7 +106,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
         assert_equal descendants.map(&:id), lvl0_node.descendant_ids
         assert_equal descendants, lvl0_node.descendants
         assert_equal [lvl0_node] + descendants, lvl0_node.subtree
-      
+
         lvl0_children.each do |lvl1_node, lvl1_children|
           # Ancestors assertions
           assert_equal [lvl0_node.id], lvl1_node.ancestor_ids
@@ -138,7 +138,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
           assert_equal descendants.map(&:id), lvl1_node.descendant_ids
           assert_equal descendants, lvl1_node.descendants
           assert_equal [lvl1_node] + descendants, lvl1_node.subtree
-  
+
           lvl1_children.each do |lvl2_node, lvl2_children|
             # Ancestors assertions
             assert_equal [lvl0_node.id, lvl1_node.id], lvl2_node.ancestor_ids
@@ -176,11 +176,40 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
+  def test_ancestors_with_string_primary_keys
+    AncestryTestDatabase.with_model :depth => 3, :width => 3, :primary_key_type => :string, :primary_key_format => /[a-z0-9]+/ do |model, roots|
+      roots.each do |lvl0_node, lvl0_children|
+        # Ancestors assertions
+        assert_equal [], lvl0_node.ancestor_ids
+        assert_equal [], lvl0_node.ancestors
+        assert_equal [lvl0_node.id], lvl0_node.path_ids
+        assert_equal [lvl0_node], lvl0_node.path
+        assert_equal 0, lvl0_node.depth
+        lvl0_children.each do |lvl1_node, lvl1_children|
+          # Ancestors assertions
+          assert_equal [lvl0_node.id], lvl1_node.ancestor_ids
+          assert_equal [lvl0_node], lvl1_node.ancestors
+          assert_equal [lvl0_node.id, lvl1_node.id], lvl1_node.path_ids
+          assert_equal [lvl0_node, lvl1_node], lvl1_node.path
+          assert_equal 1, lvl1_node.depth
+          lvl1_children.each do |lvl2_node, lvl2_children|
+            # Ancestors assertions
+            assert_equal [lvl0_node.id, lvl1_node.id], lvl2_node.ancestor_ids
+            assert_equal [lvl0_node, lvl1_node], lvl2_node.ancestors
+            assert_equal [lvl0_node.id, lvl1_node.id, lvl2_node.id], lvl2_node.path_ids
+            assert_equal [lvl0_node, lvl1_node, lvl2_node], lvl2_node.path
+            assert_equal 2, lvl2_node.depth
+          end
+        end
+      end
+    end
+  end
+
   def test_scopes
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       # Roots assertion
       assert_equal roots.map(&:first), model.roots.all
-    
+
       model.all.each do |test_node|
         # Assertions for ancestors_of named scope
         assert_equal test_node.ancestors.all, model.ancestors_of(test_node).all
@@ -200,7 +229,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_ancestry_column_validation
     AncestryTestDatabase.with_model do |model|
       node = model.create
@@ -226,7 +255,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_descendants_move_with_node
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       root1, root2, root3 = roots.map(&:first)
@@ -252,7 +281,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_orphan_rootify_strategy
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       model.orphan_strategy = :rootify
@@ -266,7 +295,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_orphan_destroy_strategy
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       model.orphan_strategy = :destroy
@@ -280,7 +309,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_orphan_restrict_strategy
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       model.orphan_strategy = :restrict
@@ -293,7 +322,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_integrity_checking
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
       # Check that there are no errors on a valid tree
@@ -302,7 +331,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
       assert_equal 0, model.check_ancestry_integrity!(:report => :list).size
     end
-  
+
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
       # Check detection of invalid format for ancestry column
       roots.first.first.update_attribute model.ancestry_column, 'invalid_ancestry'
@@ -311,7 +340,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
       assert_equal 1, model.check_ancestry_integrity!(:report => :list).size
     end
-    
+
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
       # Check detection of non-existent ancestor
       roots.first.first.update_attribute model.ancestry_column, 35
@@ -320,7 +349,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
       assert_equal 1, model.check_ancestry_integrity!(:report => :list).size
     end
-  
+
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
       # Check detection of cyclic ancestry
       node = roots.first.first
@@ -330,7 +359,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
       assert_equal 1, model.check_ancestry_integrity!(:report => :list).size
     end
-  
+
     AncestryTestDatabase.with_model do |model|
       # Check detection of conflicting parent id
       model.destroy_all
@@ -341,7 +370,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_equal 1, model.check_ancestry_integrity!(:report => :list).size
     end
   end
-  
+
   def assert_integrity_restoration model
     assert_raise Ancestry::AncestryIntegrityException do
       model.check_ancestry_integrity!
@@ -350,28 +379,28 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     assert_nothing_raised do
       model.check_ancestry_integrity!
     end
-  end    
-  
+  end
+
   def test_integrity_restoration
     # Check that integrity is restored for invalid format for ancestry column
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
       roots.first.first.update_attribute model.ancestry_column, 'invalid_ancestry'
       assert_integrity_restoration model
     end
-    
+
     # Check that integrity is restored for non-existent ancestor
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
       roots.first.first.update_attribute model.ancestry_column, 35
       assert_integrity_restoration model
     end
-  
+
     # Check that integrity is restored for cyclic ancestry
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
       node = roots.first.first
       node.update_attribute model.ancestry_column, node.id
       assert_integrity_restoration model
     end
-  
+
     # Check that integrity is restored for conflicting parent id
     AncestryTestDatabase.with_model do |model|
       model.destroy_all
@@ -379,7 +408,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_integrity_restoration model
     end
   end
-  
+
   def test_arrangement
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       id_sorter = Proc.new do |a, b|; a.id <=> b.id; end
@@ -396,26 +425,26 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_node_creation_though_scope
     AncestryTestDatabase.with_model do |model|
       node = model.create!
       child = node.children.create
-      assert_equal node, child.parent 
-  
+      assert_equal node, child.parent
+
       other_child = child.siblings.create!
       assert_equal node, other_child.parent
-  
+
       grandchild = model.children_of(child).new
       grandchild.save
       assert_equal child, grandchild.parent
-  
+
       other_grandchild = model.siblings_of(grandchild).new
       other_grandchild.save!
       assert_equal child, other_grandchild.parent
     end
   end
-  
+
   def test_validate_ancestry_exclude_self
     AncestryTestDatabase.with_model do |model|
       parent = model.create!
@@ -425,7 +454,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_depth_caching
     AncestryTestDatabase.with_model :depth => 3, :width => 3, :cache_depth => true, :depth_cache_column => :depth_cache do |model, roots|
       roots.each do |lvl0_node, lvl0_children|
@@ -439,7 +468,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_depth_scopes
     AncestryTestDatabase.with_model :depth => 4, :width => 2, :cache_depth => true do |model, roots|
       model.before_depth(2).all? { |node| assert node.depth < 2 }
@@ -449,7 +478,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       model.after_depth(2).all?  { |node| assert node.depth > 2 }
     end
   end
-  
+
   def test_depth_scopes_unavailable
     AncestryTestDatabase.with_model do |model|
       assert_raise Ancestry::AncestryException do
@@ -469,7 +498,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_invalid_has_ancestry_options
     assert_raise Ancestry::AncestryException do
       Class.new(ActiveRecord::Base).has_ancestry :this_option_doesnt_exist => 42
@@ -478,7 +507,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       Class.new(ActiveRecord::Base).has_ancestry :not_a_hash
     end
   end
-  
+
   def test_build_ancestry_from_parent_ids
     AncestryTestDatabase.with_model :skip_ancestry => true, :extra_columns => {:parent_id => :integer} do |model|
       [model.create!].each do |parent|
@@ -488,22 +517,22 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
           end
         end
       end
-    
+
       # Assert all nodes where created
       assert_equal (0..3).map { |n| 5 ** n }.sum, model.count
-      
+
       model.has_ancestry
       model.build_ancestry_from_parent_ids!
-  
+
       # Assert ancestry integrity
       assert_nothing_raised do
         model.check_ancestry_integrity!
       end
-  
+
       roots = model.roots.all
       # Assert single root node
       assert_equal 1, roots.size
-  
+
       # Assert it has 5 children
       roots.each do |parent|
         assert_equal 5, parent.children.count
@@ -519,26 +548,26 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_rebuild_depth_cache
     AncestryTestDatabase.with_model :depth => 3, :width => 3, :cache_depth => true, :depth_cache_column => :depth_cache do |model, roots|
       model.connection.execute("update test_nodes set depth_cache = null;")
-    
+
       # Assert cache was emptied correctly
       model.all.each do |test_node|
         assert_equal nil, test_node.depth_cache
       end
-    
+
       # Rebuild cache
       model.rebuild_depth_cache!
-    
+
       # Assert cache was rebuild correctly
       model.all.each do |test_node|
         assert_equal test_node.depth, test_node.depth_cache
       end
     end
   end
-  
+
   def test_exception_when_rebuilding_depth_cache_for_model_without_depth_caching
     AncestryTestDatabase.with_model do |model|
       assert_raise Ancestry::AncestryException do
@@ -546,7 +575,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_descendants_with_depth_constraints
     AncestryTestDatabase.with_model :depth => 4, :width => 4, :cache_depth => true do |model, roots|
       assert_equal 4, model.roots.first.descendants(:before_depth => 2).count
@@ -556,7 +585,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_equal 64, model.roots.first.descendants(:after_depth => 2).count
     end
   end
-  
+
   def test_subtree_with_depth_constraints
     AncestryTestDatabase.with_model :depth => 4, :width => 4, :cache_depth => true do |model, roots|
       assert_equal 5, model.roots.first.subtree(:before_depth => 2).count
@@ -566,8 +595,8 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_equal 64, model.roots.first.subtree(:after_depth => 2).count
     end
   end
-  
-  
+
+
   def test_ancestors_with_depth_constraints
     AncestryTestDatabase.with_model :cache_depth => true do |model|
       node1 = model.create!
@@ -576,7 +605,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       node4 = node3.children.create!
       node5 = node4.children.create!
       leaf  = node5.children.create!
-  
+
       assert_equal [node1, node2, node3],        leaf.ancestors(:before_depth => -2)
       assert_equal [node1, node2, node3, node4], leaf.ancestors(:to_depth => -2)
       assert_equal [node4],                      leaf.ancestors(:at_depth => -2)
@@ -584,7 +613,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_equal [node5],                      leaf.ancestors(:after_depth => -2)
     end
   end
-  
+
   def test_path_with_depth_constraints
     AncestryTestDatabase.with_model :cache_depth => true do |model|
       node1 = model.create!
@@ -593,7 +622,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       node4 = node3.children.create!
       node5 = node4.children.create!
       leaf  = node5.children.create!
-  
+
       assert_equal [node1, node2, node3],        leaf.path(:before_depth => -2)
       assert_equal [node1, node2, node3, node4], leaf.path(:to_depth => -2)
       assert_equal [node4],                      leaf.path(:at_depth => -2)
@@ -601,7 +630,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_equal [node5, leaf],                leaf.path(:after_depth => -2)
     end
   end
-  
+
   def test_exception_on_unknown_depth_column
     AncestryTestDatabase.with_model :cache_depth => true do |model|
       assert_raise Ancestry::AncestryException do
@@ -609,20 +638,20 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_sti_support
     AncestryTestDatabase.with_model :extra_columns => {:type => :string} do |model|
       subclass1 = Object.const_set 'Subclass1', Class.new(model)
       (class << subclass1; self; end).send :define_method, :model_name do; Struct.new(:human, :underscore).new 'Subclass1', 'subclass1'; end
       subclass2 = Object.const_set 'Subclass2', Class.new(model)
       (class << subclass2; self; end).send :define_method, :model_name do; Struct.new(:human, :underscore).new 'Subclass1', 'subclass1'; end
-      
+
       node1 = subclass1.create!
       node2 = subclass2.create! :parent => node1
       node3 = subclass1.create! :parent => node2
       node4 = subclass2.create! :parent => node3
       node5 = subclass1.create! :parent => node4
-      
+
       model.all.each do |node|
         assert [subclass1, subclass2].include?(node.class)
       end
@@ -633,12 +662,12 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_equal [node1.id, node2.id, node3.id, node4.id, node5.id], node5.path.map(&:id)
     end
   end
-  
+
   def test_arrange_order_option
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
       descending_nodes_lvl0 = model.arrange :order => 'id desc'
       ascending_nodes_lvl0 = model.arrange :order => 'id asc'
-  
+
       descending_nodes_lvl0.keys.zip(ascending_nodes_lvl0.keys.reverse).each do |descending_node, ascending_node|
         assert_equal descending_node, ascending_node
         descending_nodes_lvl1 = descending_nodes_lvl0[descending_node]
