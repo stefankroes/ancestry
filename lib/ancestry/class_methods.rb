@@ -52,7 +52,7 @@ module Ancestry
       parents = {}
       exceptions = [] if options[:report] == :list
       # For each node ...
-      self.base_class.all.each do |node|
+      self.base_class.find_each do |node|
         begin
           # ... check validity of ancestry column
           if !node.valid? and !node.errors[node.class.ancestry_column].blank?
@@ -86,7 +86,7 @@ module Ancestry
     def restore_ancestry_integrity!
       parents = {}
       # For each node ...
-      self.base_class.all.each do |node|
+      self.base_class.find_each do |node|
         # ... set its ancestry to nil if invalid
         if node.errors[node.class.ancestry_column].blank?
           node.without_ancestry_callbacks do
@@ -104,7 +104,7 @@ module Ancestry
         parents[node.id] = nil if parent == node.id 
       end
       # For each node ...
-      self.base_class.all.each do |node|
+      self.base_class.find_each do |node|
         # ... rebuild ancestry from parents array
         ancestry, parent = nil, parents[node.id]
         until parent.nil?
@@ -118,7 +118,7 @@ module Ancestry
     
     # Build ancestry from parent id's for migration purposes
     def build_ancestry_from_parent_ids! parent_id = nil, ancestry = nil
-      self.base_class.all(:conditions => {:parent_id => parent_id}).each do |node|
+      self.base_class.find_each(:conditions => {:parent_id => parent_id}) do |node|
         node.without_ancestry_callbacks do
           node.update_attribute ancestry_column, ancestry
         end
@@ -129,7 +129,7 @@ module Ancestry
     # Rebuild depth cache if it got corrupted or if depth caching was just turned on
     def rebuild_depth_cache!
       raise Ancestry::AncestryException.new("Cannot rebuild depth cache for model without depth caching.") unless respond_to? :depth_cache_column
-      self.base_class.all.each do |node|
+      self.base_class.find_each do |node|
         node.update_attribute depth_cache_column, node.depth
       end
     end
