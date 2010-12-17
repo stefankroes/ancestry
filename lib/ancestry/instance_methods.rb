@@ -171,7 +171,7 @@ module Ancestry
 
     # Descendants
     def descendant_conditions
-      ["#{self.base_class.ancestry_column} like ? or #{self.base_class.ancestry_column} = ?", "#{child_ancestry}/%", child_ancestry]
+      ["#{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", "#{child_ancestry}/%", child_ancestry]
     end
 
     def descendants depth_options = {}
@@ -184,7 +184,7 @@ module Ancestry
 
     # Subtree
     def subtree_conditions
-      ["#{self.base_class.primary_key} = ? or #{self.base_class.ancestry_column} like ? or #{self.base_class.ancestry_column} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
+      ["#{self.base_class.table_name}.#{self.base_class.primary_key} = ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
     end
 
     def subtree depth_options = {}
