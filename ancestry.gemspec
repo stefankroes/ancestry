@@ -23,15 +23,15 @@ EOF
   s.license  = 'MIT'
 
   s.files = [
-    'ancestry.gemspec', 
-    'init.rb', 
-    'install.rb', 
-    'lib/ancestry.rb', 
-    'lib/ancestry/has_ancestry.rb', 
-    'lib/ancestry/exceptions.rb', 
-    'lib/ancestry/class_methods.rb', 
-    'lib/ancestry/instance_methods.rb', 
-    'MIT-LICENSE', 
+    'ancestry.gemspec',
+    'init.rb',
+    'install.rb',
+    'lib/ancestry.rb',
+    'lib/ancestry/has_ancestry.rb',
+    'lib/ancestry/exceptions.rb',
+    'lib/ancestry/class_methods.rb',
+    'lib/ancestry/instance_methods.rb',
+    'MIT-LICENSE',
     'README.rdoc'
   ]
   
