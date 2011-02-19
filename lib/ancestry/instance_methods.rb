@@ -145,6 +145,10 @@ module Ancestry
       write_attribute self.ancestry_base_class.depth_cache_column, depth
     end
 
+    def ancestor_of?(node)
+      node.ancestor_ids.include?(self.id)
+    end
+
     # Parent
 
     def parent= parent
@@ -167,6 +171,10 @@ module Ancestry
       parent_id.present?
     end
 
+    def parent_of?(node)
+      self.id == node.parent_id
+    end
+
     # Root
 
     def root_id
@@ -181,6 +189,10 @@ module Ancestry
       read_attribute(self.ancestry_base_class.ancestry_column).blank?
     end
     alias :root? :is_root?
+
+    def root_of?(node)
+      self.id == node.root_id
+    end
 
     # Children
 
@@ -207,6 +219,10 @@ module Ancestry
     end
     alias_method :childless?, :is_childless?
 
+    def child_of?(node)
+      self.parent_id == node.id
+    end
+
     # Siblings
 
     def sibling_conditions
@@ -232,6 +248,10 @@ module Ancestry
     end
     alias_method :only_child?, :is_only_child?
 
+    def sibling_of?(node)
+      self.ancestry == node.ancestry
+    end
+
     # Descendants
 
     def descendant_conditions
@@ -245,6 +265,10 @@ module Ancestry
 
     def descendant_ids depth_options = {}
       descendants(depth_options).select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
+    end
+
+    def descendant_of?(node)
+      ancestor_ids.include?(node.id)
     end
 
     # Subtree
