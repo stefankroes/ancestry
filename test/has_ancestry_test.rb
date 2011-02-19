@@ -99,6 +99,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
         assert_equal roots.map(&:first), lvl0_node.siblings
         assert lvl0_node.has_siblings?
         assert !lvl0_node.is_only_child?
+        assert lvl0_node.sibling_of?(lvl0_node)
         # Descendants assertions
         descendants = model.all.find_all do |node|
           node.ancestor_ids.include? lvl0_node.id
@@ -114,23 +115,29 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
           assert_equal [lvl0_node.id, lvl1_node.id], lvl1_node.path_ids
           assert_equal [lvl0_node, lvl1_node], lvl1_node.path
           assert_equal 1, lvl1_node.depth
+          assert lvl0_node.ancestor_of?(lvl1_node)
           # Parent assertions
           assert_equal lvl0_node.id, lvl1_node.parent_id
           assert_equal lvl0_node, lvl1_node.parent
+          assert lvl0_node.parent_of?(lvl1_node)
           # Root assertions
           assert_equal lvl0_node.id, lvl1_node.root_id
           assert_equal lvl0_node, lvl1_node.root
           assert !lvl1_node.is_root?
+          assert lvl0_node.root_of?(lvl1_node)
           # Children assertions
           assert_equal lvl1_children.map(&:first).map(&:id), lvl1_node.child_ids
           assert_equal lvl1_children.map(&:first), lvl1_node.children
           assert lvl1_node.has_children?
           assert !lvl1_node.is_childless?
+          assert lvl1_node.child_of?(lvl0_node)
           # Siblings assertions
           assert_equal lvl0_children.map(&:first).map(&:id), lvl1_node.sibling_ids
           assert_equal lvl0_children.map(&:first), lvl1_node.siblings
           assert lvl1_node.has_siblings?
           assert !lvl1_node.is_only_child?
+          assert !lvl1_node.sibling_of?(lvl0_node)
+          assert lvl1_node.sibling_of?(lvl1_node)
           # Descendants assertions
           descendants = model.all.find_all do |node|
             node.ancestor_ids.include? lvl1_node.id
@@ -138,6 +145,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
           assert_equal descendants.map(&:id), lvl1_node.descendant_ids
           assert_equal descendants, lvl1_node.descendants
           assert_equal [lvl1_node] + descendants, lvl1_node.subtree
+          assert lvl1_node.descendant_of?(lvl0_node)
 
           lvl1_children.each do |lvl2_node, lvl2_children|
             # Ancestors assertions
@@ -146,23 +154,33 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
             assert_equal [lvl0_node.id, lvl1_node.id, lvl2_node.id], lvl2_node.path_ids
             assert_equal [lvl0_node, lvl1_node, lvl2_node], lvl2_node.path
             assert_equal 2, lvl2_node.depth
+            assert lvl0_node.ancestor_of?(lvl2_node)
+            assert lvl1_node.ancestor_of?(lvl2_node)
             # Parent assertions
             assert_equal lvl1_node.id, lvl2_node.parent_id
             assert_equal lvl1_node, lvl2_node.parent
+            assert !lvl0_node.parent_of?(lvl2_node)
+            assert lvl1_node.parent_of?(lvl2_node)
             # Root assertions
             assert_equal lvl0_node.id, lvl2_node.root_id
             assert_equal lvl0_node, lvl2_node.root
             assert !lvl2_node.is_root?
+            assert lvl0_node.root_of?(lvl2_node)
             # Children assertions
             assert_equal [], lvl2_node.child_ids
             assert_equal [], lvl2_node.children
             assert !lvl2_node.has_children?
             assert lvl2_node.is_childless?
+            assert lvl2_node.child_of?(lvl1_node)
+            assert !lvl2_node.child_of?(lvl0_node)
             # Siblings assertions
             assert_equal lvl1_children.map(&:first).map(&:id), lvl2_node.sibling_ids
             assert_equal lvl1_children.map(&:first), lvl2_node.siblings
             assert lvl2_node.has_siblings?
             assert !lvl2_node.is_only_child?
+            assert !lvl2_node.sibling_of?(lvl0_node)
+            assert !lvl2_node.sibling_of?(lvl1_node)
+            assert lvl2_node.sibling_of?(lvl2_node)
             # Descendants assertions
             descendants = model.all.find_all do |node|
               node.ancestor_ids.include? lvl2_node.id
@@ -170,6 +188,8 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
             assert_equal descendants.map(&:id), lvl2_node.descendant_ids
             assert_equal descendants, lvl2_node.descendants
             assert_equal [lvl2_node] + descendants, lvl2_node.subtree
+            assert lvl2_node.descendant_of?(lvl0_node)
+            assert lvl2_node.descendant_of?(lvl1_node)
           end
         end
       end
