@@ -28,7 +28,7 @@ class AncestryTestDatabase
 
     begin
       model = Class.new(ActiveRecord::Base)
-      (class << model; self; end).send :define_method, :model_name do; Struct.new(:human, :underscore).new 'TestNode', 'test_node'; end
+      (class << model; self; end).send :define_method, :model_name do; Struct.new(:human, :underscore, :i18n_key).new 'TestNode', 'test_node', 'test_node'; end
       const_set 'TestNode', model
 
       if primary_key_type == :string
