@@ -36,14 +36,36 @@ module Ancestry
           self.base_class.ordered_by_ancestry_and options.delete(:order)
         end
       # Get all nodes ordered by ancestry and start sorting them into an empty hash
-      scope.all(options).inject(ActiveSupport::OrderedHash.new) do |arranged_nodes, node|
+      arrange_nodes scope.all(options)
+    end
+    
+    # Arrange array of nodes into a nested hash of the form 
+    # {node => children}, where children = {} if the node has no children
+    def arrange_nodes(nodes)
+      # Get all nodes ordered by ancestry and start sorting them into an empty hash
+      nodes.inject(ActiveSupport::OrderedHash.new) do |arranged_nodes, node|
         # Find the insertion point for that node by going through its ancestors
         node.ancestor_ids.inject(arranged_nodes) do |insertion_point, ancestor_id|
           insertion_point.each do |parent, children|
             # Change the insertion point to children if node is a descendant of this parent
             insertion_point = children if ancestor_id == parent.id
-          end; insertion_point
-        end[node] = ActiveSupport::OrderedHash.new; arranged_nodes
+          end
+          insertion_point
+        end[node] = ActiveSupport::OrderedHash.new
+        arranged_nodes
+      end
+    end
+    
+    # Pseudo-preordered array of nodes.  Children will always follow parents, 
+    # but the ordering of nodes within a rank depends on their order in the 
+    # array that gets passed in
+    def sort_by_ancestry(nodes)
+      arranged = nodes.is_a?(Hash) ? nodes : arrange_nodes(nodes.sort_by{|n| n.ancestry || '0'})
+      arranged.inject([]) do |sorted_nodes, pair|
+        node, children = pair
+        sorted_nodes << node
+        sorted_nodes += sort_by_ancestry(children) unless children.blank?
+        sorted_nodes
       end
     end
 
@@ -52,7 +74,7 @@ module Ancestry
       parents = {}
       exceptions = [] if options[:report] == :list
       # For each node ...
-      self.base_class.all.each do |node|
+      self.base_class.find_each do |node|
         begin
           # ... check validity of ancestry column
           if !node.valid? and !node.errors[node.class.ancestry_column].blank?
@@ -86,7 +108,7 @@ module Ancestry
     def restore_ancestry_integrity!
       parents = {}
       # For each node ...
-      self.base_class.all.each do |node|
+      self.base_class.find_each do |node|
         # ... set its ancestry to nil if invalid
         if node.errors[node.class.ancestry_column].blank?
           node.without_ancestry_callbacks do
@@ -104,7 +126,7 @@ module Ancestry
         parents[node.id] = nil if parent == node.id 
       end
       # For each node ...
-      self.base_class.all.each do |node|
+      self.base_class.find_each do |node|
         # ... rebuild ancestry from parents array
         ancestry, parent = nil, parents[node.id]
         until parent.nil?
@@ -118,7 +140,7 @@ module Ancestry
     
     # Build ancestry from parent id's for migration purposes
     def build_ancestry_from_parent_ids! parent_id = nil, ancestry = nil
-      self.base_class.all(:conditions => {:parent_id => parent_id}).each do |node|
+      self.base_class.find_each(:conditions => {:parent_id => parent_id}) do |node|
         node.without_ancestry_callbacks do
           node.update_attribute ancestry_column, ancestry
         end
@@ -129,7 +151,7 @@ module Ancestry
     # Rebuild depth cache if it got corrupted or if depth caching was just turned on
     def rebuild_depth_cache!
       raise Ancestry::AncestryException.new("Cannot rebuild depth cache for model without depth caching.") unless respond_to? :depth_cache_column
-      self.base_class.all.each do |node|
+      self.base_class.find_each do |node|
         node.update_attribute depth_cache_column, node.depth
       end
     end

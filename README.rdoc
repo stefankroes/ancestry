@@ -156,6 +156,14 @@ The arrange method takes ActiveRecord find options. If you want your hashes to b
 
   TreeNode.find_by_name('Crunchy').subtree.arrange(:order => :name)
 
+= Sorting
+
+If you just want to sort an array of nodes as if you were traversing them in preorder, you can use the sort_by_ancestry class method:
+  
+  TreeNode.sort_by_ancestry(array_of_nodes)
+
+Note that since materialised path trees don't support ordering within a rank, the order of siblings depends on their order in the original array.
+
 = Migrating from plugin that uses parent_id column
 
 Most current tree plugins use a parent_id column (has_ancestry, awesome_nested_set, better_nested_set, acts_as_nested_set). With ancestry its easy to migrate from any of these plugins, to do so, use the build_ancestry_from_parent_ids! method on your ancestry model. These steps provide a more detailed explanation:

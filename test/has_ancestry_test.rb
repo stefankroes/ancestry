@@ -688,4 +688,17 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
+  
+  def test_sort_by_ancestry
+    AncestryTestDatabase.with_model do |model|
+      n1 = model.create!
+      n2 = model.create!(:parent => n1)
+      n3 = model.create!(:parent => n2)
+      n4 = model.create!(:parent => n2)
+      n5 = model.create!(:parent => n1)
+      
+      arranged = model.sort_by_ancestry(model.all.sort_by(&:id).reverse)
+      assert_equal [n1, n2, n4, n3, n5].map(&:id), arranged.map(&:id)
+    end
+  end
 end
