@@ -152,7 +152,7 @@ The arrange method also works on a scoped class, for example:
 
   TreeNode.find_by_name('Crunchy').subtree.arrange
 
-The arrange method takes ActiveRecord find options. If you want your hashes to be ordered, you should pass the order to the arrange method instead of to the scope. This only works for Ruby 1.9 and later since before that hashes weren't ordered. For example:
+The arrange method takes ActiveRecord find options. If you want your hashes to be ordered, you should pass the order to the arrange method instead of to the scope. This also works for Ruby 1.8 since an OrderedHash is returned. For example:
 
   TreeNode.find_by_name('Crunchy').subtree.arrange(:order => :name)
 
@@ -238,6 +238,10 @@ The materialised path pattern requires Ancestry to use a 'like' condition in ord
 
 The latest version of ancestry is recommended. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
 
+- Version 1.2.4 (2011-4-22)
+  - Prepended table names to column names in queries (thx raelik)
+  - Better check to see if acts_as_tree can be overloaded (thx jims)
+  - Performance inprovements (thx kueda)
 - Version 1.2.3 (2010-10-28)
   - Fixed error with determining ActiveRecord version
   - Added option to specify :primary_key_format (thanks goes to rolftimmermans)
