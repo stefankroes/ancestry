@@ -35,7 +35,11 @@ class AncestryTestDatabase
         has_ancestry options unless options.delete(:skip_ancestry)
 
         def self.model_name
-          Struct.new(:human, :underscore).new 'TestNode', 'test_node'
+          if rails_3
+            ActiveModel::Name.new(TestNode)
+          else
+            Struct.new(:human, :underscore).new('TestNode', 'test_node')
+          end
         end
 
         private
