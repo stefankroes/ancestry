@@ -53,6 +53,8 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
 
   def test_scoping_in_callbacks
     AncestryTestDatabase.with_model do |model|
+      $random_object = model.create
+
       model.instance_eval do
         after_create :after_create_callback
       end
@@ -60,6 +62,8 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
         def after_create_callback
           # We don't want to be in the #children scope here when creating the child
           self.parent
+          self.parent_id = $random_object.id if $random_object
+          self.root
         end
       end
 

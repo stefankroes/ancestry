@@ -103,7 +103,7 @@ module Ancestry
     end
 
     def parent_id= parent_id
-      self.parent = if parent_id.blank? then nil else self.base_class.find(parent_id) end
+      self.parent = if parent_id.blank? then nil else self.base_class.scoped.except(:where).find(parent_id) end
     end
 
     def parent_id
@@ -111,7 +111,7 @@ module Ancestry
     end
 
     def parent
-      if parent_id.blank? then nil else self.base_class.find(parent_id) end
+      if parent_id.blank? then nil else self.base_class.scoped.except(:where).find(parent_id) end
     end
 
     # Root
@@ -120,7 +120,7 @@ module Ancestry
     end
 
     def root
-      if root_id == id then self else self.base_class.find(root_id) end
+      if root_id == id then self else self.base_class.scoped.except(:where).find(root_id) end
     end
 
     def is_root?
