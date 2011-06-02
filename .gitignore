@@ -1,3 +1,4 @@
+.rvmrc
 doc
 *.gem
 **/*.log
