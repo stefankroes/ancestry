@@ -701,4 +701,22 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_equal [n1, n2, n4, n3, n5].map(&:id), arranged.map(&:id)
     end
   end
+  
+  def test_clone_with_modifications!
+    AncestryTestDatabase.with_model :extra_columns => {:source_id => :integer, :project_id => :integer} do |model|
+      n1 = model.create!(:project_id => nil)
+      n2 = model.create!(:parent => n1, :project_id => nil)
+      n3 = model.create!(:parent => n2, :project_id => nil)
+      n4 = model.create!(:parent => n2, :project_id => nil)
+      n5 = model.create!(:parent => n1, :project_id => nil)
+      
+      n1c = n1.clone_with_modifications!({:project_id => 1}, nil, :source_id)
+      
+      assert_equal n1.id, n1c.source_id
+      assert_equal 1, n1c.project_id
+      assert_equal n1.descendants.count, n1c.descendants.count
+      assert_equal 1, n1c.descendants.last.project_id
+      assert_equal n1.descendants.last.id, n1c.descendants.last.source_id
+    end
+  end
 end

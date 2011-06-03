@@ -55,6 +55,19 @@ module Ancestry
         end
       end
     end
+    
+    # Clone an object and all children
+    # => replacing values with those from attributes if present
+    # => setting parent to new parent if present
+    # => setting the "original_id_field_name" if present to the id of the original object
+    def clone_with_modifications!(attributes = nil, parent = nil, original_id_field_name = nil)
+      clone = self.class.create!(self.attributes.merge(:ancestry => nil).merge(attributes))
+      clone.send("#{original_id_field_name}=", self.id) if original_id_field_name
+      clone.parent = parent
+      self.children.each { |child| child.clone_with_modifications!(attributes, clone, original_id_field_name) }
+      clone.save!
+      clone
+    end
 
     # The ancestry value for this record's children
     def child_ancestry

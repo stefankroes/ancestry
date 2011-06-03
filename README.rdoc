@@ -221,6 +221,26 @@ For example, from IRB:
 Additionally, if you think something is wrong with your depth cache:
 
   >> TreeNode.rebuild_depth_cache!
+  
+= Copying
+
+Ancestry provides a method to clone a tree, optionally replacing attributes and/or preserving a reference to the parent. This allows the creation of structures that use a 'default' tree and make copies of it.  Example
+
+   class Category < ActiveRecord::Base
+     belongs_to :project
+     belongs_to :source_category, :class_name => "Category"
+     scope :defaults, where(:project_id => nil)
+     
+     def self.import_from_defaults_for(project)
+       defaults.roots.all.each do |root|
+       root.clone_with_modifications!({:project_id => project.id}, nil, :source_category_id)
+     end
+   end
+   
+   class Project < ActiveRecord::Base
+     has_many :categories, :dependent => :destroy
+     after_create Proc.new { |p| Category.import_from_defaults_for(self) }
+   end
 
 = Tests
 
