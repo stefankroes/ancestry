@@ -107,33 +107,36 @@ module Ancestry
     # Integrity restoration
     def restore_ancestry_integrity!
       parents = {}
-      # For each node ...
-      self.base_class.find_each do |node|
-        # ... set its ancestry to nil if invalid
-        if node.errors[node.class.ancestry_column].blank?
-          node.without_ancestry_callbacks do
-            node.update_attribute node.ancestry_column, nil
+      # Wrap the whole thing in a transaction ...
+      self.base_class.transaction do
+        # For each node ...
+        self.base_class.find_each do |node|
+          # ... set its ancestry to nil if invalid
+          if !node.valid? and !node.errors[node.class.ancestry_column].blank?
+            node.without_ancestry_callbacks do
+              node.update_attribute node.ancestry_column, nil
+            end
           end
-        end
-        # ... save parent of this node in parents array if it exists
-        parents[node.id] = node.parent_id if exists? node.parent_id
+          # ... save parent of this node in parents array if it exists
+          parents[node.id] = node.parent_id if exists? node.parent_id
 
-        # Reset parent id in array to nil if it introduces a cycle
-        parent = parents[node.id]
-        until parent.nil? || parent == node.id
-          parent = parents[parent]
+          # Reset parent id in array to nil if it introduces a cycle
+          parent = parents[node.id]
+          until parent.nil? || parent == node.id
+            parent = parents[parent]
+          end
+          parents[node.id] = nil if parent == node.id 
         end
-        parents[node.id] = nil if parent == node.id 
-      end
-      # For each node ...
-      self.base_class.find_each do |node|
-        # ... rebuild ancestry from parents array
-        ancestry, parent = nil, parents[node.id]
-        until parent.nil?
-          ancestry, parent = if ancestry.nil? then parent else "#{parent}/#{ancestry}" end, parents[parent]
-        end
-        node.without_ancestry_callbacks do
-          node.update_attribute node.ancestry_column, ancestry
+        # For each node ...
+        self.base_class.find_each do |node|
+          # ... rebuild ancestry from parents array
+          ancestry, parent = nil, parents[node.id]
+          until parent.nil?
+            ancestry, parent = if ancestry.nil? then parent else "#{parent}/#{ancestry}" end, parents[parent]
+          end
+          node.without_ancestry_callbacks do
+            node.update_attribute node.ancestry_column, ancestry
+          end
         end
       end
     end

@@ -379,23 +379,26 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     assert_nothing_raised do
       model.check_ancestry_integrity!
     end
+    assert model.all.any? {|node| node.ancestry.present? }, "Expected some nodes not to be roots"
+    assert_equal model.count, model.roots.collect {|node| node.descendants.count + 1 }.sum
   end
 
   def test_integrity_restoration
+    width, depth = 3, 3
     # Check that integrity is restored for invalid format for ancestry column
-    AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
+    AncestryTestDatabase.with_model :width => width, :depth => depth do |model, roots|
       roots.first.first.update_attribute model.ancestry_column, 'invalid_ancestry'
       assert_integrity_restoration model
     end
 
     # Check that integrity is restored for non-existent ancestor
-    AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
+    AncestryTestDatabase.with_model :width => width, :depth => depth do |model, roots|
       roots.first.first.update_attribute model.ancestry_column, 35
       assert_integrity_restoration model
     end
 
     # Check that integrity is restored for cyclic ancestry
-    AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
+    AncestryTestDatabase.with_model :width => width, :depth => depth do |model, roots|
       node = roots.first.first
       node.update_attribute model.ancestry_column, node.id
       assert_integrity_restoration model
