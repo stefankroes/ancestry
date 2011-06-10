@@ -136,7 +136,7 @@ module Ancestry
     end
 
     def root_of?(node)
-      self.root_id == node.root_id
+      self.id == node.root_id
     end
 
     # Children
