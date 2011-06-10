@@ -448,7 +448,6 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
-  # NOTE: A workaround for this case is to call self.reload before calling self.children in the after_create
   def test_node_creation_in_after_create
     AncestryTestDatabase.with_model do |model|
       children=[]

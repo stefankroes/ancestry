@@ -18,8 +18,8 @@ module Ancestry
               descendant.update_attribute(
                 self.base_class.ancestry_column,
                 descendant.read_attribute(descendant.class.ancestry_column).gsub(
-                  /^#{self.child_ancestry}/,
-                  if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
+                  /^#{self.child_ancestry_was}/,
+                  self.child_ancestry
                 )
               )
             end
@@ -61,7 +61,16 @@ module Ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
 
-      if self.send("#{self.base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.base_class.ancestry_column}_was"}/#{id}" end
+      ancestry = self.send(self.ancestry_column)
+      if ancestry.blank? then self.id.to_s else ancestry.to_s + "/#{self.id.to_s}" end
+    end
+
+    def child_ancestry_was
+      # New records cannot have children
+      raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
+
+      ancestry = self.send("#{self.ancestry_column}_was")
+      if ancestry.blank? then self.id.to_s else ancestry.to_s + "/#{self.id.to_s}" end
     end
 
     # Ancestors
@@ -171,7 +180,7 @@ module Ancestry
 
     # Descendants
     def descendant_conditions
-      ["#{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", "#{child_ancestry}/%", child_ancestry]
+      ["#{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", "#{child_ancestry_was}/%", child_ancestry_was]
     end
 
     def descendants depth_options = {}
@@ -184,7 +193,7 @@ module Ancestry
 
     # Subtree
     def subtree_conditions
-      ["#{self.base_class.table_name}.#{self.base_class.primary_key} = ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
+      ["#{self.base_class.table_name}.#{self.base_class.primary_key} = ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", self.id, "#{child_ancestry_was}/%", child_ancestry_was]
     end
 
     def subtree depth_options = {}
