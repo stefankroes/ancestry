@@ -296,10 +296,6 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-	
-	def test_orphan_parentify_strategy
-		
-	end
 
   def test_orphan_destroy_strategy
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
