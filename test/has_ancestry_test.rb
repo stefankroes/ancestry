@@ -296,6 +296,10 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
+	
+	def test_orphan_parentify_strategy
+		
+	end
 
   def test_orphan_destroy_strategy
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
@@ -334,8 +338,8 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       n5 = model.create!(:parent => n4)
 			# delete a node with desecendants
 			n2.destroy
-			assert_equal(model.find(3).parent,n1, "orphan's not parentified as excepted" )
-			assert_equal(model.find(5).ancestor_ids,[n1.id,n4.id], "ancestry integrity not maintained")
+			assert_equal(model.find(n5.id).ancestor_ids,[n1.id,n4.id], "ancestry integrity not maintained")
+			assert_equal(model.find(n3.id).parent,n1, "orphan's not parentified" )
 		end
 	end
 
