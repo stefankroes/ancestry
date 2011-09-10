@@ -52,7 +52,8 @@ module Ancestry
           elsif self.base_class.orphan_strategy == :parentify
             descendants.all.each do |descendant|
               descendant.without_ancestry_callbacks do
-                descendant.update_attribute descendant.class.ancestry_column, descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")
+								new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")
+                descendant.update_attribute descendant.class.ancestry_column, new_ancestry || nil
               end
             end
 				  # ... throw an exception if it has children and orphan strategy is restrict
