@@ -472,6 +472,17 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
+  def test_depth_caching_after_subtree_movement
+    AncestryTestDatabase.with_model :depth => 6, :width => 1, :cache_depth => true, :depth_cache_column => :depth_cache do |model, roots|
+      node = model.at_depth(3).first
+      node.update_attributes(:parent => model.roots.first)
+      assert_equal(1, node.depth_cache)
+      node.descendants.each do |descendant|
+        assert_equal(descendant.depth, descendant.depth_cache)
+      end
+    end
+  end
+
   def test_depth_scopes
     AncestryTestDatabase.with_model :depth => 4, :width => 2, :cache_depth => true do |model, roots|
       model.before_depth(2).all? { |node| assert node.depth < 2 }
