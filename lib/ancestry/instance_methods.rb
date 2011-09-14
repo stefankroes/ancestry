@@ -126,6 +126,7 @@ module Ancestry
     def is_root?
       read_attribute(self.base_class.ancestry_column).blank?
     end
+    alias :root? :is_root?
 
     # Children
     def child_conditions

@@ -46,7 +46,7 @@ To navigate an Ancestry model, use the following methods on any instance / recor
   parent_id        Returns the id of the parent of the record, nil for a root node
   root             Returns the root of the tree the record is in, self for a root node
   root_id          Returns the id of the root of the tree the record is in
-  is_root?         Returns true if the record is a root node, false otherwise
+  root?, is_root?  Returns true if the record is a root node, false otherwise
   ancestor_ids     Returns a list of ancestor ids, starting with the root id and ending with the parent id
   ancestors        Scopes the model on ancestors of the record
   path_ids         Returns a list the path ids, starting with the root id and ending with the node's own id
