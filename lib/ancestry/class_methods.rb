@@ -78,19 +78,19 @@ module Ancestry
         begin
           # ... check validity of ancestry column
           if !node.valid? and !node.errors[node.class.ancestry_column].blank?
-            raise Ancestry::AncestryIntegrityException.new "Invalid format for ancestry column of node #{node.id}: #{node.read_attribute node.ancestry_column}."
+            raise Ancestry::AncestryIntegrityException.new("Invalid format for ancestry column of node #{node.id}: #{node.read_attribute node.ancestry_column}.")
           end
           # ... check that all ancestors exist
           node.ancestor_ids.each do |ancestor_id|
             unless exists? ancestor_id
-              raise Ancestry::AncestryIntegrityException.new "Reference to non-existent node in node #{node.id}: #{ancestor_id}."
+              raise Ancestry::AncestryIntegrityException.new("Reference to non-existent node in node #{node.id}: #{ancestor_id}.")
             end
           end
           # ... check that all node parents are consistent with values observed earlier
           node.path_ids.zip([nil] + node.path_ids).each do |node_id, parent_id|
             parents[node_id] = parent_id unless parents.has_key? node_id
             unless parents[node_id] == parent_id
-              raise Ancestry::AncestryIntegrityException.new "Conflicting parent id found in node #{node.id}: #{parent_id || 'nil'} for node #{node_id} while expecting #{parents[node_id] || 'nil'}"
+              raise Ancestry::AncestryIntegrityException.new("Conflicting parent id found in node #{node.id}: #{parent_id || 'nil'} for node #{node_id} while expecting #{parents[node_id] || 'nil'}")
             end
           end
         rescue Ancestry::AncestryIntegrityException => integrity_exception
