@@ -3,8 +3,8 @@ module Ancestry
     # Fetch tree node if necessary
     def to_node object
       if object.is_a?(self.base_class) then object else find(object) end
-    end 
-    
+    end
+
     # Scope on relative depth options
     def scope_depth depth_options, depth
       depth_options.inject(self.base_class) do |scope, option|
@@ -26,7 +26,7 @@ module Ancestry
         raise Ancestry::AncestryException.new("Invalid orphan strategy, valid ones are :rootify, :restrict and :destroy.")
       end
     end
-    
+
     # Arrangement
     def arrange options = {}
       scope =
@@ -125,7 +125,7 @@ module Ancestry
           until parent.nil? || parent == node.id
             parent = parents[parent]
           end
-          parents[node.id] = nil if parent == node.id 
+          parents[node.id] = nil if parent == node.id
         end
         # For each node ...
         self.base_class.find_each do |node|
@@ -140,7 +140,7 @@ module Ancestry
         end
       end
     end
-    
+
     # Build ancestry from parent id's for migration purposes
     def build_ancestry_from_parent_ids! parent_id = nil, ancestry = nil
       self.base_class.find_each(:conditions => {:parent_id => parent_id}) do |node|
@@ -150,7 +150,7 @@ module Ancestry
         build_ancestry_from_parent_ids! node.id, if ancestry.nil? then "#{node.id}" else "#{ancestry}/#{node.id}" end
       end
     end
-    
+
     # Rebuild depth cache if it got corrupted or if depth caching was just turned on
     def rebuild_depth_cache!
       raise Ancestry::AncestryException.new("Cannot rebuild depth cache for model without depth caching.") unless respond_to? :depth_cache_column

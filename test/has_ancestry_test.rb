@@ -88,17 +88,12 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
         # Root assertions
         assert_equal lvl0_node.id, lvl0_node.root_id
         assert_equal lvl0_node, lvl0_node.root
-        assert lvl0_node.is_root?
         # Children assertions
         assert_equal lvl0_children.map(&:first).map(&:id), lvl0_node.child_ids
         assert_equal lvl0_children.map(&:first), lvl0_node.children
-        assert lvl0_node.has_children?
-        assert !lvl0_node.is_childless?
         # Siblings assertions
         assert_equal roots.map(&:first).map(&:id), lvl0_node.sibling_ids
         assert_equal roots.map(&:first), lvl0_node.siblings
-        assert lvl0_node.has_siblings?
-        assert !lvl0_node.is_only_child?
         # Descendants assertions
         descendants = model.all.find_all do |node|
           node.ancestor_ids.include? lvl0_node.id
@@ -120,17 +115,12 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
           # Root assertions
           assert_equal lvl0_node.id, lvl1_node.root_id
           assert_equal lvl0_node, lvl1_node.root
-          assert !lvl1_node.is_root?
           # Children assertions
           assert_equal lvl1_children.map(&:first).map(&:id), lvl1_node.child_ids
           assert_equal lvl1_children.map(&:first), lvl1_node.children
-          assert lvl1_node.has_children?
-          assert !lvl1_node.is_childless?
           # Siblings assertions
           assert_equal lvl0_children.map(&:first).map(&:id), lvl1_node.sibling_ids
           assert_equal lvl0_children.map(&:first), lvl1_node.siblings
-          assert lvl1_node.has_siblings?
-          assert !lvl1_node.is_only_child?
           # Descendants assertions
           descendants = model.all.find_all do |node|
             node.ancestor_ids.include? lvl1_node.id
@@ -152,17 +142,12 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
             # Root assertions
             assert_equal lvl0_node.id, lvl2_node.root_id
             assert_equal lvl0_node, lvl2_node.root
-            assert !lvl2_node.is_root?
             # Children assertions
             assert_equal [], lvl2_node.child_ids
             assert_equal [], lvl2_node.children
-            assert !lvl2_node.has_children?
-            assert lvl2_node.is_childless?
             # Siblings assertions
             assert_equal lvl1_children.map(&:first).map(&:id), lvl2_node.sibling_ids
             assert_equal lvl1_children.map(&:first), lvl2_node.siblings
-            assert lvl2_node.has_siblings?
-            assert !lvl2_node.is_only_child?
             # Descendants assertions
             descendants = model.all.find_all do |node|
               node.ancestor_ids.include? lvl2_node.id
@@ -172,6 +157,40 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
             assert_equal [lvl2_node] + descendants, lvl2_node.subtree
           end
         end
+      end
+    end
+  end
+
+  def test_tree_predicates
+    AncestryTestDatabase.with_model :depth => 2, :width => 3 do |model, roots|
+      roots.each do |lvl0_node, lvl0_children|
+        root, children = lvl0_node, lvl0_children.map(&:first)
+        # Ancestors assertions
+        assert children.map { |n| root.ancestor_of?(n) }.all?
+        assert children.map { |n| !n.ancestor_of?(root) }.all?
+        # Parent assertions
+        assert children.map { |n| root.parent_of?(n) }.all?
+        assert children.map { |n| !n.parent_of?(root) }.all?
+        # Root assertions
+        assert root.is_root?
+        assert children.map { |n| !n.is_root? }.all?
+        assert children.map { |n| root.root_of?(n) }.all?
+        assert children.map { |n| !n.root_of?(root) }.all?
+        # Children assertions
+        assert root.has_children?
+        assert !root.is_childless?
+        assert children.map { |n| n.is_childless? }.all?
+        assert children.map { |n| !root.child_of?(n) }.all?
+        assert children.map { |n| n.child_of?(root) }.all?
+        # Siblings assertions
+        assert root.has_siblings?
+        assert !root.is_only_child?
+        assert children.map { |n| !n.is_only_child? }.all?
+        assert children.map { |n| !root.sibling_of?(n) }.all?
+        assert children.permutation(2).map { |l, r| l.sibling_of?(r) }.all?
+        # Descendants assertions
+        assert children.map { |n| !root.descendant_of?(n) }.all?
+        assert children.map { |n| n.descendant_of?(root) }.all?
       end
     end
   end
@@ -691,7 +710,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_sort_by_ancestry
     AncestryTestDatabase.with_model do |model|
       n1 = model.create!
@@ -699,7 +718,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       n3 = model.create!(:parent => n2)
       n4 = model.create!(:parent => n2)
       n5 = model.create!(:parent => n1)
-      
+
       arranged = model.sort_by_ancestry(model.all.sort_by(&:id).reverse)
       assert_equal [n1, n2, n4, n3, n5].map(&:id), arranged.map(&:id)
     end

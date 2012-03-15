@@ -97,6 +97,10 @@ module Ancestry
       write_attribute self.base_class.depth_cache_column, depth
     end
 
+    def ancestor_of?(node)
+      node.ancestor_ids.include?(self.id)
+    end
+
     # Parent
     def parent= parent
       write_attribute(self.base_class.ancestry_column, if parent.blank? then nil else parent.child_ancestry end)
@@ -114,6 +118,10 @@ module Ancestry
       if parent_id.blank? then nil else self.base_class.find(parent_id) end
     end
 
+    def parent_of?(node)
+      self.id == node.parent_id
+    end
+
     # Root
     def root_id
       if ancestor_ids.empty? then id else ancestor_ids.first end
@@ -125,6 +133,10 @@ module Ancestry
 
     def is_root?
       read_attribute(self.base_class.ancestry_column).blank?
+    end
+
+    def root_of?(node)
+      self.id == node.root_id
     end
 
     # Children
@@ -148,6 +160,10 @@ module Ancestry
       !has_children?
     end
 
+    def child_of?(node)
+      self.parent_id == node.id
+    end
+
     # Siblings
     def sibling_conditions
       {self.base_class.ancestry_column => read_attribute(self.base_class.ancestry_column)}
@@ -169,6 +185,10 @@ module Ancestry
       !has_siblings?
     end
 
+    def sibling_of?(node)
+      self.ancestry == node.ancestry
+    end
+
     # Descendants
     def descendant_conditions
       ["#{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", "#{child_ancestry}/%", child_ancestry]
@@ -180,6 +200,10 @@ module Ancestry
 
     def descendant_ids depth_options = {}
       descendants(depth_options).all(:select => self.base_class.primary_key).collect(&self.base_class.primary_key.to_sym)
+    end
+
+    def descendant_of?(node)
+      ancestor_ids.include?(node.id)
     end
 
     # Subtree

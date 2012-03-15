@@ -28,14 +28,25 @@ class AncestryTestDatabase
 
     begin
       model = Class.new(ActiveRecord::Base)
-      (class << model; self; end).send :define_method, :model_name do; Struct.new(:human, :underscore).new 'TestNode', 'test_node'; end
       const_set 'TestNode', model
 
-      if primary_key_type == :string
-        model.before_create { self.id = ActiveSupport::SecureRandom.hex(10) }
+      model.class_eval do
+        before_create :set_id if primary_key_type == :string
+        has_ancestry options unless options.delete(:skip_ancestry)
+
+        def self.model_name
+          if rails_3
+            ActiveModel::Name.new(TestNode)
+          else
+            Struct.new(:human, :underscore).new('TestNode', 'test_node')
+          end
+        end
+
+        private
+        def set_id
+          self.id = ActiveSupport::SecureRandom.hex(10)
+        end
       end
-      model.send :set_table_name, 'test_nodes'
-      model.has_ancestry options unless options.delete(:skip_ancestry)
 
       if depth > 0
         yield model, create_test_nodes(model, depth, width)
@@ -44,7 +55,7 @@ class AncestryTestDatabase
       end
     ensure
       ActiveRecord::Base.connection.drop_table 'test_nodes'
-      remove_const "TestNode"
+      remove_const 'TestNode'
     end
   end
 

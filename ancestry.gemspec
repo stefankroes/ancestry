@@ -10,17 +10,17 @@ Gem::Specification.new do |s|
   s.homepage = 'http://github.com/stefankroes/ancestry'
 
   s.files = [
-    'ancestry.gemspec', 
-    'init.rb', 
-    'install.rb', 
-    'lib/ancestry.rb', 
-    'lib/ancestry/has_ancestry.rb', 
-    'lib/ancestry/exceptions.rb', 
-    'lib/ancestry/class_methods.rb', 
-    'lib/ancestry/instance_methods.rb', 
-    'MIT-LICENSE', 
+    'ancestry.gemspec',
+    'init.rb',
+    'install.rb',
+    'lib/ancestry.rb',
+    'lib/ancestry/has_ancestry.rb',
+    'lib/ancestry/exceptions.rb',
+    'lib/ancestry/class_methods.rb',
+    'lib/ancestry/instance_methods.rb',
+    'MIT-LICENSE',
     'README.rdoc'
   ]
-  
+
   s.add_dependency 'activerecord', '>= 2.2.2'
 end
