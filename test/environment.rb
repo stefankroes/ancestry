@@ -1,5 +1,11 @@
 require 'rubygems'
-Gem.activate 'activerecord', ENV['ar'] || '3.0.0'
+
+if ENV['ar'].nil?
+  gem 'activerecord'
+else 
+  gem 'activerecord', ENV['ar']
+end
+
 require 'active_record'
 require 'active_support/test_case'
 require 'test/unit'
@@ -7,14 +13,14 @@ require 'ancestry'
 
 class AncestryTestDatabase
   def self.setup
-    ActiveRecord::Base.logger
+    ActiveRecord::Base.logger = ActiveSupport::BufferedLogger.new('log/test.log')
     ActiveRecord::Base.establish_connection YAML.load(File.open(File.join(File.dirname(__FILE__), 'database.yml')).read)[ENV['db'] || 'sqlite3']
   end
 
   def self.with_model options = {}
-    depth         = options.delete(:depth) || 0
-    width         = options.delete(:width) || 0
-    extra_columns = options.delete(:extra_columns)
+    depth            = options.delete(:depth) || 0
+    width            = options.delete(:width) || 0
+    extra_columns    = options.delete(:extra_columns)
     primary_key_type = options.delete(:primary_key_type) || :default
 
     ActiveRecord::Base.connection.create_table 'test_nodes', :id => (primary_key_type == :default) do |table|
@@ -32,9 +38,10 @@ class AncestryTestDatabase
       const_set 'TestNode', model
 
       if primary_key_type == :string
-        model.before_create { self.id = ActiveSupport::SecureRandom.hex(10) }
+        model.before_create { self.id = SecureRandom.hex(10) }
       end
-      model.send :set_table_name, 'test_nodes'
+      model.table_name = 'test_nodes'
+      model.primary_key = :id if primary_key_type == :string
       model.has_ancestry options unless options.delete(:skip_ancestry)
 
       if depth > 0
@@ -43,8 +50,9 @@ class AncestryTestDatabase
         yield model
       end
     ensure
+      model.reset_column_information
       ActiveRecord::Base.connection.drop_table 'test_nodes'
-      remove_const "TestNode"
+      remove_const 'TestNode'
     end
   end
 
@@ -62,6 +70,6 @@ AncestryTestDatabase.setup
 
 puts "\nRunning Ancestry test suite:"
 puts "  Ruby: #{RUBY_VERSION}"
-puts "  ActiveRecord: #{ENV['ar'] || '3.0.0'}"
+puts "  ActiveRecord: #{ActiveRecord::VERSION::STRING}"
 puts "  Database: #{ActiveRecord::Base.connection.adapter_name}\n\n"
 
