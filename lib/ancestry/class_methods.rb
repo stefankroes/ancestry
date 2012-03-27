@@ -2,12 +2,12 @@ module Ancestry
   module ClassMethods
     # Fetch tree node if necessary
     def to_node object
-      if object.is_a?(self.base_class) then object else find(object) end
+      if object.is_a?(self.ancestry_base_class) then object else find(object) end
     end 
     
     # Scope on relative depth options
     def scope_depth depth_options, depth
-      depth_options.inject(self.base_class) do |scope, option|
+      depth_options.inject(self.ancestry_base_class) do |scope, option|
         scope_name, relative_depth = option
         if [:before_depth, :to_depth, :at_depth, :from_depth, :after_depth].include? scope_name
           scope.send scope_name, depth + relative_depth
@@ -31,9 +31,9 @@ module Ancestry
     def arrange options = {}
       scope =
         if options[:order].nil?
-          self.base_class.ordered_by_ancestry
+          self.ancestry_base_class.ordered_by_ancestry
         else
-          self.base_class.ordered_by_ancestry_and options.delete(:order)
+          self.ancestry_base_class.ordered_by_ancestry_and options.delete(:order)
         end
       # Get all nodes ordered by ancestry and start sorting them into an empty hash
       arrange_nodes scope.all(options)
@@ -74,7 +74,7 @@ module Ancestry
       parents = {}
       exceptions = [] if options[:report] == :list
       # For each node ...
-      self.base_class.find_each do |node|
+      self.ancestry_base_class.find_each do |node|
         begin
           # ... check validity of ancestry column
           if !node.valid? and !node.errors[node.class.ancestry_column].blank?
@@ -108,9 +108,9 @@ module Ancestry
     def restore_ancestry_integrity!
       parents = {}
       # Wrap the whole thing in a transaction ...
-      self.base_class.transaction do
+      self.ancestry_base_class.transaction do
         # For each node ...
-        self.base_class.find_each do |node|
+        self.ancestry_base_class.find_each do |node|
           # ... set its ancestry to nil if invalid
           if !node.valid? and !node.errors[node.class.ancestry_column].blank?
             node.without_ancestry_callbacks do
@@ -128,7 +128,7 @@ module Ancestry
           parents[node.id] = nil if parent == node.id 
         end
         # For each node ...
-        self.base_class.find_each do |node|
+        self.ancestry_base_class.find_each do |node|
           # ... rebuild ancestry from parents array
           ancestry, parent = nil, parents[node.id]
           until parent.nil?
@@ -143,7 +143,7 @@ module Ancestry
     
     # Build ancestry from parent id's for migration purposes
     def build_ancestry_from_parent_ids! parent_id = nil, ancestry = nil
-      self.base_class.find_each(:conditions => {:parent_id => parent_id}) do |node|
+      self.ancestry_base_class.find_each(:conditions => {:parent_id => parent_id}) do |node|
         node.without_ancestry_callbacks do
           node.update_attribute ancestry_column, ancestry
         end
@@ -154,7 +154,7 @@ module Ancestry
     # Rebuild depth cache if it got corrupted or if depth caching was just turned on
     def rebuild_depth_cache!
       raise Ancestry::AncestryException.new("Cannot rebuild depth cache for model without depth caching.") unless respond_to? :depth_cache_column
-      self.base_class.find_each do |node|
+      self.ancestry_base_class.find_each do |node|
         node.update_attribute depth_cache_column, node.depth
       end
     end

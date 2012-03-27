@@ -27,8 +27,8 @@ class << ActiveRecord::Base
     self.orphan_strategy = options[:orphan_strategy] || :destroy
 
     # Save self as base class (for STI)
-    cattr_accessor :base_class
-    self.base_class = self
+    cattr_accessor :ancestry_base_class
+    self.ancestry_base_class = self
     
     # Validate format of ancestry column value
     primary_key_format = options[:primary_key_format] || /[0-9]+/
