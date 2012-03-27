@@ -1,6 +1,7 @@
 require File.join(File.expand_path(File.dirname(__FILE__)), "environment")
 
 class HasAncestryTreeTest < ActiveSupport::TestCase
+	
   def test_default_ancestry_column
     AncestryTestDatabase.with_model do |model|
       assert_equal :ancestry, model.ancestry_column
@@ -322,6 +323,23 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
+	
+	def test_orphan_parentify_strategy
+		AncestryTestDatabase.with_model do |model|
+			model.orphan_strategy = :parentify 	# set the orphan strategy as paerntify
+      n1 = model.create!									#create a root node
+      n2 = model.create!(:parent => n1)		#create child with parent=root
+      n3 = model.create!(:parent => n2)		#create child with parent=n2, depth = 2
+      n4 = model.create!(:parent => n2)		#create child with parent=n2, depth = 2
+      n5 = model.create!(:parent => n4)		#create child with parent=n4, depth = 3
+			n2.destroy													# delete a node with desecendants
+			assert_equal(model.find(n3.id).parent,n1, "orphan's not parentified" )
+			assert_equal(model.find(n5.id).ancestor_ids,[n1.id,n4.id], "ancestry integrity not maintained")
+			n1.destroy													# delete a root node with desecendants
+			assert_equal(model.find(n3.id).parent_id,nil," Children of the deleted root not rootfied")
+			assert_equal(model.find(n5.id).ancestor_ids,[n4.id],"ancestry integrity not maintained")
+		end
+	end
 
   def test_integrity_checking
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|

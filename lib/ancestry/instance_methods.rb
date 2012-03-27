@@ -16,18 +16,18 @@ module Ancestry
             # ... replace old ancestry with new ancestry
             descendant.without_ancestry_callbacks do
               descendant.update_attribute(
-                self.base_class.ancestry_column,
-                descendant.read_attribute(descendant.class.ancestry_column).gsub(
-                  /^#{self.child_ancestry}/,
-                  if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
-                )
+                  self.base_class.ancestry_column,
+                  descendant.read_attribute(descendant.class.ancestry_column).gsub(
+                      /^#{self.child_ancestry}/,
+                      if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
+                  )
               )
             end
           end
         end
       end
     end
-
+     
     # Apply orphan strategy
     def apply_orphan_strategy
       # Skip this if callbacks are disabled
@@ -48,7 +48,15 @@ module Ancestry
                 descendant.destroy
               end
             end
-          # ... throw an exception if it has children and orphan strategy is restrict
+          # ... make child elements of this node, child of its parent if orphan strategy is parentify
+          elsif self.base_class.orphan_strategy == :parentify
+            descendants.all.each do |descendant|
+              descendant.without_ancestry_callbacks do
+								new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")
+                descendant.update_attribute descendant.class.ancestry_column, new_ancestry || nil
+              end
+            end
+				  # ... throw an exception if it has children and orphan strategy is restrict
           elsif self.base_class.orphan_strategy == :restrict
             raise Ancestry::AncestryException.new('Cannot delete record because it has descendants.') unless is_childless?
           end
@@ -56,7 +64,7 @@ module Ancestry
       end
     end
 
-    # The ancestry value for this record's children
+      # The ancestry value for this record's children
     def child_ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
@@ -64,7 +72,7 @@ module Ancestry
       if self.send("#{self.base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.base_class.ancestry_column}_was"}/#{id}" end
     end
 
-    # Ancestors
+      # Ancestors
     def ancestor_ids
       read_attribute(self.base_class.ancestry_column).to_s.split('/').map { |id| cast_primary_key(id) }
     end
@@ -158,7 +166,7 @@ module Ancestry
     end
 
     def sibling_ids
-       siblings.all(:select => self.base_class.primary_key).collect(&self.base_class.primary_key.to_sym)
+      siblings.all(:select => self.base_class.primary_key).collect(&self.base_class.primary_key.to_sym)
     end
 
     def has_siblings?
@@ -228,5 +236,6 @@ module Ancestry
     def primary_key_type
       @primary_key_type ||= column_for_attribute(self.class.primary_key).type
     end
+
   end
 end
