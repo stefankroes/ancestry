@@ -1,6 +1,6 @@
 = Ancestry
 
-Ancestry is a gem/plugin that allows the records of a Ruby on Rails ActiveRecord model to be organised as a tree structure (or hierarchy). It uses a single, intuitively formatted database column, using a variation on the materialised path pattern. It exposes all the standard tree structure relations (ancestors, parent, root, children, siblings, descendants) and all of them can be fetched in a single sql query. Additional features are STI support, scopes, depth caching, depth constraints, easy migration from older plugins/gems, integrity checking, integrity restoration, arrangement of (sub)tree into hashes and different strategies for dealing with orphaned records.
+Ancestry is a gem/plugin that allows the records of a Ruby on Rails ActiveRecord model to be organised as a tree structure (or hierarchy). It uses a single, intuitively formatted database column, using a variation on the materialised path pattern. It exposes all the standard tree structure relations (ancestors, parent, root, children, siblings, descendants) and all of them can be fetched in a single SQL query. Additional features are STI support, scopes, depth caching, depth constraints, easy migration from older plugins/gems, integrity checking, integrity restoration, arrangement of (sub)tree into hashes and different strategies for dealing with orphaned records.
 
 = Installation
 
@@ -228,7 +228,7 @@ The Ancestry gem comes with a unit test suite consisting of about 1800 assertion
 
 = Internals
 
-As can be seen in the previous section, Ancestry stores a path from the root to the parent for every node. This is a variation on the materialised path database pattern. It allows Ancestry to fetch any relation (siblings, descendants, etc.) in a single sql query without the complicated algorithms and incomprehensibility associated with left and right values. Additionally, any inserts, deletes and updates only affect nodes within the affected node's own subtree.
+As can be seen in the previous section, Ancestry stores a path from the root to the parent for every node. This is a variation on the materialised path database pattern. It allows Ancestry to fetch any relation (siblings, descendants, etc.) in a single SQL query without the complicated algorithms and incomprehensibility associated with left and right values. Additionally, any inserts, deletes and updates only affect nodes within the affected node's own subtree.
 
 In the example above, the ancestry column is created as a string. This puts a limitation on the depth of the tree of about 40 or 50 levels, which I think may be enough for most users. To increase the maximum depth of the tree, increase the size of the string that is being used or change it to a text to remove the limitation entirely. Changing it to a text will however decrease performance because an index cannot be put on the column in that case.
 
@@ -238,7 +238,10 @@ The materialised path pattern requires Ancestry to use a 'like' condition in ord
 
 The latest version of ancestry is recommended. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
 
-- Version 1.2.4 (2011-4-22)
+- Version 1.2.5 (2012-03-15)
+  - Fixed warnings: "parenthesize argument(s) for future version"
+  - Fixed a bug in the restore_ancestry_integrity! method (thx Arthur Holstvoogd)
+- Version 1.2.4 (2011-04-22)
   - Prepended table names to column names in queries (thx raelik)
   - Better check to see if acts_as_tree can be overloaded (thx jims)
   - Performance inprovements (thx kueda)
