@@ -238,6 +238,9 @@ The materialised path pattern requires Ancestry to use a 'like' condition in ord
 
 The latest version of ancestry is recommended. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
 
+- Version 1.3.0 (2012-05-04)
+  - Ancestry now ignores default scopes when moving or destroying nodes, ensuring tree consistency
+  - Changed ActiveRecord dependency to 2.3.14
 - Version 1.2.5 (2012-03-15)
   - Fixed warnings: "parenthesize argument(s) for future version"
   - Fixed a bug in the restore_ancestry_integrity! method (thx Arthur Holstvoogd)
