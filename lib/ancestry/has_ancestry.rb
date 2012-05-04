@@ -1,7 +1,3 @@
-require 'ancestry/class_methods'
-require 'ancestry/instance_methods'
-require 'ancestry/exceptions'
-
 class << ActiveRecord::Base
   def has_ancestry options = {}
     # Check options

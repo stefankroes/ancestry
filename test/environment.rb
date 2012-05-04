@@ -3,7 +3,7 @@ Gem.activate 'activerecord', ENV['ar'] || '3.0.0'
 require 'active_record'
 require 'active_support/test_case'
 require 'test/unit'
-require 'ancestry'
+require 'lib/ancestry'
 
 class AncestryTestDatabase
   def self.setup
@@ -12,10 +12,11 @@ class AncestryTestDatabase
   end
 
   def self.with_model options = {}
-    depth         = options.delete(:depth) || 0
-    width         = options.delete(:width) || 0
-    extra_columns = options.delete(:extra_columns)
-    primary_key_type = options.delete(:primary_key_type) || :default
+    depth                = options.delete(:depth) || 0
+    width                = options.delete(:width) || 0
+    extra_columns        = options.delete(:extra_columns)
+    primary_key_type     = options.delete(:primary_key_type) || :default
+    default_scope_params = options.delete(:default_scope_params)
 
     ActiveRecord::Base.connection.create_table 'test_nodes', :id => (primary_key_type == :default) do |table|
       table.string :id, :null => false if primary_key_type == :string
@@ -29,12 +30,12 @@ class AncestryTestDatabase
     begin
       model = Class.new(ActiveRecord::Base)
       (class << model; self; end).send :define_method, :model_name do; Struct.new(:human, :underscore, :i18n_key).new 'TestNode', 'test_node', 'test_node'; end
-      const_set 'TestNode', model
 
       if primary_key_type == :string
-        model.before_create { self.id = ActiveSupport::SecureRandom.hex(10) }
+        model.before_create { |instance| instance.id = ActiveSupport::SecureRandom.hex(10) }
       end
       model.send :set_table_name, 'test_nodes'
+      model.send :default_scope, default_scope_params if default_scope_params.present?
       model.has_ancestry options unless options.delete(:skip_ancestry)
 
       if depth > 0
@@ -44,7 +45,6 @@ class AncestryTestDatabase
       end
     ensure
       ActiveRecord::Base.connection.drop_table 'test_nodes'
-      remove_const "TestNode"
     end
   end
 
