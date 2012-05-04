@@ -704,14 +704,4 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert_equal [n1, n2, n4, n3, n5].map(&:id), arranged.map(&:id)
     end
   end
-
-  def test_arrangement_nesting
-    AncestryTestDatabase.with_model :extra_columns => {:name => :string} do |model|
-      model.send :default_scope, model.order('name')
-
-      model.create!(:name => 'Linux').children.create! :name => 'Debian'
-
-      assert_equal 1, model.arrange.count
-    end
-  end
 end

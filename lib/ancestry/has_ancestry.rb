@@ -51,8 +51,8 @@ class << ActiveRecord::Base
     send scope_method, :descendants_of, lambda { |object| {:conditions => to_node(object).descendant_conditions} }
     send scope_method, :subtree_of, lambda { |object| {:conditions => to_node(object).subtree_conditions} }
     send scope_method, :siblings_of, lambda { |object| {:conditions => to_node(object).sibling_conditions} }
-    send scope_method, :ordered_by_ancestry, reorder("(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}")
-    send scope_method, :ordered_by_ancestry_and, lambda { |order| reorder("(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}, #{order}") }
+    send scope_method, :ordered_by_ancestry, :order => "(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}"
+    send scope_method, :ordered_by_ancestry_and, lambda { |order| {:order => "(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}, #{order}"} }
     
     # Update descendants with new ancestry before save
     before_save :update_descendants_with_new_ancestry
