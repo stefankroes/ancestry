@@ -74,7 +74,7 @@ module Ancestry
     end
 
     def ancestors depth_options = {}
-      self.base_class.scope_depth(depth_options, depth).ordered_by_ancestry.scoped :conditions => ancestor_conditions
+      self.base_class.reorder('').scope_depth(depth_options, depth).ordered_by_ancestry.scoped :conditions => ancestor_conditions
     end
 
     def path_ids
