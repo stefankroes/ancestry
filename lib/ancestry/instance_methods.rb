@@ -48,8 +48,8 @@ module Ancestry
                 descendant.destroy
               end
             end
-          # ... make child elements of this node, child of its parent if orphan strategy is parentify
-          elsif self.base_class.orphan_strategy == :parentify
+          # ... make child elements of this node, child of its parent if orphan strategy is adopt
+          elsif self.base_class.orphan_strategy == :adopt
             descendants.all.each do |descendant|
               descendant.without_ancestry_callbacks do
 								new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")

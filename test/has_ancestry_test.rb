@@ -324,9 +324,9 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 	
-	def test_orphan_parentify_strategy
+	def test_orphan_adopt_strategy
 		AncestryTestDatabase.with_model do |model|
-			model.orphan_strategy = :parentify 	# set the orphan strategy as paerntify
+			model.orphan_strategy = :adopt 	# set the orphan strategy as paerntify
       n1 = model.create!									#create a root node
       n2 = model.create!(:parent => n1)		#create child with parent=root
       n3 = model.create!(:parent => n2)		#create child with parent=n2, depth = 2
