@@ -2,7 +2,7 @@ module Ancestry
   module InstanceMethods
     # Validate that the ancestors don't include itself
     def ancestry_exclude_self
-      add_error_to_base "#{self.class.name.humanize} cannot be a descendant of itself." if ancestor_ids.include? self.id
+      errors.add(:base, "#{self.class.name.humanize} cannot be a descendant of itself.") if ancestor_ids.include? self.id
     end
 
     # Update descendants with new ancestry
@@ -207,15 +207,6 @@ module Ancestry
     end
 
   private
-
-    # Workaround to support Rails 2
-    def add_error_to_base error
-      if rails_3
-        errors[:base] << error
-      else
-        errors.add_to_base error
-      end
-    end
 
     def cast_primary_key(key)
       if primary_key_type == :string

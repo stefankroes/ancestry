@@ -74,7 +74,7 @@ module Ancestry
       parents = {}
       exceptions = [] if options[:report] == :list
       
-      self.base_class.send(:with_exclusive_scope) do 
+      self.base_class.unscoped do 
         # For each node ...
         self.base_class.find_each do |node|
           begin
@@ -112,7 +112,7 @@ module Ancestry
       parents = {}
       # Wrap the whole thing in a transaction ...
       self.base_class.transaction do
-        self.base_class.send(:with_exclusive_scope) do 
+        self.base_class.unscoped do 
           # For each node ...
           self.base_class.find_each do |node|
             # ... set its ancestry to nil if invalid
@@ -149,7 +149,7 @@ module Ancestry
     
     # Build ancestry from parent id's for migration purposes
     def build_ancestry_from_parent_ids! parent_id = nil, ancestry = nil
-      self.base_class.send(:with_exclusive_scope) do 
+      self.base_class.unscoped do 
         self.base_class.find_each(:conditions => {:parent_id => parent_id}) do |node|
           node.without_ancestry_callbacks do
             node.update_attribute ancestry_column, ancestry
@@ -163,7 +163,7 @@ module Ancestry
     def rebuild_depth_cache!
       raise Ancestry::AncestryException.new("Cannot rebuild depth cache for model without depth caching.") unless respond_to? :depth_cache_column
       
-      self.base_class.send(:with_exclusive_scope) do 
+      self.base_class.unscoped do 
         self.base_class.find_each do |node|
           node.update_attribute depth_cache_column, node.depth
         end
