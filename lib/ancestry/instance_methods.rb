@@ -9,8 +9,8 @@ module Ancestry
     def update_descendants_with_new_ancestry
       # Skip this if callbacks are disabled
       unless ancestry_callbacks_disabled?
-        # If node is valid, not a new record and ancestry was updated ...
-        if changed.include?(self.base_class.ancestry_column.to_s) && !new_record? && valid?
+        # If node is not a new record and ancestry was updated and the new ancestry is sane ...
+        if changed.include?(self.base_class.ancestry_column.to_s) && !new_record? && sane_ancestry?
           # ... for each descendant ...
           unscoped_descendants.each do |descendant|
             # ... replace old ancestry with new ancestry
@@ -221,9 +221,15 @@ module Ancestry
     end
     
     def unscoped_descendants
-      self.base_class.send(:with_exclusive_scope) do 
+      self.base_class.unscoped do 
         self.base_class.all(:conditions => descendant_conditions) 
       end
+    end
+    
+    # basically validates the ancestry, but also applied if validation is
+    # bypassed to determine if chidren should be affected
+    def sane_ancestry?
+      ancestry.nil? || (ancestry.to_s =~ Ancestry::ANCESTRY_PATTERN && !ancestor_ids.include?(self.id))
     end
   end
 end

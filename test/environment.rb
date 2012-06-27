@@ -9,7 +9,11 @@ end
 require 'active_record'
 require 'active_support/test_case'
 require 'test/unit'
-require 'ancestry'
+
+# this is to make absolutely sure we test this one, not the one
+# installed on the system.
+require File.expand_path('../../lib/ancestry', __FILE__)
+
 require 'debugger' if RUBY_VERSION =~ /\A1.9/
 
 class AncestryTestDatabase
