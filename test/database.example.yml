@@ -1,6 +1,3 @@
-sqlite: 
-  adapter: sqlite 
-  database: ":memory:"
 sqlite3: 
   adapter: sqlite3 
   database: ":memory:"
@@ -9,6 +6,7 @@ postgresql:
   database: ancestry_test
   username: ancestry
   password: ancestry
+  min_messages: WARNING
 mysql: 
   adapter: mysql 
   host: localhost 

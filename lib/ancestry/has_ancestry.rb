@@ -3,7 +3,7 @@ class << ActiveRecord::Base
     # Check options
     raise Ancestry::AncestryException.new("Options for has_ancestry must be in a hash.") unless options.is_a? Hash
     options.each do |key, value|
-      unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :primary_key_format].include? key
+      unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column].include? key
         raise Ancestry::AncestryException.new("Unknown option for has_ancestry: #{key.inspect} => #{value.inspect}.")
       end
     end
@@ -27,8 +27,7 @@ class << ActiveRecord::Base
     self.base_class = self
     
     # Validate format of ancestry column value
-    primary_key_format = options[:primary_key_format] || /[0-9]+/
-    validates_format_of ancestry_column, :with => /\A#{primary_key_format.source}(\/#{primary_key_format.source})*\Z/, :allow_nil => true
+    validates_format_of ancestry_column, :with => /\A[0-9]+(\/[0-9]+)*\Z/, :allow_nil => true
 
     # Validate that the ancestor ids don't include own id
     validate :ancestry_exclude_self
@@ -47,8 +46,8 @@ class << ActiveRecord::Base
     send scope_method, :descendants_of, lambda { |object| {:conditions => to_node(object).descendant_conditions} }
     send scope_method, :subtree_of, lambda { |object| {:conditions => to_node(object).subtree_conditions} }
     send scope_method, :siblings_of, lambda { |object| {:conditions => to_node(object).sibling_conditions} }
-    send scope_method, :ordered_by_ancestry, :order => "(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}"
-    send scope_method, :ordered_by_ancestry_and, lambda { |order| {:order => "(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}, #{order}"} }
+    send scope_method, :ordered_by_ancestry, reorder("(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}")
+    send scope_method, :ordered_by_ancestry_and, lambda { |order| reorder("(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}, #{order}") }
     
     # Update descendants with new ancestry before save
     before_save :update_descendants_with_new_ancestry

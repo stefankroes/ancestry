@@ -4,3 +4,4 @@ doc
 **/*.db
 test/database.yml
 coverage
+Gemfile.lock
