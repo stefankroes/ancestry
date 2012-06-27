@@ -27,7 +27,7 @@ module Ancestry
         end
       end
     end
-
+     
     # Apply orphan strategy
     def apply_orphan_strategy
       # Skip this if callbacks are disabled
@@ -46,6 +46,14 @@ module Ancestry
             unscoped_descendants.each do |descendant|
               descendant.without_ancestry_callbacks do
                 descendant.destroy
+              end
+            end
+          # ... make child elements of this node, child of its parent if orphan strategy is adopt
+          elsif self.base_class.orphan_strategy == :adopt
+            descendants.all.each do |descendant|
+              descendant.without_ancestry_callbacks do
+                new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")
+                descendant.update_attribute descendant.class.ancestry_column, new_ancestry || nil
               end
             end
           # ... throw an exception if it has children and orphan strategy is restrict
@@ -158,7 +166,7 @@ module Ancestry
     end
 
     def sibling_ids
-       siblings.all(:select => self.base_class.primary_key).collect(&self.base_class.primary_key.to_sym)
+      siblings.all(:select => self.base_class.primary_key).collect(&self.base_class.primary_key.to_sym)
     end
 
     def has_siblings?
@@ -219,7 +227,6 @@ module Ancestry
     def primary_key_type
       @primary_key_type ||= column_for_attribute(self.class.primary_key).type
     end
-    
     def unscoped_descendants
       self.base_class.unscoped do
         self.base_class.all(:conditions => descendant_conditions) 
