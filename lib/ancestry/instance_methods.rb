@@ -103,7 +103,7 @@ module Ancestry
     end
 
     def parent_id= parent_id
-      self.parent = if parent_id.blank? then nil else self.base_class.find(parent_id) end
+      self.parent = if parent_id.blank? then nil else unscoped_find(parent_id) end
     end
 
     def parent_id
@@ -111,7 +111,7 @@ module Ancestry
     end
 
     def parent
-      if parent_id.blank? then nil else self.base_class.find(parent_id) end
+      if parent_id.blank? then nil else unscoped_find(parent_id) end
     end
 
     # Root
@@ -120,7 +120,7 @@ module Ancestry
     end
 
     def root
-      if root_id == id then self else self.base_class.find(root_id) end
+      if root_id == id then self else unscoped_find(root_id) end
     end
 
     def is_root?
@@ -221,7 +221,7 @@ module Ancestry
     end
     
     def unscoped_descendants
-      self.base_class.unscoped do 
+      self.base_class.unscoped do
         self.base_class.all(:conditions => descendant_conditions) 
       end
     end
@@ -230,6 +230,10 @@ module Ancestry
     # bypassed to determine if chidren should be affected
     def sane_ancestry?
       ancestry.nil? || (ancestry.to_s =~ Ancestry::ANCESTRY_PATTERN && !ancestor_ids.include?(self.id))
+    end
+    
+    def unscoped_find id
+      self.base_class.unscoped { self.base_class.find(id) }
     end
   end
 end
