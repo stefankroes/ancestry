@@ -78,7 +78,7 @@ module Ancestry
     end
 
     def ancestor_conditions
-      {self.base_class.primary_key => ancestor_ids}
+      {primary_key_with_table => ancestor_ids}
     end
 
     def ancestors depth_options = {}
@@ -90,7 +90,7 @@ module Ancestry
     end
 
     def path_conditions
-      {self.base_class.primary_key => path_ids}
+      {primary_key_with_table => path_ids}
     end
 
     def path depth_options = {}
@@ -158,7 +158,7 @@ module Ancestry
 
     # Siblings
     def sibling_conditions
-      {self.base_class.ancestry_column => read_attribute(self.base_class.ancestry_column)}
+      {primary_key_with_table => read_attribute(self.base_class.ancestry_column)}
     end
 
     def siblings
@@ -192,7 +192,7 @@ module Ancestry
 
     # Subtree
     def subtree_conditions
-      ["#{self.base_class.table_name}.#{self.base_class.primary_key} = ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
+      ["#{primary_key_with_table} = ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
     end
 
     def subtree depth_options = {}
@@ -222,6 +222,10 @@ module Ancestry
       else
         key.to_i
       end
+    end
+
+    def primary_key_with_table
+      "#{self.base_class.table_name}.#{self.base_class.primary_key}"
     end
 
     def primary_key_type
