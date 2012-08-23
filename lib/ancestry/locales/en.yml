@@ -1,6 +1,6 @@
 en:
   ancestry:
-    unkown_depth_option: "Unknown depth option: %{scope_name}."
+    unknown_depth_option: "Unknown depth option: %{scope_name}."
     invalid_orphan_strategy: "Invalid orphan strategy, valid ones are :rootify, :adopt, :restrict and :destroy."
     invalid_ancestry_column: "Invalid format for ancestry column of node %{node_id}: %{ancestry_column}."
     reference_nonexistent_node: "Reference to nonexistent node in node %{node_id}: %{ancestor_id}."

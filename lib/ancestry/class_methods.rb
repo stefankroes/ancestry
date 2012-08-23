@@ -12,7 +12,7 @@ module Ancestry
         if [:before_depth, :to_depth, :at_depth, :from_depth, :after_depth].include? scope_name
           scope.send scope_name, depth + relative_depth
         else
-          raise Ancestry::AncestryException.new(I18n.t("ancestry.unkown_depth_option", {:scope_name => scope_name}))
+          raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_depth_option", {:scope_name => scope_name}))
         end
       end
     end
