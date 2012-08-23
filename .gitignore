@@ -5,3 +5,5 @@ doc
 test/database.yml
 coverage
 Gemfile.lock
+.bundle
+bin
