@@ -7,7 +7,7 @@ class << ActiveRecord::Base
         raise Ancestry::AncestryException.new("Unknown option for has_ancestry: #{key.inspect} => #{value.inspect}.")
       end
     end
-    
+
     # Include instance methods
     include Ancestry::InstanceMethods
 
@@ -25,13 +25,13 @@ class << ActiveRecord::Base
     # Save self as base class (for STI)
     cattr_accessor :base_class
     self.base_class = self
-    
+
     # Validate format of ancestry column value
     validates_format_of ancestry_column, :with => Ancestry::ANCESTRY_PATTERN, :allow_nil => true
 
     # Validate that the ancestor ids don't include own id
     validate :ancestry_exclude_self
-    
+
     # Named scopes
     scope :roots, :conditions => {ancestry_column => nil}
     scope :ancestors_of, lambda { |object| {:conditions => to_node(object).ancestor_conditions} }
@@ -41,7 +41,7 @@ class << ActiveRecord::Base
     scope :siblings_of, lambda { |object| {:conditions => to_node(object).sibling_conditions} }
     scope :ordered_by_ancestry, reorder("(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}")
     scope :ordered_by_ancestry_and, lambda { |order| reorder("(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}, #{order}") }
-    
+
     # Update descendants with new ancestry before save
     before_save :update_descendants_with_new_ancestry
 
@@ -60,7 +60,7 @@ class << ActiveRecord::Base
       # Validate depth column
       validates_numericality_of depth_cache_column, :greater_than_or_equal_to => 0, :only_integer => true, :allow_nil => false
     end
-    
+
     # Create named scopes for depth
     {:before_depth => '<', :to_depth => '<=', :at_depth => '=', :from_depth => '>=', :after_depth => '>'}.each do |scope_name, operator|
       scope scope_name, lambda { |depth|
@@ -69,9 +69,9 @@ class << ActiveRecord::Base
       }
     end
   end
-  
+
   # Alias has_ancestry with acts_as_tree, if it's available.
-  if !defined?(ActsAsTree) 
+  if !defined?(ActsAsTree)
     alias_method :acts_as_tree, :has_ancestry
   end
 end
