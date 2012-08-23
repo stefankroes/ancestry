@@ -2,10 +2,10 @@ module Ancestry
   module HasAncestry
     def has_ancestry options = {}
       # Check options
-      raise Ancestry::AncestryException.new("Options for has_ancestry must be in a hash.") unless options.is_a? Hash
+      raise Ancestry::AncestryException.new(I18n.t("ancestry.option_must_be_hash")) unless options.is_a? Hash
       options.each do |key, value|
         unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy].include? key
-          raise Ancestry::AncestryException.new("Unknown option for has_ancestry: #{key.inspect} => #{value.inspect}.")
+          raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_option", {:key => key.inspect, :value => value.inspect}))
         end
       end
 
@@ -78,7 +78,9 @@ module Ancestry
       # Create named scopes for depth
       {:before_depth => '<', :to_depth => '<=', :at_depth => '=', :from_depth => '>=', :after_depth => '>'}.each do |scope_name, operator|
         scope scope_name, lambda { |depth|
-          raise Ancestry::AncestryException.new("Named scope '#{scope_name}' is only available when depth caching is enabled.") unless options[:cache_depth]
+          raise Ancestry::AncestryException.new(I18n.t("ancestry.named_scope_depth_cache",
+                                                       :scope_name => scope_name
+                                                       )) unless options[:cache_depth]
           where("#{depth_cache_column} #{operator} ?", depth)
         }
       end
