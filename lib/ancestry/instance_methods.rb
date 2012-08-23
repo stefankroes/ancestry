@@ -2,7 +2,7 @@ module Ancestry
   module InstanceMethods
     # Validate that the ancestors don't include itself
     def ancestry_exclude_self
-      errors.add(:base, "#{self.class.name.humanize} cannot be a descendant of itself.") if ancestor_ids.include? self.id
+      errors.add(:base, I18n.t("ancestry.exclude_self", {:class_name => self.class.name.humanize})) if ancestor_ids.include? self.id
     end
 
     # Update descendants with new ancestry
@@ -58,7 +58,7 @@ module Ancestry
             end
           # ... throw an exception if it has children and orphan strategy is restrict
           elsif self.base_class.orphan_strategy == :restrict
-            raise Ancestry::AncestryException.new('Cannot delete record because it has descendants.') unless is_childless?
+            raise Ancestry::AncestryException.new(I18n.t("ancestry.cannot_delete_descendants")) unless is_childless?
           end
         end
       end
@@ -67,7 +67,7 @@ module Ancestry
     # The ancestry value for this record's children
     def child_ancestry
       # New records cannot have children
-      raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
+      raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
 
       if self.send("#{self.base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.base_class.ancestry_column}_was"}/#{id}" end
     end

@@ -12,7 +12,7 @@ module Ancestry
         if [:before_depth, :to_depth, :at_depth, :from_depth, :after_depth].include? scope_name
           scope.send scope_name, depth + relative_depth
         else
-          raise Ancestry::AncestryException.new("Unknown depth option: #{scope_name}.")
+          raise Ancestry::AncestryException.new(I18n.t("ancestry.unkown_depth_option", {:scope_name => scope_name}))
         end
       end
     end
@@ -23,7 +23,7 @@ module Ancestry
       if [:rootify, :adopt, :restrict, :destroy].include? orphan_strategy
         class_variable_set :@@orphan_strategy, orphan_strategy
       else
-        raise Ancestry::AncestryException.new("Invalid orphan strategy, valid ones are :rootify,:adopt, :restrict and :destroy.")
+        raise Ancestry::AncestryException.new(I18n.t("ancestry.invalid_orphan_strategy"))
       end
     end
 
@@ -80,19 +80,32 @@ module Ancestry
           begin
             # ... check validity of ancestry column
             if !node.valid? and !node.errors[node.class.ancestry_column].blank?
-              raise Ancestry::AncestryIntegrityException.new("Invalid format for ancestry column of node #{node.id}: #{node.read_attribute node.ancestry_column}.")
+              raise Ancestry::AncestryIntegrityException.new(I18n.t("ancestry.invalid_ancestry_column",
+                                                                    {
+                                                                      :node_id => node.id,
+                                                                      :ancestry_column => "#{node.read_attribute node.ancestry_column}"
+                                                                    }))
             end
             # ... check that all ancestors exist
             node.ancestor_ids.each do |ancestor_id|
               unless exists? ancestor_id
-                raise Ancestry::AncestryIntegrityException.new("Reference to non-existent node in node #{node.id}: #{ancestor_id}.")
+                raise Ancestry::AncestryIntegrityException.new(I18n.t("ancestry.reference_nonexistent_node",
+                                                                      {
+                                                                        :node_id => node.id,
+                                                                        :ancestor_id => ancestor_id
+                                                                      }))
               end
             end
             # ... check that all node parents are consistent with values observed earlier
             node.path_ids.zip([nil] + node.path_ids).each do |node_id, parent_id|
               parents[node_id] = parent_id unless parents.has_key? node_id
               unless parents[node_id] == parent_id
-                raise Ancestry::AncestryIntegrityException.new("Conflicting parent id found in node #{node.id}: #{parent_id || 'nil'} for node #{node_id} while expecting #{parents[node_id] || 'nil'}")
+                raise Ancestry::AncestryIntegrityException.new(I18n.t("ancestry.conflicting_parent_id",
+                                                                      {
+                                                                        :node_id => node_id,
+                                                                        :parent_id => parent_id || 'nil',
+                                                                        :expected => parents[node_id] || 'nil'
+                                                                      }))
               end
             end
           rescue Ancestry::AncestryIntegrityException => integrity_exception
@@ -161,7 +174,7 @@ module Ancestry
 
     # Rebuild depth cache if it got corrupted or if depth caching was just turned on
     def rebuild_depth_cache!
-      raise Ancestry::AncestryException.new("Cannot rebuild depth cache for model without depth caching.") unless respond_to? :depth_cache_column
+      raise Ancestry::AncestryException.new(I18n.t("ancestry.cannot_rebuild_depth_cache")) unless respond_to? :depth_cache_column
 
       self.base_class.unscoped do
         self.base_class.find_each do |node|
