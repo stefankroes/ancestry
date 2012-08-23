@@ -519,7 +519,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
         end
       end
 
-      # Assert all nodes where created
+      # Assert all nodes were created
       assert_equal (0..3).map { |n| 5 ** n }.sum, model.count
 
       model.has_ancestry
