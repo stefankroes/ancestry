@@ -1,7 +1,7 @@
 require "environment"
 
 class HasAncestryTreeTest < ActiveSupport::TestCase
-  
+
   def test_default_ancestry_column
     AncestryTestDatabase.with_model do |model|
       assert_equal :ancestry, model.ancestry_column
@@ -303,7 +303,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_orphan_adopt_strategy
     AncestryTestDatabase.with_model do |model|
       model.orphan_strategy = :adopt  # set the orphan strategy as paerntify
@@ -519,7 +519,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
         end
       end
 
-      # Assert all nodes where created
+      # Assert all nodes were created
       assert_equal (0..3).map { |n| 5 ** n }.sum, model.count
 
       model.has_ancestry
@@ -689,7 +689,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_sort_by_ancestry
     AncestryTestDatabase.with_model do |model|
       n1 = model.create!
@@ -697,22 +697,22 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       n3 = model.create!(:parent => n2)
       n4 = model.create!(:parent => n2)
       n5 = model.create!(:parent => n1)
-      
+
       arranged = model.sort_by_ancestry(model.all.sort_by(&:id).reverse)
       assert_equal [n1, n2, n4, n3, n5].map(&:id), arranged.map(&:id)
     end
   end
-  
+
   def test_node_excluded_by_default_scope_should_still_move_with_parent
     AncestryTestDatabase.with_model(
-      :width => 3, :depth => 3, :extra_columns => {:deleted_at => :datetime}, 
+      :width => 3, :depth => 3, :extra_columns => {:deleted_at => :datetime},
       :default_scope_params => {:conditions => {:deleted_at => nil}}
     ) do |model, roots|
       grandparent = model.roots.all[0]
       new_grandparent = model.roots.all[1]
       parent = grandparent.children.first
       child = parent.children.first
-      
+
       child.update_attributes :deleted_at => Time.now
       parent.update_attributes :parent => new_grandparent
       child.update_attributes :deleted_at => nil
@@ -723,34 +723,34 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
 
   def test_node_excluded_by_default_scope_should_be_destroyed_with_parent
     AncestryTestDatabase.with_model(
-      :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime}, 
+      :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime},
       :default_scope_params => {:conditions => {:deleted_at => nil}},
       :orphan_strategy => :destroy
     ) do |model, roots|
       parent = model.roots.first
       child = parent.children.first
-      
+
       child.update_attributes :deleted_at => Time.now
       parent.destroy
       child.update_attributes :deleted_at => nil
-      
+
       assert model.count.zero?
     end
   end
 
   def test_node_excluded_by_default_scope_should_be_rootified
     AncestryTestDatabase.with_model(
-      :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime}, 
+      :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime},
       :default_scope_params => {:conditions => {:deleted_at => nil}},
       :orphan_strategy => :rootify
     ) do |model, roots|
       parent = model.roots.first
       child = parent.children.first
-      
+
       child.update_attributes :deleted_at => Time.now
       parent.destroy
       child.update_attributes :deleted_at => nil
-      
+
       assert child.reload.is_root?
     end
   end
