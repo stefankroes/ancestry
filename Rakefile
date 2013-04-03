@@ -16,9 +16,9 @@ end
 desc 'Test the ancestry plugin with multiple databases and activerecord versions.'
 task :test_all do |t|
   commands = []
-  %w(3.0.0 3.1.0 3.2.0).each do |activerecord_version|
+  %w(Gemfile.rails-3-0 Gemfile.rails-3-1 Gemfile).each do |gemfile|
     %w(sqlite3 postgresql mysql).each do |database_adapter|
-      commands << "rake test ar=#{activerecord_version} db=#{database_adapter}"
+      commands << "rake test db=#{database_adapter} BUNDLE_GEMFILE=#{gemfile}"
     end
   end
   

@@ -1,10 +1,5 @@
 require 'rubygems'
-
-if ENV['ar'].nil?
-  gem 'activerecord'
-else 
-  gem 'activerecord', ENV['ar']
-end
+require 'bundler/setup'
 
 require 'active_record'
 require 'active_support/test_case'
@@ -19,7 +14,7 @@ require 'debugger' if RUBY_VERSION =~ /\A1.9/
 class AncestryTestDatabase
   def self.setup
     ActiveRecord::Base.logger = ActiveSupport::BufferedLogger.new('log/test.log')
-    ActiveRecord::Base.establish_connection YAML.load(File.open(File.join(File.dirname(__FILE__), 'database.yml')).read)[ENV['db'] || 'sqlite3']
+    ActiveRecord::Base.establish_connection YAML.load(File.open(File.expand_path('../database.yml', __FILE__)).read)[ENV['db'] || 'sqlite3']
   end
 
   def self.with_model options = {}

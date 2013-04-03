@@ -225,7 +225,18 @@ Additionally, if you think something is wrong with your depth cache:
 
 = Tests
 
-The Ancestry gem comes with a unit test suite consisting of about 1800 assertions in about 30 tests. It takes about 10 seconds to run on sqlite. To run it yourself check out the repository from GitHub, copy test/database.example.yml to test/database.yml and type 'rake'. You can pass rake style options for ActiveRecord version to test against (e.g. ar=3.0.1) and database to test against (e.g. db=mysql). The test suite is located in test/has_ancestry_test.rb.
+The Ancestry gem comes with a unit test suite consisting of about 1800 assertions in about 30 tests. It takes about 10 seconds to run on sqlite. To run it yourself:
+- check out the repository from GitHub
+- copy test/database.example.yml to test/database.yml
+- run <tt>bundle</tt>
+- run <tt>rake [test]</tt>
+
+You can pass rake style options for database to test against (e.g. db=mysql). By default, the test suite runs against the latest activerecord version. You can run agains activerecord 3-0 or 3-1 as follows:
+- run <tt>bundle --gemfile Gemfile.rails-<version></tt>
+- run <tt>rake [test] BUNDLE_GEMFILE=Gemfile.rails-<version></tt>
+
+To run the test suite multiple times against several databases and all supported activerecord versions, run <tt>rake test_all</tt>
+The test suite is located in test/has_ancestry_test.rb.
 
 = Internals
 

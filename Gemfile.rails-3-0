@@ -1,6 +1,6 @@
 source 'http://rubygems.org'
 
-gem 'activerecord', '~> 3.2.13'
+gem 'activerecord', '~> 3.0.20'
 
 group :development, :test do
   gem 'debugger'
