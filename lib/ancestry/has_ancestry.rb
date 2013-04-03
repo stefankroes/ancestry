@@ -33,13 +33,13 @@ class << ActiveRecord::Base
     validate :ancestry_exclude_self
     
     # Named scopes
-    scope :roots, :conditions => {ancestry_column => nil}
-    scope :ancestors_of, lambda { |object| {:conditions => to_node(object).ancestor_conditions} }
-    scope :children_of, lambda { |object| {:conditions => to_node(object).child_conditions} }
-    scope :descendants_of, lambda { |object| {:conditions => to_node(object).descendant_conditions} }
-    scope :subtree_of, lambda { |object| {:conditions => to_node(object).subtree_conditions} }
-    scope :siblings_of, lambda { |object| {:conditions => to_node(object).sibling_conditions} }
-    scope :ordered_by_ancestry, reorder("(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}")
+    scope :roots, lambda { where(ancestry_column => nil) }
+    scope :ancestors_of, lambda { |object| where(to_node(object).ancestor_conditions) }
+    scope :children_of, lambda { |object| where(to_node(object).child_conditions) }
+    scope :descendants_of, lambda { |object| where(to_node(object).descendant_conditions) }
+    scope :subtree_of, lambda { |object| where(to_node(object).subtree_conditions) }
+    scope :siblings_of, lambda { |object| where(to_node(object).sibling_conditions) }
+    scope :ordered_by_ancestry, lambda { reorder("(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}") }
     scope :ordered_by_ancestry_and, lambda { |order| reorder("(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}, #{order}") }
     
     # Update descendants with new ancestry before save
