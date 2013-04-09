@@ -14,7 +14,8 @@ require 'debugger' if RUBY_VERSION =~ /\A1.9/
 
 class AncestryTestDatabase
   def self.setup
-    ActiveRecord::Base.logger = ActiveSupport::BufferedLogger.new('log/test.log')
+    logger = ActiveSupport.const_defined?(:Logger) ? :Logger : :BufferedLogger
+    ActiveRecord::Base.logger = ActiveSupport.const_get(logger).new('log/test.log')
     ActiveRecord::Base.establish_connection YAML.load(File.open(File.expand_path('../database.yml', __FILE__)).read)[ENV['db'] || 'sqlite3']
   end
 
@@ -40,7 +41,17 @@ class AncestryTestDatabase
       const_set model_name, model
 
       model.table_name = 'test_nodes'
-      model.send :default_scope, default_scope_params if default_scope_params.present?
+
+      if default_scope_params.present?
+
+        # Rails < 3.1 doesn't support lambda default_scopes (only hashes)
+        # But Rails >= 4 logs deprecation warnings for hash default_scopes
+        if ActiveRecord::VERSION::STRING < "3.1"
+          model.send :default_scope, { :conditions => default_scope_params }
+        else
+          model.send :default_scope, lambda { model.where(default_scope_params) }
+        end
+      end
 
       model.has_ancestry options unless options.delete(:skip_ancestry)
 

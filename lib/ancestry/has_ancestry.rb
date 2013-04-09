@@ -65,7 +65,7 @@ class << ActiveRecord::Base
     {:before_depth => '<', :to_depth => '<=', :at_depth => '=', :from_depth => '>=', :after_depth => '>'}.each do |scope_name, operator|
       scope scope_name, lambda { |depth|
         raise Ancestry::AncestryException.new("Named scope '#{scope_name}' is only available when depth caching is enabled.") unless options[:cache_depth]
-        {:conditions => ["#{depth_cache_column} #{operator} ?", depth]}
+        where("#{depth_cache_column} #{operator} ?", depth)
       }
     end
   end
