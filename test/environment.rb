@@ -3,6 +3,7 @@ require 'bundler/setup'
 
 require 'active_record'
 require 'active_support/test_case'
+require 'active_support/buffered_logger'
 require 'test/unit'
 
 # this is to make absolutely sure we test this one, not the one
