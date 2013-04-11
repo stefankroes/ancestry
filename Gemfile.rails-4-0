@@ -1,0 +1,17 @@
+source 'http://rubygems.org'
+
+gem 'activerecord', '~> 4.0.0.beta1'
+
+group :development, :test do
+  gem 'debugger'
+end
+
+group :development do
+  gem 'rdoc'
+end
+
+group :test do
+  gem 'sqlite3'
+  gem 'pg'
+  gem 'mysql'
+end
