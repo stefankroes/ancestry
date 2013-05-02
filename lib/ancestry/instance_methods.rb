@@ -19,7 +19,7 @@ module Ancestry
                 self.ancestry_base_class.ancestry_column,
                 descendant.read_attribute(descendant.class.ancestry_column).gsub(
                   /^#{self.child_ancestry}/,
-                  if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
+                  if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }#{self.class.ancestry_delimiter}#{id}" end
                 )
               )
             end
@@ -38,7 +38,7 @@ module Ancestry
           if self.ancestry_base_class.orphan_strategy == :rootify
             unscoped_descendants.each do |descendant|
               descendant.without_ancestry_callbacks do
-                descendant.update_attribute descendant.class.ancestry_column, (if descendant.ancestry == child_ancestry then nil else descendant.ancestry.gsub(/^#{child_ancestry}\//, '') end)
+                descendant.update_attribute descendant.class.ancestry_column, (if descendant.ancestry == child_ancestry then nil else descendant.ancestry.gsub(/^#{child_ancestry}#{Regexp.escape(self.ancestry_base_class.ancestry_delimiter)}/, '') end)
               end
             end
           # ... destroy all descendants if orphan strategy is destroy
@@ -52,7 +52,7 @@ module Ancestry
           elsif self.ancestry_base_class.orphan_strategy == :adopt
             descendants.each do |descendant|
               descendant.without_ancestry_callbacks do
-                new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")
+                new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join(descendant.class.ancestry_delimiter)
                 # check for empty string if it's then set to nil
                 new_ancestry = nil if new_ancestry.empty?
                 descendant.update_attribute descendant.class.ancestry_column, new_ancestry || nil
@@ -90,7 +90,7 @@ module Ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
 
-      if self.send("#{self.ancestry_base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.ancestry_base_class.ancestry_column}_was"}/#{id}" end
+      if self.send("#{self.ancestry_base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.ancestry_base_class.ancestry_column}_was"}#{self.ancestry_base_class.ancestry_delimiter}#{id}" end
     end
 
     # Ancestors
@@ -100,7 +100,7 @@ module Ancestry
     end
 
     def parse_ancestry_column obj
-      obj.to_s.split('/').map { |id| cast_primary_key(id) }
+      obj.to_s.split(self.ancestry_base_class.ancestry_delimiter).map { |id| cast_primary_key(id) }
     end
 
     def ancestor_ids
@@ -257,10 +257,11 @@ module Ancestry
     def descendant_conditions
       t = get_arel_table
       # rails has case sensitive matching.
+      child_values = "#{child_ancestry}#{get_ancestry_delimiter}%"
       if defined?(ActiveRecord.version) && ActiveRecord.version.to_s >= "5"
-        t[get_ancestry_column].matches("#{child_ancestry}/%", nil, true).or(t[get_ancestry_column].eq(child_ancestry))
+        t[get_ancestry_column].matches(child_values, nil, true).or(t[get_ancestry_column].eq(child_ancestry))
       else
-        t[get_ancestry_column].matches("#{child_ancestry}/%").or(t[get_ancestry_column].eq(child_ancestry))
+        t[get_ancestry_column].matches(child_values).or(t[get_ancestry_column].eq(child_ancestry))
       end
     end
 
@@ -326,7 +327,7 @@ module Ancestry
     # Validates the ancestry, but can also be applied if validation is bypassed to determine if children should be affected
     def sane_ancestry?
       ancestry_value = read_attribute(self.ancestry_base_class.ancestry_column)
-      ancestry_value.nil? || (ancestry_value.to_s =~ Ancestry::ANCESTRY_PATTERN && !ancestor_ids.include?(self.id))
+      ancestry_value.nil? || (ancestry_value.to_s =~ self.ancestry_base_class.ancestry_pattern && !ancestor_ids.include?(self.id))
     end
 
     def unscoped_find id
@@ -343,6 +344,10 @@ module Ancestry
 
     def get_ancestry_column
       self.ancestry_base_class.ancestry_column.to_sym
+    end
+
+    def get_ancestry_delimiter
+      self.ancestry_base_class.ancestry_delimiter
     end
   end
 end

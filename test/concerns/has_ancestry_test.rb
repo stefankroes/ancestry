@@ -22,6 +22,35 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
+  def test_default_ancestry_delimiter
+    AncestryTestDatabase.with_model do |model|
+      assert_equal "/", model.ancestry_delimiter
+    end
+  end
+
+  def test_non_default_ancestry_delimiter
+    AncestryTestDatabase.with_model :ancestry_delimiter => ',' do |model|
+      assert_equal ',', model.ancestry_delimiter
+    end
+  end
+
+  def test_setting_ancestry_delimiter
+    AncestryTestDatabase.with_model do |model|
+      model.ancestry_column = :ancestors
+      assert_equal :ancestors, model.ancestry_column
+      model.ancestry_column = :ancestry
+      assert_equal :ancestry, model.ancestry_column
+    end
+  end
+
+  def test_setting_invalid_ancestry_delimiter
+    AncestryTestDatabase.with_model do |model|
+      assert_raise Ancestry::AncestryException do
+        model.ancestry_delimiter = '1'
+      end
+    end
+  end
+
   def test_invalid_has_ancestry_options
     assert_raise Ancestry::AncestryException do
       Class.new(ActiveRecord::Base).has_ancestry :this_option_doesnt_exist => 42
