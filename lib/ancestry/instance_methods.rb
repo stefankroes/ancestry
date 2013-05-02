@@ -19,7 +19,7 @@ module Ancestry
                 self.base_class.ancestry_column,
                 descendant.read_attribute(descendant.class.ancestry_column).gsub(
                   /^#{self.child_ancestry}/,
-                  if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
+                  if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }#{self.class.ancestry_delimiter}#{id}" end
                 )
               )
             end
@@ -38,7 +38,7 @@ module Ancestry
           if self.base_class.orphan_strategy == :rootify
             unscoped_descendants.each do |descendant|
               descendant.without_ancestry_callbacks do
-                descendant.update_attribute descendant.class.ancestry_column, (if descendant.ancestry == child_ancestry then nil else descendant.ancestry.gsub(/^#{child_ancestry}\//, '') end)
+                descendant.update_attribute descendant.class.ancestry_column, (if descendant.ancestry == child_ancestry then nil else descendant.ancestry.gsub(/^#{child_ancestry}#{Regexp.escape(self.class.ancestry_delimiter)}/, '') end)
               end
             end
           # ... destroy all descendants if orphan strategy is destroy
@@ -52,7 +52,7 @@ module Ancestry
           elsif self.base_class.orphan_strategy == :adopt
             descendants.each do |descendant|
               descendant.without_ancestry_callbacks do
-                new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")
+                new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join(self.class.ancestry_delimiter)
                 descendant.update_attribute descendant.class.ancestry_column, new_ancestry || nil
               end
             end
@@ -69,12 +69,12 @@ module Ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
 
-      if self.send("#{self.base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.base_class.ancestry_column}_was"}/#{id}" end
+      if self.send("#{self.base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.base_class.ancestry_column}_was"}#{self.class.ancestry_delimiter}#{id}" end
     end
 
     # Ancestors
     def ancestor_ids
-      read_attribute(self.base_class.ancestry_column).to_s.split('/').map { |id| cast_primary_key(id) }
+      read_attribute(self.base_class.ancestry_column).to_s.split(self.class.ancestry_delimiter).map { |id| cast_primary_key(id) }
     end
 
     def ancestor_conditions
@@ -179,7 +179,7 @@ module Ancestry
 
     # Descendants
     def descendant_conditions
-      ["#{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", "#{child_ancestry}/%", child_ancestry]
+      ["#{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", "#{child_ancestry}#{self.class.ancestry_delimiter}%", child_ancestry]
     end
 
     def descendants depth_options = {}
@@ -192,7 +192,7 @@ module Ancestry
 
     # Subtree
     def subtree_conditions
-      ["#{self.base_class.table_name}.#{self.base_class.primary_key} = ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
+      ["#{self.base_class.table_name}.#{self.base_class.primary_key} = ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", self.id, "#{child_ancestry}#{self.class.ancestry_delimiter}%", child_ancestry]
     end
 
     def subtree depth_options = {}
@@ -234,9 +234,9 @@ module Ancestry
     end
 
     # basically validates the ancestry, but also applied if validation is
-    # bypassed to determine if chidren should be affected
+    # bypassed to determine if children should be affected
     def sane_ancestry?
-      ancestry.nil? || (ancestry.to_s =~ Ancestry::ANCESTRY_PATTERN && !ancestor_ids.include?(self.id))
+      ancestry.nil? || (ancestry.to_s =~ self.class.ancestry_pattern && !ancestor_ids.include?(self.id))
     end
 
     def unscoped_find id
