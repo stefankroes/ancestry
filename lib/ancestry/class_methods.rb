@@ -26,6 +26,20 @@ module Ancestry
         raise Ancestry::AncestryException.new("Invalid orphan strategy, valid ones are :rootify,:adopt, :restrict and :destroy.")
       end
     end
+
+    # Delimiter writer
+    def ancestry_delimiter= ancestry_delimiter
+      # Check value of the delimiter. Restrict if it's numeric.
+      if ancestry_delimiter =~ /^\D+$/
+        class_variable_set :@@ancestry_delimiter, ancestry_delimiter
+      else
+        raise Ancestry::AncestryException.new("Invalid delimiter, only non-numeric characters are allowed.")
+      end
+    end
+
+    def ancestry_pattern
+      /\A[0-9]+(#{Regexp.escape(ancestry_delimiter)}[0-9]+)*\Z/
+    end
     
     # Arrangement
     def arrange options = {}
@@ -137,7 +151,7 @@ module Ancestry
             # ... rebuild ancestry from parents array
             ancestry, parent = nil, parents[node.id]
             until parent.nil?
-              ancestry, parent = if ancestry.nil? then parent else "#{parent}/#{ancestry}" end, parents[parent]
+              ancestry, parent = if ancestry.nil? then parent else "#{parent}#{self.ancestry_delimiter}#{ancestry}" end, parents[parent]
             end
             node.without_ancestry_callbacks do
               node.update_attribute node.ancestry_column, ancestry
@@ -154,7 +168,7 @@ module Ancestry
           node.without_ancestry_callbacks do
             node.update_attribute ancestry_column, ancestry
           end
-          build_ancestry_from_parent_ids! node.id, if ancestry.nil? then "#{node.id}" else "#{ancestry}/#{node.id}" end
+          build_ancestry_from_parent_ids! node.id, if ancestry.nil? then "#{node.id}" else "#{ancestry}#{self.ancestry_delimiter}#{node.id}" end
         end
       end
     end

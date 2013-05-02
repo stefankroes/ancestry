@@ -52,6 +52,26 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
+  def test_default_ancestry_delimiter
+    AncestryTestDatabase.with_model do |model|
+      assert_equal "/", model.ancestry_delimiter
+    end
+  end
+
+  def test_non_default_orphan_strategy
+    AncestryTestDatabase.with_model :ancestry_delimiter => ',' do |model|
+      assert_equal ',', model.ancestry_delimiter
+    end
+  end
+
+  def test_setting_invalid_ancestry_delimiter
+    AncestryTestDatabase.with_model do |model|
+      assert_raise Ancestry::AncestryException do
+        model.ancestry_delimiter = '1'
+      end
+    end
+  end
+
   def test_scoping_in_callbacks
     AncestryTestDatabase.with_model do |model|
       $random_object = model.create
