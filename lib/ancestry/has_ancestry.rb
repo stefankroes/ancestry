@@ -23,8 +23,8 @@ class << ActiveRecord::Base
     self.orphan_strategy = options[:orphan_strategy] || :destroy
 
     # Save self as base class (for STI)
-    cattr_accessor :base_class
-    self.base_class = self
+    cattr_accessor :ancestry_base_class
+    self.ancestry_base_class = self
     
     # Validate format of ancestry column value
     validates_format_of ancestry_column, :with => Ancestry::ANCESTRY_PATTERN, :allow_nil => true

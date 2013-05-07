@@ -16,7 +16,7 @@ module Ancestry
             # ... replace old ancestry with new ancestry
             descendant.without_ancestry_callbacks do
               descendant.update_attribute(
-                self.base_class.ancestry_column,
+                self.ancestry_base_class.ancestry_column,
                 descendant.read_attribute(descendant.class.ancestry_column).gsub(
                   /^#{self.child_ancestry}/,
                   if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
@@ -35,21 +35,21 @@ module Ancestry
         # If this isn't a new record ...
         unless new_record?
           # ... make all children root if orphan strategy is rootify
-          if self.base_class.orphan_strategy == :rootify
+          if self.ancestry_base_class.orphan_strategy == :rootify
             unscoped_descendants.each do |descendant|
               descendant.without_ancestry_callbacks do
                 descendant.update_attribute descendant.class.ancestry_column, (if descendant.ancestry == child_ancestry then nil else descendant.ancestry.gsub(/^#{child_ancestry}\//, '') end)
               end
             end
           # ... destroy all descendants if orphan strategy is destroy
-          elsif self.base_class.orphan_strategy == :destroy
+          elsif self.ancestry_base_class.orphan_strategy == :destroy
             unscoped_descendants.each do |descendant|
               descendant.without_ancestry_callbacks do
                 descendant.destroy
               end
             end
           # ... make child elements of this node, child of its parent if orphan strategy is adopt
-          elsif self.base_class.orphan_strategy == :adopt
+          elsif self.ancestry_base_class.orphan_strategy == :adopt
             descendants.each do |descendant|
               descendant.without_ancestry_callbacks do
                 new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")
@@ -57,7 +57,7 @@ module Ancestry
               end
             end
           # ... throw an exception if it has children and orphan strategy is restrict
-          elsif self.base_class.orphan_strategy == :restrict
+          elsif self.ancestry_base_class.orphan_strategy == :restrict
             raise Ancestry::AncestryException.new('Cannot delete record because it has descendants.') unless is_childless?
           end
         end
@@ -69,24 +69,24 @@ module Ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
 
-      if self.send("#{self.base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.base_class.ancestry_column}_was"}/#{id}" end
+      if self.send("#{self.ancestry_base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.ancestry_base_class.ancestry_column}_was"}/#{id}" end
     end
 
     # Ancestors
     def ancestry_changed?
-      changed.include?(self.base_class.ancestry_column.to_s)
+      changed.include?(self.ancestry_base_class.ancestry_column.to_s)
     end
 
     def ancestor_ids
-      read_attribute(self.base_class.ancestry_column).to_s.split('/').map { |id| cast_primary_key(id) }
+      read_attribute(self.ancestry_base_class.ancestry_column).to_s.split('/').map { |id| cast_primary_key(id) }
     end
 
     def ancestor_conditions
-      {self.base_class.primary_key => ancestor_ids}
+      {self.ancestry_base_class.primary_key => ancestor_ids}
     end
 
     def ancestors depth_options = {}
-      self.base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where  ancestor_conditions
+      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where  ancestor_conditions
     end
 
     def path_ids
@@ -94,11 +94,11 @@ module Ancestry
     end
 
     def path_conditions
-      {self.base_class.primary_key => path_ids}
+      {self.ancestry_base_class.primary_key => path_ids}
     end
 
     def path depth_options = {}
-      self.base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where  path_conditions
+      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where  path_conditions
     end
 
     def depth
@@ -106,12 +106,12 @@ module Ancestry
     end
 
     def cache_depth
-      write_attribute self.base_class.depth_cache_column, depth
+      write_attribute self.ancestry_base_class.depth_cache_column, depth
     end
 
     # Parent
     def parent= parent
-      write_attribute(self.base_class.ancestry_column, if parent.nil? then nil else parent.child_ancestry end)
+      write_attribute(self.ancestry_base_class.ancestry_column, if parent.nil? then nil else parent.child_ancestry end)
     end
 
     def parent_id= parent_id
@@ -140,21 +140,21 @@ module Ancestry
     end
 
     def is_root?
-      read_attribute(self.base_class.ancestry_column).blank?
+      read_attribute(self.ancestry_base_class.ancestry_column).blank?
     end
     alias :root? :is_root?
 
     # Children
     def child_conditions
-      {self.base_class.ancestry_column => child_ancestry}
+      {self.ancestry_base_class.ancestry_column => child_ancestry}
     end
 
     def children
-      self.base_class.where child_conditions
+      self.ancestry_base_class.where child_conditions
     end
 
     def child_ids
-      children.select(self.base_class.primary_key).map(&self.base_class.primary_key.to_sym)
+      children.select(self.ancestry_base_class.primary_key).map(&self.ancestry_base_class.primary_key.to_sym)
     end
 
     def has_children?
@@ -167,15 +167,15 @@ module Ancestry
 
     # Siblings
     def sibling_conditions
-      {self.base_class.ancestry_column => read_attribute(self.base_class.ancestry_column)}
+      {self.ancestry_base_class.ancestry_column => read_attribute(self.ancestry_base_class.ancestry_column)}
     end
 
     def siblings
-      self.base_class.where sibling_conditions
+      self.ancestry_base_class.where sibling_conditions
     end
 
     def sibling_ids
-      siblings.select(self.base_class.primary_key).collect(&self.base_class.primary_key.to_sym)
+      siblings.select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
     end
 
     def has_siblings?
@@ -188,28 +188,28 @@ module Ancestry
 
     # Descendants
     def descendant_conditions
-      ["#{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", "#{child_ancestry}/%", child_ancestry]
+      ["#{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.ancestry_column} like ? or #{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.ancestry_column} = ?", "#{child_ancestry}/%", child_ancestry]
     end
 
     def descendants depth_options = {}
-      self.base_class.ordered_by_ancestry.scope_depth(depth_options, depth).where descendant_conditions
+      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).where descendant_conditions
     end
 
     def descendant_ids depth_options = {}
-      descendants(depth_options).select(self.base_class.primary_key).collect(&self.base_class.primary_key.to_sym)
+      descendants(depth_options).select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
     end
 
     # Subtree
     def subtree_conditions
-      ["#{self.base_class.table_name}.#{self.base_class.primary_key} = ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} like ? or #{self.base_class.table_name}.#{self.base_class.ancestry_column} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
+      ["#{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.primary_key} = ? or #{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.ancestry_column} like ? or #{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.ancestry_column} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
     end
 
     def subtree depth_options = {}
-      self.base_class.ordered_by_ancestry.scope_depth(depth_options, depth).where subtree_conditions
+      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).where subtree_conditions
     end
 
     def subtree_ids depth_options = {}
-      subtree(depth_options).select(self.base_class.primary_key).collect(&self.base_class.primary_key.to_sym)
+      subtree(depth_options).select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
     end
 
     # Callback disabling
@@ -237,8 +237,8 @@ module Ancestry
       @primary_key_type ||= column_for_attribute(self.class.primary_key).type
     end
     def unscoped_descendants
-      self.base_class.unscoped do
-        self.base_class.where descendant_conditions
+      self.ancestry_base_class.unscoped do
+        self.ancestry_base_class.where descendant_conditions
       end
     end
 
@@ -249,7 +249,7 @@ module Ancestry
     end
 
     def unscoped_find id
-      self.base_class.unscoped { self.base_class.find(id) }
+      self.ancestry_base_class.unscoped { self.ancestry_base_class.find(id) }
     end
   end
 end
