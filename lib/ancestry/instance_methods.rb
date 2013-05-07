@@ -10,7 +10,7 @@ module Ancestry
       # Skip this if callbacks are disabled
       unless ancestry_callbacks_disabled?
         # If node is not a new record and ancestry was updated and the new ancestry is sane ...
-        if changed.include?(self.base_class.ancestry_column.to_s) && !new_record? && sane_ancestry?
+        if ancestry_changed? && !new_record? && sane_ancestry?
           # ... for each descendant ...
           unscoped_descendants.each do |descendant|
             # ... replace old ancestry with new ancestry
@@ -73,6 +73,10 @@ module Ancestry
     end
 
     # Ancestors
+    def ancestry_changed?
+      changed.include?(self.base_class.ancestry_column.to_s)
+    end
+
     def ancestor_ids
       read_attribute(self.base_class.ancestry_column).to_s.split('/').map { |id| cast_primary_key(id) }
     end
