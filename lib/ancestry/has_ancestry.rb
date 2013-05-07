@@ -56,6 +56,7 @@ class << ActiveRecord::Base
 
       # Cache depth in depth cache column before save
       before_validation :cache_depth
+      before_save :cache_depth
 
       # Validate depth column
       validates_numericality_of depth_cache_column, :greater_than_or_equal_to => 0, :only_integer => true, :allow_nil => false
