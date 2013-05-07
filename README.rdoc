@@ -8,8 +8,7 @@ To apply Ancestry to any ActiveRecord model, follow these simple steps:
 
 1. Install
    - <b>Rails 2</b>
-     - Add to config/environment.rb: <b>config.gem 'ancestry'</b>
-     - Install required gems: <b>sudo rake gems:install</b>
+     - See 1-3-stable branch
    - <b>Rails 3</b>
      - Add to Gemfile: <b>gem 'ancestry'</b>
      - Install required gems: <b>bundle install</b>
@@ -250,6 +249,11 @@ The materialised path pattern requires Ancestry to use a 'like' condition in ord
 
 The latest version of ancestry is recommended. The three numbers of each version numbers are respectively the major, minor and patch versions. We started with major version 1 because it looks so much better and ancestry was already quite mature and complete when it was published. The major version is only bumped when backwards compatibility is broken. The minor version is bumped when new features are added. The patch version is bumped when bugs are fixed.
 
+- Version 2.0.0.rc1 (2013-05-07)
+  - Removed rails 2 compatibility
+  - Fixed deprecation warnings for rails 4
+  - New adopt strategy
+  - Many more fixes & minor changes
 - Version 1.3.0 (2012-05-04)
   - Ancestry now ignores default scopes when moving or destroying nodes, ensuring tree consistency
   - Changed ActiveRecord dependency to 2.3.14
