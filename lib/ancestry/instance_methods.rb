@@ -107,7 +107,7 @@ module Ancestry
 
     # Parent
     def parent= parent
-      write_attribute(self.base_class.ancestry_column, if parent.blank? then nil else parent.child_ancestry end)
+      write_attribute(self.base_class.ancestry_column, if parent.nil? then nil else parent.child_ancestry end)
     end
 
     def parent_id= parent_id
