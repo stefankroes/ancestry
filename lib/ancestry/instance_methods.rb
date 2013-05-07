@@ -122,6 +122,10 @@ module Ancestry
       if parent_id.blank? then nil else unscoped_find(parent_id) end
     end
 
+    def parent_id?
+      parent_id.present?
+    end
+
     # Root
     def root_id
       if ancestor_ids.empty? then id else ancestor_ids.first end

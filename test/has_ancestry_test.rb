@@ -107,6 +107,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
         # Parent assertions
         assert_equal nil, lvl0_node.parent_id
         assert_equal nil, lvl0_node.parent
+        refute lvl0_node.parent_id?
         # Root assertions
         assert_equal lvl0_node.id, lvl0_node.root_id
         assert_equal lvl0_node, lvl0_node.root
@@ -139,6 +140,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
           # Parent assertions
           assert_equal lvl0_node.id, lvl1_node.parent_id
           assert_equal lvl0_node, lvl1_node.parent
+          assert lvl1_node.parent_id?
           # Root assertions
           assert_equal lvl0_node.id, lvl1_node.root_id
           assert_equal lvl0_node, lvl1_node.root
@@ -171,6 +173,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
             # Parent assertions
             assert_equal lvl1_node.id, lvl2_node.parent_id
             assert_equal lvl1_node, lvl2_node.parent
+            assert lvl2_node.parent_id?
             # Root assertions
             assert_equal lvl0_node.id, lvl2_node.root_id
             assert_equal lvl0_node, lvl2_node.root
