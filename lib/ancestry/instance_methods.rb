@@ -82,7 +82,7 @@ module Ancestry
     end
 
     def ancestor_conditions
-      {self.ancestry_base_class.primary_key => ancestor_ids}
+      {primary_key_with_table => ancestor_ids}
     end
 
     def ancestors depth_options = {}
@@ -94,7 +94,7 @@ module Ancestry
     end
 
     def path_conditions
-      {self.ancestry_base_class.primary_key => path_ids}
+      {primary_key_with_table => path_ids}
     end
 
     def path depth_options = {}
@@ -146,7 +146,7 @@ module Ancestry
 
     # Children
     def child_conditions
-      {self.ancestry_base_class.ancestry_column => child_ancestry}
+      {ancestry_column_with_table => child_ancestry}
     end
 
     def children
@@ -167,7 +167,7 @@ module Ancestry
 
     # Siblings
     def sibling_conditions
-      {self.ancestry_base_class.ancestry_column => read_attribute(self.ancestry_base_class.ancestry_column)}
+      {ancestry_column_with_table => read_attribute(self.ancestry_base_class.ancestry_column)}
     end
 
     def siblings
@@ -188,7 +188,7 @@ module Ancestry
 
     # Descendants
     def descendant_conditions
-      ["#{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.ancestry_column} like ? or #{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.ancestry_column} = ?", "#{child_ancestry}/%", child_ancestry]
+      ["#{ancestry_column_with_table} like ? or #{ancestry_column_with_table} = ?", "#{child_ancestry}/%", child_ancestry]
     end
 
     def descendants depth_options = {}
@@ -201,7 +201,7 @@ module Ancestry
 
     # Subtree
     def subtree_conditions
-      ["#{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.primary_key} = ? or #{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.ancestry_column} like ? or #{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.ancestry_column} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
+      ["#{primary_key_with_table} = ? or #{ancestry_column_with_table} like ? or #{ancestry_column_with_table} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
     end
 
     def subtree depth_options = {}
@@ -250,6 +250,14 @@ module Ancestry
 
     def unscoped_find id
       self.ancestry_base_class.unscoped { self.ancestry_base_class.find(id) }
+    end
+
+    def primary_key_with_table
+      "#{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.primary_key}"
+    end
+
+    def ancestry_column_with_table
+      "#{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.ancestry_column}"
     end
   end
 end
