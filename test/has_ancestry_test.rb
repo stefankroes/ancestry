@@ -678,6 +678,16 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
+  def test_sti_support_with_from_subclass
+    AncestryTestDatabase.with_model :extra_columns => {:type => :string} do |model|
+      subclass1 = Object.const_set 'SubclassWithAncestry', Class.new(model)
+
+      subclass1.has_ancestry
+
+      subclass1.create!
+    end
+  end
+
   def test_arrange_order_option
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
       descending_nodes_lvl0 = model.arrange :order => 'id desc'
