@@ -3,7 +3,7 @@ class << ActiveRecord::Base
     # Check options
     raise Ancestry::AncestryException.new("Options for has_ancestry must be in a hash.") unless options.is_a? Hash
     options.each do |key, value|
-      unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column].include? key
+      unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch].include? key
         raise Ancestry::AncestryException.new("Unknown option for has_ancestry: #{key.inspect} => #{value.inspect}.")
       end
     end
@@ -25,7 +25,11 @@ class << ActiveRecord::Base
     # Save self as base class (for STI)
     cattr_accessor :ancestry_base_class
     self.ancestry_base_class = self
-    
+
+    # Touch ancestors after updating
+    cattr_accessor :touch_ancestors
+    self.touch_ancestors = options[:touch] || false
+
     # Validate format of ancestry column value
     validates_format_of ancestry_column, :with => Ancestry::ANCESTRY_PATTERN, :allow_nil => true
 
@@ -69,6 +73,10 @@ class << ActiveRecord::Base
         where("#{depth_cache_column} #{operator} ?", depth)
       }
     end
+
+    after_save :touch_ancestors_callback
+    after_touch :touch_ancestors_callback
+    after_destroy :touch_ancestors_callback
   end
   
   # Alias has_ancestry with acts_as_tree, if it's available.
