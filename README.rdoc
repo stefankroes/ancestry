@@ -73,7 +73,8 @@ The has_ancestry methods supports the following options:
                          :destroy   All children are destroyed as well (default)
                          :rootify   The children of the destroyed node become root nodes
                          :restrict  An AncestryException is raised if any children exist
-                         :adopt     The orphan subtree is added to the parent of the deleted node.If the deleted node is Root, then rootify the orphan subtree.
+                         :adopt     The orphan subtree is added to the parent of the deleted node.
+                                    If the deleted node is Root, then rootify the orphan subtree.
   :cache_depth           Cache the depth of each node in the 'ancestry_depth' column (default: false)
                          If you turn depth_caching on for an existing model:
                          - Migrate: add_column [table], :ancestry_depth, :integer, :default => 0
@@ -81,6 +82,8 @@ The has_ancestry methods supports the following options:
   :depth_cache_column    Pass in a symbol to store depth cache in a different column
   :primary_key_format    Supply a regular expression that matches the format of your primary key.
                          By default, primary keys only match integers ([0-9]+).
+  :touch                 Instruct Ancestry to touch the ancestors of a node when it changes, to
+                         invalidate nested key-based caches. (default: false)
 
 = (Named) Scopes
 
