@@ -8,6 +8,7 @@ Gem::Specification.new do |s|
   s.author   = 'Stefan Kroes'
   s.email    = 's.a.kroes@gmail.com'
   s.homepage = 'http://github.com/stefankroes/ancestry'
+  s.license  = 'MIT'
 
   s.files = [
     'ancestry.gemspec', 
