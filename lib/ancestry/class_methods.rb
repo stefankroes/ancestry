@@ -179,7 +179,7 @@ module Ancestry
       
       self.ancestry_base_class.unscoped do 
         self.ancestry_base_class.find_each do |node|
-          node.update_attribute depth_cache_column, node.depth
+          node.update_column depth_cache_column, node.depth
         end
       end
     end
