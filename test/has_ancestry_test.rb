@@ -1,7 +1,6 @@
 require "environment"
 
 class HasAncestryTreeTest < ActiveSupport::TestCase
-  
   def test_default_ancestry_column
     AncestryTestDatabase.with_model do |model|
       assert_equal :ancestry, model.ancestry_column
@@ -306,7 +305,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_orphan_adopt_strategy
     AncestryTestDatabase.with_model do |model|
       model.orphan_strategy = :adopt  # set the orphan strategy as paerntify
@@ -713,7 +712,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       end
     end
   end
-  
+
   def test_sort_by_ancestry
     AncestryTestDatabase.with_model do |model|
       n1 = model.create!
@@ -721,12 +720,12 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       n3 = model.create!(:parent => n2)
       n4 = model.create!(:parent => n2)
       n5 = model.create!(:parent => n1)
-      
+
       arranged = model.sort_by_ancestry(model.all.sort_by(&:id).reverse)
       assert_equal [n1, n2, n4, n3, n5].map(&:id), arranged.map(&:id)
     end
   end
-  
+
   def test_node_excluded_by_default_scope_should_still_move_with_parent
     AncestryTestDatabase.with_model(
       :width => 3, :depth => 3, :extra_columns => {:deleted_at => :datetime}, 
@@ -737,7 +736,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       new_grandparent = roots[1]
       parent = grandparent.children.first
       child = parent.children.first
-      
+
       child.update_attributes :deleted_at => Time.now
       parent.update_attributes :parent => new_grandparent
       child.update_attributes :deleted_at => nil
@@ -754,11 +753,11 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     ) do |model, roots|
       parent = model.roots.first
       child = parent.children.first
-      
+
       child.update_attributes :deleted_at => Time.now
       parent.destroy
       child.update_attributes :deleted_at => nil
-      
+
       assert model.count.zero?
     end
   end
@@ -771,11 +770,11 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     ) do |model, roots|
       parent = model.roots.first
       child = parent.children.first
-      
+
       child.update_attributes :deleted_at => Time.now
       parent.destroy
       child.update_attributes :deleted_at => nil
-      
+
       assert child.reload.is_root?
     end
   end
@@ -805,7 +804,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       n4 = model.create!(:rank => 0, :parent => n2)
       n5 = model.create!(:rank => 1, :parent => n1)
       n6 = model.create!(:rank => 1, :parent => n2)
-      
+
       arranged = model.sort_by_ancestry(model.all.sort_by(&:rank).reverse) {|a, b| a.rank <=> b.rank}
       assert_equal [n1, n3, n5, n2, n4, n6].map(&:id), arranged.map(&:id)
     end
