@@ -1,7 +1,10 @@
 doc
 *.gem
+*.log
 **/*.log
 **/*.db
 test/database.yml
 coverage
 Gemfile.lock
+gemfiles/*.lock
+*.DS_Store
