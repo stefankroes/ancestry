@@ -230,11 +230,11 @@ The Ancestry gem comes with a unit test suite consisting of about 1800 assertion
 - run <tt>bundle</tt>
 - run <tt>rake [test]</tt>
 
-You can pass an environment variable for the database to test against (e.g. db=mysql). By default, the test suite runs against the latest activerecord version. You can run agains activerecord 3-0 or 3-1 as follows:
+You can pass an environment variable for the database to test against (e.g. db=mysql). By default, the test suite runs against the latest Active Record version. You can run against Active Record 3-0 or 3-1 as follows:
 - run <tt>bundle --gemfile Gemfile.rails-<version></tt>
 - run <tt>rake [test] BUNDLE_GEMFILE=Gemfile.rails-<version></tt>
 
-To run the test suite multiple times against several databases and all supported activerecord versions, run <tt>rake test_all</tt>
+To run the test suite multiple times against several databases and all supported Active Record versions, run <tt>rake test_all</tt>
 The test suite is located in test/has_ancestry_test.rb.
 
 = Internals
