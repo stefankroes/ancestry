@@ -53,7 +53,7 @@ To navigate an Ancestry model, use the following methods on any instance / recor
   children         Scopes the model on children of the record
   child_ids        Returns a list of child ids
   has_children?    Returns true if the record has any children, false otherwise
-  is_childless?    Returns true is the record has no childen, false otherwise
+  is_childless?    Returns true is the record has no children, false otherwise
   siblings         Scopes the model on siblings of the record, the record itself is included
   sibling_ids      Returns a list of sibling ids
   has_siblings?    Returns true if the record's parent has more than one child
