@@ -245,6 +245,7 @@ module Ancestry
     # basically validates the ancestry, but also applied if validation is
     # bypassed to determine if chidren should be affected
     def sane_ancestry?
+      puts "ANCESTRY #{ancestry}"
       ancestry.empty? || ancestry.nil? || (ancestry.to_s =~ Ancestry::ANCESTRY_PATTERN && !ancestor_ids.include?(self.id))
     end
 

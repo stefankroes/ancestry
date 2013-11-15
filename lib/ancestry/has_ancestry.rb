@@ -27,7 +27,8 @@ class << ActiveRecord::Base
     self.ancestry_base_class = self
     
     # Validate format of ancestry column value
-    validates_format_of ancestry_column, :with => Ancestry::ANCESTRY_PATTERN, :allow_nil => true
+    validates_format_of ancestry_column, :with => Ancestry::ANCESTRY_PATTERN, :allow_nil => true,
+      :allow_blank => true
 
     # Validate that the ancestor ids don't include own id
     validate :ancestry_exclude_self
