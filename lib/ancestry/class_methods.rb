@@ -55,6 +55,13 @@ module Ancestry
         arranged_nodes
       end
     end
+
+    # Arrangement to nested array
+    def arrange_serializable nodes = arrange
+      nodes.map do |parent, children|
+        parent.serializable_hash.merge 'children' => arrange_serializable(children)
+      end
+    end
     
     # Pseudo-preordered array of nodes.  Children will always follow parents, 
     # for ordering nodes within a rank provide block, eg. Node.sort_by_ancestry(Node.all) {|a, b| a.rank <=> b.rank}.

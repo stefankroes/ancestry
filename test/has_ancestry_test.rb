@@ -429,6 +429,20 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
+  def test_arrange_serializable
+    AncestryTestDatabase.with_model :depth => 2, :width => 1 do |model, roots|
+      result = [
+        {
+          'ancestry' => nil, 'id' => 1, 'children' => [
+            { 'ancestry' => '1', 'id' => 2, 'children' => [] }
+          ]
+        }
+      ]
+
+      assert_equal model.arrange_serializable, result
+    end
+  end
+
   def test_node_creation_though_scope
     AncestryTestDatabase.with_model do |model|
       node = model.create!
