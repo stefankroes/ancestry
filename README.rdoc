@@ -156,6 +156,22 @@ The arrange method takes ActiveRecord find options. If you want your hashes to b
 
   TreeNode.find_by_name('Crunchy').subtree.arrange(:order => :name)
 
+To get the arranged nodes as a nested array instead of a nested hash:
+
+  TreeNode.arrange_to_a
+
+  [
+    {
+      "ancestry" => nil, "id" => 1, "children" => [
+        { "ancestry" => "1", "id" => 2, "children" => [] }
+      ]
+    }
+  ]
+
+And to output as json, just add to_json afterwards:
+
+  TreeNode.arrange_to_a.to_json
+
 = Sorting
 
 If you just want to sort an array of nodes as if you were traversing them in preorder, you can use the sort_by_ancestry class method:
