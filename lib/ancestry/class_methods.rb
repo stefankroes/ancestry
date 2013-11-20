@@ -56,17 +56,10 @@ module Ancestry
       end
     end
 
-    # Arrangement to JSON
-    def arrange_to_json(child_attr = 'children')
-      arranged_nodes_to_json(arrange, child_attr).to_json
-    end
-
-    # Take arrangement of nodes and turn it into JSON
-    def arranged_nodes_to_json(records, child_attr)
-      records.map do |record, children|
-        record.serializable_hash.merge!({
-          child_attr => arranged_nodes_to_json(children, child_attr)
-        })
+    # Arrangement to serializable hash
+    def arrange_to_hash(nodes = arrange)
+      nodes.map do |parent, children|
+        parent.serializable_hash.merge({ 'children' => arrange_to_hash(children) })
       end
     end
     
