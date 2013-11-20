@@ -429,9 +429,9 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
-  def test_arrangement_to_hash
+  def test_arrangement_to_array
     AncestryTestDatabase.with_model :depth => 2, :width => 1 do |model, roots|
-      static_hash = [
+      static_array = [
         {
           "ancestry" => nil, "id" => 1, "children" => [
             { "ancestry" => "1", "id" => 2, "children" => [] }
@@ -439,7 +439,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
         }
       ]
 
-      assert_equal model.arrange_to_hash, static_hash
+      assert_equal model.arrange_to_a, static_array
     end
   end
 

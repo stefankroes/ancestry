@@ -156,9 +156,9 @@ The arrange method takes ActiveRecord find options. If you want your hashes to b
 
   TreeNode.find_by_name('Crunchy').subtree.arrange(:order => :name)
 
-To get the arranged nodes as a serializable hash instead of a nested hash:
+To get the arranged nodes as a nested array instead of a nested hash:
 
-  TreeNode.arrange_to_hash
+  TreeNode.arrange_to_a
 
   [
     {
@@ -170,7 +170,7 @@ To get the arranged nodes as a serializable hash instead of a nested hash:
 
 And to output as json, just add to_json afterwards:
 
-  TreeNode.arrange_to_hash.to_json
+  TreeNode.arrange_to_a.to_json
 
 = Sorting
 

@@ -56,10 +56,10 @@ module Ancestry
       end
     end
 
-    # Arrangement to serializable hash
-    def arrange_to_hash(nodes = arrange)
+    # Arrangement to nested array
+    def arrange_to_a(nodes = arrange)
       nodes.map do |parent, children|
-        parent.serializable_hash.merge({ 'children' => arrange_to_hash(children) })
+        parent.serializable_hash.merge({ 'children' => arrange_to_a(children) })
       end
     end
     
