@@ -742,7 +742,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
 
   def test_node_excluded_by_default_scope_should_still_move_with_parent
     AncestryTestDatabase.with_model(
-      :width => 3, :depth => 3, :extra_columns => {:deleted_at => :datetime}, 
+      :width => 3, :depth => 3, :extra_columns => {:deleted_at => :datetime},
       :default_scope_params => {:deleted_at => nil}
     ) do |model, roots|
       roots = model.roots.to_a
@@ -761,7 +761,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
 
   def test_node_excluded_by_default_scope_should_be_destroyed_with_parent
     AncestryTestDatabase.with_model(
-      :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime}, 
+      :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime},
       :default_scope_params => {:deleted_at => nil},
       :orphan_strategy => :destroy
     ) do |model, roots|
@@ -778,7 +778,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
 
   def test_node_excluded_by_default_scope_should_be_rootified
     AncestryTestDatabase.with_model(
-      :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime}, 
+      :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime},
       :default_scope_params => {:deleted_at => nil},
       :orphan_strategy => :rootify
     ) do |model, roots|
