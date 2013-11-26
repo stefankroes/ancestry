@@ -32,7 +32,7 @@ class AncestryTestDatabase
         table.send type, name
       end unless extra_columns.nil?
     end
-    
+
     testmethod = caller[0][/`.*'/][1..-2]
     model_name = testmethod.camelize + "TestNode"
 
