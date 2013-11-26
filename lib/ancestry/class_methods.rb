@@ -57,9 +57,10 @@ module Ancestry
     end
 
     # Arrangement to nested array
-    def arrange_serializable nodes = arrange
+    def arrange_serializable options={}, nodes=nil
+      nodes = arrange(options) if nodes.nil?
       nodes.map do |parent, children|
-        parent.serializable_hash.merge 'children' => arrange_serializable(children)
+        parent.serializable_hash.merge 'children' => arrange_serializable(options, children)
       end
     end
 

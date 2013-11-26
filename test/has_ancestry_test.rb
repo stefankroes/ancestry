@@ -430,16 +430,19 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
   end
 
   def test_arrange_serializable
-    AncestryTestDatabase.with_model :depth => 2, :width => 1 do |model, roots|
-      result = [
-        {
-          'ancestry' => nil, 'id' => 1, 'children' => [
-            { 'ancestry' => '1', 'id' => 2, 'children' => [] }
-          ]
-        }
-      ]
+    AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, roots|
+      result = [{"ancestry"=>nil,
+          "id"=>4,
+          "children"=>
+           [{"ancestry"=>"4", "id"=>6, "children"=>[]},
+            {"ancestry"=>"4", "id"=>5, "children"=>[]}]},
+         {"ancestry"=>nil,
+          "id"=>1,
+          "children"=>
+           [{"ancestry"=>"1", "id"=>3, "children"=>[]},
+            {"ancestry"=>"1", "id"=>2, "children"=>[]}]}]
 
-      assert_equal model.arrange_serializable, result
+      assert_equal model.arrange_serializable(order: "id desc"), result
     end
   end
 
