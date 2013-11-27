@@ -172,6 +172,10 @@ The result of arrange_serializable can easily be serialized to json with 'to_jso
 
   TreeNode.arrange_serializable.to_json
 
+You can also pass the order to the arrange_serializable method just as you can pass it to the arrange method:
+
+  TreeNode.arrange_serializable(:order => :name)
+
 = Sorting
 
 If you just want to sort an array of nodes as if you were traversing them in preorder, you can use the sort_by_ancestry class method:
