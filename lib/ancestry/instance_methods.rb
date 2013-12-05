@@ -105,7 +105,8 @@ module Ancestry
     end
 
     def ancestor_conditions
-      {primary_key_with_table => ancestor_ids}
+      t = get_arel_table
+      t[get_primary_key_column].in(ancestor_ids)
     end
 
     def ancestors depth_options = {}
@@ -125,7 +126,8 @@ module Ancestry
     end
 
     def path_conditions
-      {primary_key_with_table => path_ids}
+      t = get_arel_table
+      t[get_primary_key_column].in(path_ids)
     end
 
     def path depth_options = {}
@@ -177,7 +179,8 @@ module Ancestry
 
     # Children
     def child_conditions
-      {ancestry_column_with_table => child_ancestry}
+      t = get_arel_table
+      t[get_ancestry_column].eq(child_ancestry)
     end
 
     def children
@@ -198,7 +201,8 @@ module Ancestry
 
     # Siblings
     def sibling_conditions
-      {ancestry_column_with_table => read_attribute(self.ancestry_base_class.ancestry_column)}
+      t = get_arel_table
+      t[get_ancestry_column].eq(read_attribute(self.ancestry_base_class.ancestry_column))
     end
 
     def siblings
@@ -219,7 +223,8 @@ module Ancestry
 
     # Descendants
     def descendant_conditions
-      ["#{ancestry_column_with_table} like ? or #{ancestry_column_with_table} = ?", "#{child_ancestry}/%", child_ancestry]
+      t = get_arel_table
+      t[get_ancestry_column].matches("#{child_ancestry}/%").or(t[get_ancestry_column].eq(child_ancestry))
     end
 
     def descendants depth_options = {}
@@ -232,7 +237,8 @@ module Ancestry
 
     # Subtree
     def subtree_conditions
-      ["#{primary_key_with_table} = ? or #{ancestry_column_with_table} like ? or #{ancestry_column_with_table} = ?", self.id, "#{child_ancestry}/%", child_ancestry]
+      t = get_arel_table
+      t[get_primary_key_column].eq(self.id).or(t[get_ancestry_column].matches("#{child_ancestry}/%")).or(t[get_ancestry_column].eq(child_ancestry))
     end
 
     def subtree depth_options = {}
@@ -283,12 +289,16 @@ module Ancestry
       self.ancestry_base_class.unscoped { self.ancestry_base_class.find(id) }
     end
 
-    def primary_key_with_table
-      "#{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.primary_key}"
+    def get_arel_table
+      self.ancestry_base_class.arel_table
     end
 
-    def ancestry_column_with_table
-      "#{self.ancestry_base_class.table_name}.#{self.ancestry_base_class.ancestry_column}"
+    def get_primary_key_column
+      self.ancestry_base_class.primary_key.to_sym
+    end
+
+    def get_ancestry_column
+      self.ancestry_base_class.ancestry_column.to_sym
     end
   end
 end
