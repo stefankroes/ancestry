@@ -64,6 +64,25 @@ module Ancestry
       end
     end
 
+    # Touch each of this record's ancestors
+    def touch_ancestors_callback
+
+      # Skip this if callbacks are disabled
+      unless ancestry_callbacks_disabled?
+
+        # Only touch if the option is enabled
+        if self.ancestry_base_class.touch_ancestors
+
+          # Touch each of the old *and* new ancestors
+          self.class.where(id: (ancestor_ids + ancestor_ids_was).uniq).each do |ancestor|
+            ancestor.without_ancestry_callbacks do
+              ancestor.touch
+            end
+          end
+        end
+      end
+    end
+
     # The ancestry value for this record's children
     def child_ancestry
       # New records cannot have children
@@ -77,8 +96,12 @@ module Ancestry
       changed.include?(self.ancestry_base_class.ancestry_column.to_s)
     end
 
+    def parse_ancestry_column obj
+      obj.to_s.split('/').map { |id| cast_primary_key(id) }
+    end
+
     def ancestor_ids
-      read_attribute(self.ancestry_base_class.ancestry_column).to_s.split('/').map { |id| cast_primary_key(id) }
+      parse_ancestry_column(read_attribute(self.ancestry_base_class.ancestry_column))
     end
 
     def ancestor_conditions
@@ -86,7 +109,15 @@ module Ancestry
     end
 
     def ancestors depth_options = {}
-      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where  ancestor_conditions
+      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where ancestor_conditions
+    end
+
+    def ancestor_was_conditions
+      {primary_key_with_table => ancestor_ids_was}
+    end
+
+    def ancestor_ids_was
+      parse_ancestry_column(changed_attributes[self.ancestry_base_class.ancestry_column.to_s])
     end
 
     def path_ids
