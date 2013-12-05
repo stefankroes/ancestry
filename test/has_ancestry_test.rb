@@ -430,16 +430,19 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
   end
 
   def test_arrange_serializable
-    AncestryTestDatabase.with_model :depth => 2, :width => 1 do |model, roots|
-      result = [
-        {
-          'ancestry' => nil, 'id' => 1, 'children' => [
-            { 'ancestry' => '1', 'id' => 2, 'children' => [] }
-          ]
-        }
-      ]
+    AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, roots|
+      result = [{"ancestry"=>nil,
+          "id"=>4,
+          "children"=>
+           [{"ancestry"=>"4", "id"=>6, "children"=>[]},
+            {"ancestry"=>"4", "id"=>5, "children"=>[]}]},
+         {"ancestry"=>nil,
+          "id"=>1,
+          "children"=>
+           [{"ancestry"=>"1", "id"=>3, "children"=>[]},
+            {"ancestry"=>"1", "id"=>2, "children"=>[]}]}]
 
-      assert_equal model.arrange_serializable, result
+      assert_equal model.arrange_serializable(order: "id desc"), result
     end
   end
 
@@ -742,7 +745,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
 
   def test_node_excluded_by_default_scope_should_still_move_with_parent
     AncestryTestDatabase.with_model(
-      :width => 3, :depth => 3, :extra_columns => {:deleted_at => :datetime}, 
+      :width => 3, :depth => 3, :extra_columns => {:deleted_at => :datetime},
       :default_scope_params => {:deleted_at => nil}
     ) do |model, roots|
       roots = model.roots.to_a
@@ -761,7 +764,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
 
   def test_node_excluded_by_default_scope_should_be_destroyed_with_parent
     AncestryTestDatabase.with_model(
-      :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime}, 
+      :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime},
       :default_scope_params => {:deleted_at => nil},
       :orphan_strategy => :destroy
     ) do |model, roots|
@@ -778,7 +781,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
 
   def test_node_excluded_by_default_scope_should_be_rootified
     AncestryTestDatabase.with_model(
-      :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime}, 
+      :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime},
       :default_scope_params => {:deleted_at => nil},
       :orphan_strategy => :rootify
     ) do |model, roots|

@@ -64,7 +64,7 @@ To navigate an Ancestry model, use the following methods on any instance / recor
   subtree_ids      Returns a list of all ids in the record's subtree
   depth            Return the depth of the node, root nodes are at depth 0
 
-= Options for has_ancestry 
+= Options for has_ancestry
 
 The has_ancestry methods supports the following options:
 
@@ -115,7 +115,7 @@ When depth caching is enabled (see has_ancestry options), five more named scopes
   at_depth(depth)         Return nodes that are at depth (node.depth == depth)
   from_depth(depth)       Return nodes starting from a certain depth (node.depth >= depth)
   after_depth(depth)      Return nodes that are deeper than depth (node.depth > depth)
-  
+
 The depth scopes are also available through calls to descendants, descendant_ids, subtree, subtree_ids, path and ancestors. In this case, depth values are interpreted relatively. Some examples:
 
   node.subtree(:to_depth => 2)      Subtree of node, to a depth of node.depth + 2 (self, children and grandchildren)
@@ -172,10 +172,14 @@ The result of arrange_serializable can easily be serialized to json with 'to_jso
 
   TreeNode.arrange_serializable.to_json
 
+You can also pass the order to the arrange_serializable method just as you can pass it to the arrange method:
+
+  TreeNode.arrange_serializable(:order => :name)
+
 = Sorting
 
 If you just want to sort an array of nodes as if you were traversing them in preorder, you can use the sort_by_ancestry class method:
-  
+
   TreeNode.sort_by_ancestry(array_of_nodes)
 
 Note that since materialised path trees don't support ordering within a rank, the order of siblings depends on their order in the original array.
@@ -194,7 +198,7 @@ Most current tree plugins use a parent_id column (has_ancestry, awesome_nested_s
    - Remove gem config line from environment.rb: config.gem [old gem]
    - Add Ancestry to environment.rb: config.gem :ancestry
    - See 'Installation' for more info on installing and configuring gems
-  
+
 3. Change your model
    - Remove any macros required by old plugin/gem from app/models/[model].rb
    - Add to app/models/[model].rb: <b>has_ancestry</b>
@@ -215,7 +219,7 @@ Most current tree plugins use a parent_id column (has_ancestry, awesome_nested_s
 
 = Integrity checking and restoration
 
-I don't see any way Ancestry tree integrity could get compromised without explicitly setting cyclic parents or invalid ancestry and circumventing validation with update_attribute, if you do, please let me know. 
+I don't see any way Ancestry tree integrity could get compromised without explicitly setting cyclic parents or invalid ancestry and circumventing validation with update_attribute, if you do, please let me know.
 
 Ancestry includes some methods for detecting integrity problems and restoring integrity just to be sure. To check integrity use: [Model].check_ancestry_integrity!. An AncestryIntegrityException will be raised if there are any problems. You can also specify :report => :list to return an array of exceptions or :report => :echo to echo any error messages. To restore integrity use: [Model].restore_ancestry_integrity!.
 
