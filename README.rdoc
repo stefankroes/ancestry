@@ -254,7 +254,7 @@ The Ancestry gem comes with a unit test suite consisting of about 1900 assertion
 - Run <tt>appraisal install</tt>
 - Run <tt>appraisal rake test</tt>
 
-Tu can run against a specific database and specific version of Activerecord:
+You can also run against a specific database and specific version of Activerecord:
 - Run the above commands, except for the last one
 - Run <tt>appraisal sqlite3-ar-32 rake test</tt> (to test against sqlite3 and Activerecord 3.2)
 
@@ -266,14 +266,10 @@ In the example above, the ancestry column is created as a string. This puts a li
 
 The materialised path pattern requires Ancestry to use a 'like' condition in order to fetch descendants. This should not be particularly slow however since the the condition never starts with a wildcard which allows the DBMS to use the column index. If you have any data on performance with a large number of records, please drop me line.
 
-= Future work
+= Contributing and licence
 
-I will try to keep Ancestry up to date with changing versions of Rails and Ruby and also with any bug reports I might receive. I will implement new features on request as I see fit.
-
-= Contributing
+I will try to keep Ancestry up to date with changing versions of Rails and Ruby and also with any bug reports I might receive. I will implement new features on request as I see fit and have time.
 
 Question? Bug report? Faulty/incomplete documentation? Feature request? Please post an issue on 'http://github.com/stefankroes/ancestry/issues'. Make sure you have read the documentation and you have included tests and documentation with any pull request.
-
-
 
 Copyright (c) 2013 Stefan Kroes, released under the MIT license
