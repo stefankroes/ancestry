@@ -92,6 +92,7 @@ module Ancestry
     end
 
     # Ancestors
+    
     def ancestry_changed?
       changed.include?(self.ancestry_base_class.ancestry_column.to_s)
     end
@@ -143,6 +144,7 @@ module Ancestry
     end
 
     # Parent
+    
     def parent= parent
       write_attribute(self.ancestry_base_class.ancestry_column, if parent.nil? then nil else parent.child_ancestry end)
     end
@@ -164,6 +166,7 @@ module Ancestry
     end
 
     # Root
+    
     def root_id
       if ancestor_ids.empty? then id else ancestor_ids.first end
     end
@@ -178,6 +181,7 @@ module Ancestry
     alias :root? :is_root?
 
     # Children
+    
     def child_conditions
       t = get_arel_table
       t[get_ancestry_column].eq(child_ancestry)
@@ -200,6 +204,7 @@ module Ancestry
     end
 
     # Siblings
+    
     def sibling_conditions
       t = get_arel_table
       t[get_ancestry_column].eq(read_attribute(self.ancestry_base_class.ancestry_column))
@@ -222,6 +227,7 @@ module Ancestry
     end
 
     # Descendants
+    
     def descendant_conditions
       t = get_arel_table
       t[get_ancestry_column].matches("#{child_ancestry}/%").or(t[get_ancestry_column].eq(child_ancestry))
@@ -236,6 +242,7 @@ module Ancestry
     end
 
     # Subtree
+    
     def subtree_conditions
       t = get_arel_table
       t[get_primary_key_column].eq(self.id).or(t[get_ancestry_column].matches("#{child_ancestry}/%")).or(t[get_ancestry_column].eq(child_ancestry))
@@ -250,6 +257,7 @@ module Ancestry
     end
 
     # Callback disabling
+    
     def without_ancestry_callbacks
       @disable_ancestry_callbacks = true
       yield
