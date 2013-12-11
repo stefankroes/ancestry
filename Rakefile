@@ -13,18 +13,6 @@ Rake::TestTask.new(:test) do |t|
   t.verbose = true
 end
 
-desc 'Test the ancestry plugin with multiple databases and activerecord versions.'
-task :test_all do |t|
-  commands = []
-  %w(Gemfile.rails-3-0 Gemfile.rails-3-1 Gemfile Gemfile.rails-4-0).each do |gemfile|
-    %w(sqlite3 postgresql mysql).each do |database_adapter|
-      commands << "rake test db=#{database_adapter} BUNDLE_GEMFILE=#{gemfile}"
-    end
-  end
-  
-  exec commands.join(' && ')
-end
-
 desc 'Generate documentation for the ancestry plugin.'
 Rake::RDocTask.new(:rdoc) do |rdoc|
   rdoc.rdoc_dir = 'doc'

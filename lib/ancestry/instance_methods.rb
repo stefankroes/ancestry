@@ -273,14 +273,14 @@ module Ancestry
     def primary_key_type
       @primary_key_type ||= column_for_attribute(self.class.primary_key).type
     end
+
     def unscoped_descendants
       self.ancestry_base_class.unscoped do
         self.ancestry_base_class.where descendant_conditions
       end
     end
 
-    # basically validates the ancestry, but also applied if validation is
-    # bypassed to determine if chidren should be affected
+    # Validates the ancestry, but can also be applied if validation is bypassed to determine if chidren should be affected
     def sane_ancestry?
       ancestry.nil? || (ancestry.to_s =~ Ancestry::ANCESTRY_PATTERN && !ancestor_ids.include?(self.id))
     end

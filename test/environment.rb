@@ -1,22 +1,33 @@
 require 'rubygems'
 require 'bundler/setup'
-
 require 'active_record'
 require 'active_support/test_case'
 require 'active_support/buffered_logger'
 require 'test/unit'
+require 'debugger'
 
-# this is to make absolutely sure we test this one, not the one
-# installed on the system.
+# Make absolutely sure we are testing local ancestry
 require File.expand_path('../../lib/ancestry', __FILE__)
-
-require 'debugger' if RUBY_VERSION =~ /\A1.9/
 
 class AncestryTestDatabase
   def self.setup
+    # Silence I18n
+    I18n.enforce_available_locales = false if I18n.respond_to? :enforce_available_locales=
+
+    # Setup logger
     logger = ActiveSupport.const_defined?(:Logger) ? :Logger : :BufferedLogger
     ActiveRecord::Base.logger = ActiveSupport.const_get(logger).new('log/test.log')
-    ActiveRecord::Base.establish_connection YAML.load(File.open(File.expand_path('../database.yml', __FILE__)).read)[ENV['db'] || 'sqlite3']
+    
+    # Setup database connection
+    YAML.load(File.open(File.expand_path('../database.yml', __FILE__)).read).values.each do |config|
+      begin
+        ActiveRecord::Base.establish_connection config
+        break if ActiveRecord::Base.connection
+      rescue LoadError, RuntimeError
+        # Try if adapter can be loaded for next config
+      end
+    end
+    raise 'Could not load any database adapter!' unless ActiveRecord::Base.connected?
   end
 
   def self.with_model options = {}
@@ -79,7 +90,7 @@ end
 
 AncestryTestDatabase.setup
 
-puts "\nRunning Ancestry test suite:"
+puts "\nLoaded Ancestry test suite environment:"
 puts "  Ruby: #{RUBY_VERSION}"
 puts "  ActiveRecord: #{ActiveRecord::VERSION::STRING}"
 puts "  Database: #{ActiveRecord::Base.connection.adapter_name}\n\n"
