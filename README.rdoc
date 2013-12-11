@@ -247,18 +247,16 @@ Additionally, if you think something is wrong with your depth cache:
 
 = Tests
 
-The Ancestry gem comes with a unit test suite consisting of about 1800 assertions in about 30 tests. It takes about 10 seconds to run on sqlite. To run it yourself:
-- check out the repository from GitHub
-- copy test/database.example.yml to test/database.yml
-- run <tt>bundle</tt>
-- run <tt>rake [test]</tt>
+The Ancestry gem comes with a unit test suite consisting of about 1900 assertions in about 50 tests. It takes about 10 seconds to run on sqlite. It is run against three databases (sqlite3, mysql and postgresql) and four versions of Activerecord (3.0, 3.1, 3.2 and 4.0) using Appraisals. To run it yourself:
+- Check out the repository from GitHub
+- Copy test/database.example.yml to test/database.yml
+- Run <tt>bundle</tt>
+- Run <tt>appraisal install</tt>
+- Run <tt>appraisal rake test</tt>
 
-You can pass an environment variable for the database to test against (e.g. db=mysql). By default, the test suite runs against the latest Active Record version. You can run against Active Record 3-0 or 3-1 as follows:
-- run <tt>bundle --gemfile Gemfile.rails-<version></tt>
-- run <tt>rake [test] BUNDLE_GEMFILE=Gemfile.rails-<version></tt>
-
-To run the test suite multiple times against several databases and all supported Active Record versions, run <tt>rake test_all</tt>
-The test suite is located in test/has_ancestry_test.rb.
+Tu can run against a specific database and specific version of Activerecord:
+- Run the above commands, except for the last one
+- Run <tt>appraisal sqlite3-ar-32 rake test</tt> (to test against sqlite3 and Activerecord 3.2)
 
 = Internals
 
@@ -270,12 +268,12 @@ The materialised path pattern requires Ancestry to use a 'like' condition in ord
 
 = Future work
 
-I will try to keep Ancestry up to date with changing versions of Rails and Ruby and also with any bug reports I might receive. I will implement new features on request as I see fit. One thing I definitely want to do soon is some proper performance testing.
+I will try to keep Ancestry up to date with changing versions of Rails and Ruby and also with any bug reports I might receive. I will implement new features on request as I see fit.
 
-= Contact and copyright
+= Contributing
 
-Bug report? Faulty/incomplete documentation? Feature request? Please post an issue on 'http://github.com/stefankroes/ancestry/issues'. Please also contact me at s.a.kroes[at]gmail.com if it's urgent.
+Question? Bug report? Faulty/incomplete documentation? Feature request? Please post an issue on 'http://github.com/stefankroes/ancestry/issues'. Make sure you have read the documentation and you have included tests and documentation with any pull request.
 
-Question? Contact me at s.a.kroes[at]gmail.com, make sure you read the documentation.
 
-Copyright (c) 2009 Stefan Kroes, released under the MIT license
+
+Copyright (c) 2013 Stefan Kroes, released under the MIT license

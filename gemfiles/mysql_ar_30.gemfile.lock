@@ -1,23 +1,22 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    activemodel (3.1.12)
-      activesupport (= 3.1.12)
-      builder (~> 3.0.0)
-      i18n (~> 0.6)
-    activerecord (3.1.12)
-      activemodel (= 3.1.12)
-      activesupport (= 3.1.12)
-      arel (~> 2.2.3)
-      tzinfo (~> 0.3.29)
-    activesupport (3.1.12)
-      multi_json (~> 1.0)
+    activemodel (3.0.20)
+      activesupport (= 3.0.20)
+      builder (~> 2.1.2)
+      i18n (~> 0.5.0)
+    activerecord (3.0.20)
+      activemodel (= 3.0.20)
+      activesupport (= 3.0.20)
+      arel (~> 2.0.10)
+      tzinfo (~> 0.3.23)
+    activesupport (3.0.20)
     appraisal (1.0.0.beta2)
       bundler
       rake
       thor (>= 0.14.0)
-    arel (2.2.3)
-    builder (3.0.4)
+    arel (2.0.10)
+    builder (2.1.2)
     columnize (0.3.6)
     debugger (1.6.3)
       columnize (>= 0.3.1)
@@ -25,10 +24,9 @@ GEM
       debugger-ruby_core_source (~> 1.2.4)
     debugger-linecache (1.2.0)
     debugger-ruby_core_source (1.2.4)
-    i18n (0.6.9)
+    i18n (0.5.0)
     json (1.8.1)
-    multi_json (1.8.2)
-    mysql2 (0.3.14)
+    mysql (2.9.1)
     rake (10.1.0)
     rdoc (4.0.1)
       json (~> 1.4)
@@ -39,8 +37,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  activerecord (= 3.1.12)
+  activerecord (= 3.0.20)
   appraisal (= 1.0.0.beta2)
   debugger
-  mysql2
+  mysql
   rdoc
