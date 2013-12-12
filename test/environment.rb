@@ -2,7 +2,6 @@ require 'rubygems'
 require 'bundler/setup'
 require 'active_record'
 require 'active_support/test_case'
-require 'active_support/buffered_logger'
 require 'test/unit'
 require 'debugger'
 
@@ -13,10 +12,6 @@ class AncestryTestDatabase
   def self.setup
     # Silence I18n
     I18n.enforce_available_locales = false if I18n.respond_to? :enforce_available_locales=
-
-    # Setup logger
-    logger = ActiveSupport.const_defined?(:Logger) ? :Logger : :BufferedLogger
-    ActiveRecord::Base.logger = ActiveSupport.const_get(logger).new('log/test.log')
 
     # Assume Travis CI database config if no custom one exists
     filename = if File.exists?(File.expand_path('../database.yml', __FILE__))
