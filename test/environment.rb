@@ -2,16 +2,23 @@ require 'rubygems'
 require 'bundler/setup'
 require 'active_record'
 require 'active_support/test_case'
+require 'active_support/buffered_logger'
 require 'test/unit'
 require 'debugger'
+require 'coveralls'
+require 'logger'
+
+Coveralls.wear!
 
 # Make absolutely sure we are testing local ancestry
 require File.expand_path('../../lib/ancestry', __FILE__)
 
 class AncestryTestDatabase
   def self.setup
-    # Silence I18n
+    # Silence I18n and Activerecord logging
     I18n.enforce_available_locales = false if I18n.respond_to? :enforce_available_locales=
+    ActiveRecord::Base.logger = Logger.new(STDERR)
+    ActiveRecord::Base.logger.level = Logger::Severity::UNKNOWN
 
     # Assume Travis CI database config if no custom one exists
     filename = if File.exists?(File.expand_path('../database.yml', __FILE__))

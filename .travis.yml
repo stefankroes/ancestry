@@ -20,11 +20,11 @@ gemfile:
 matrix:
   exclude:
     - rvm: 1.9.2
-      gemfile: gemfiles/sqlite3-ar-40.gemfile
+      gemfile: gemfiles/sqlite3_ar_40.gemfile
     - rvm: 1.9.2
-      gemfile: gemfiles/mysql-ar-40.gemfile
+      gemfile: gemfiles/mysql_ar_40.gemfile
     - rvm: 1.9.2
-      gemfile: gemfiles/pg-ar-40.gemfile
+      gemfile: gemfiles/pg_ar_40.gemfile
 
 services:
   - mysql
