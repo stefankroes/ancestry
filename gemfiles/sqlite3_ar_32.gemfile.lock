@@ -12,10 +12,10 @@ GEM
     activesupport (3.2.14)
       i18n (~> 0.6, >= 0.6.4)
       multi_json (~> 1.0)
-    appraisal (1.0.0.beta2)
+    appraisal (1.0.0.beta1)
       bundler
       rake
-      thor (>= 0.14.0)
+      thor (~> 0.18.1)
     arel (3.0.3)
     builder (3.0.4)
     columnize (0.3.6)
@@ -40,7 +40,7 @@ PLATFORMS
 
 DEPENDENCIES
   activerecord (= 3.2.14)
-  appraisal (= 1.0.0.beta2)
+  appraisal (= 1.0.0.beta1)
   debugger
   rdoc
   sqlite3

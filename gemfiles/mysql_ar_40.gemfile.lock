@@ -16,10 +16,10 @@ GEM
       multi_json (~> 1.3)
       thread_safe (~> 0.1)
       tzinfo (~> 0.3.37)
-    appraisal (1.0.0.beta2)
+    appraisal (1.0.0.beta1)
       bundler
       rake
-      thor (>= 0.14.0)
+      thor (~> 0.18.1)
     arel (4.0.1)
     atomic (1.1.14)
     builder (3.1.4)
@@ -48,7 +48,7 @@ PLATFORMS
 
 DEPENDENCIES
   activerecord (= 4.0.1)
-  appraisal (= 1.0.0.beta2)
+  appraisal (= 1.0.0.beta1)
   debugger
   mysql
   rdoc
