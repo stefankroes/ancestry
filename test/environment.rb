@@ -17,9 +17,16 @@ class AncestryTestDatabase
     # Setup logger
     logger = ActiveSupport.const_defined?(:Logger) ? :Logger : :BufferedLogger
     ActiveRecord::Base.logger = ActiveSupport.const_get(logger).new('log/test.log')
+
+    # Assume Travis CI database config if no custom one exists
+    filename = if File.exists?(File.expand_path('../database.yml', __FILE__))
+      File.expand_path('../database.yml', __FILE__)
+    else
+      File.expand_path('../database.ci.yml', __FILE__)
+    end
     
     # Setup database connection
-    YAML.load(File.open(File.expand_path('../database.yml', __FILE__)).read).values.each do |config|
+    YAML.load(File.open(filename).read).values.each do |config|
       begin
         ActiveRecord::Base.establish_connection config
         break if ActiveRecord::Base.connection

@@ -24,5 +24,4 @@ PLATFORMS
 DEPENDENCIES
   appraisal (= 1.0.0.beta1)
   debugger
-  rake
   rdoc

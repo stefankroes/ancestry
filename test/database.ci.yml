@@ -1,0 +1,14 @@
+sqlite3:
+  adapter: sqlite3
+  database: ":memory:"
+  timeout: 500
+postgresql:
+  adapter: postgresql
+  database: ancestry_test
+  username: postgres
+  min_messages: WARNING
+mysql:
+  adapter: mysql
+  database: ancestry_test
+  username: travis
+  encoding: utf8

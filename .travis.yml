@@ -25,3 +25,12 @@ matrix:
       gemfile: gemfiles/mysql-ar-40.gemfile
     - rvm: 1.9.2
       gemfile: gemfiles/pg-ar-40.gemfile
+
+services:
+  - mysql
+  - postgresql
+  - sqlite3
+
+before_script:
+  - mysql -e 'create database ancestry_test;'
+  - psql -c 'create database ancestry_test;' -U postgres
