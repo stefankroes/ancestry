@@ -2,21 +2,21 @@ rvm:
   - 1.9.2
   - 1.9.3
   - 2.0.0
-  
+
 gemfile:
-  - gemfiles/sqlite3-ar-30.gemfile
-  - gemfiles/sqlite3-ar-31.gemfile
-  - gemfiles/sqlite3-ar-32.gemfile
-  - gemfiles/sqlite3-ar-40.gemfile
-  - gemfiles/mysql-ar-30.gemfile
-  - gemfiles/mysql-ar-31.gemfile
-  - gemfiles/mysql-ar-32.gemfile
-  - gemfiles/mysql-ar-40.gemfile
-  - gemfiles/pg-ar-30.gemfile
-  - gemfiles/pg-ar-31.gemfile
-  - gemfiles/pg-ar-32.gemfile
-  - gemfiles/pg-ar-40.gemfile
-  
+  - gemfiles/sqlite3_ar_30.gemfile
+  - gemfiles/sqlite3_ar_31.gemfile
+  - gemfiles/sqlite3_ar_32.gemfile
+  - gemfiles/sqlite3_ar_40.gemfile
+  - gemfiles/mysql_ar_30.gemfile
+  - gemfiles/mysql_ar_31.gemfile
+  - gemfiles/mysql_ar_32.gemfile
+  - gemfiles/mysql_ar_40.gemfile
+  - gemfiles/pg_ar_30.gemfile
+  - gemfiles/pg_ar_31.gemfile
+  - gemfiles/pg_ar_32.gemfile
+  - gemfiles/pg_ar_40.gemfile
+
 matrix:
   exclude:
     - rvm: 1.9.2
