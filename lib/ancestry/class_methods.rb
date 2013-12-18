@@ -185,9 +185,11 @@ module Ancestry
     def rebuild_depth_cache!
       raise Ancestry::AncestryException.new("Cannot rebuild depth cache for model without depth caching.") unless respond_to? :depth_cache_column
 
-      self.ancestry_base_class.unscoped do
-        self.ancestry_base_class.find_each do |node|
-          node.update_attribute depth_cache_column, node.depth
+      self.ancestry_base_class.transaction do
+        self.ancestry_base_class.unscoped do
+          self.ancestry_base_class.find_each do |node|
+            node.update_attribute depth_cache_column, node.depth
+          end
         end
       end
     end
