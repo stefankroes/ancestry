@@ -22,6 +22,11 @@ module Ancestry
                   if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
                 )
               )
+              descendant.reload
+              descendant.update_attribute(
+                self.base_class.depth_cache_column,
+                descendant.depth
+              )
             end
           end
         end
