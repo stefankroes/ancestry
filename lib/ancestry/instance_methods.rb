@@ -132,7 +132,7 @@ module Ancestry
     end
 
     def path depth_options = {}
-      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where  path_conditions
+      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where path_conditions
     end
 
     def depth
