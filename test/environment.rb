@@ -26,7 +26,7 @@ class AncestryTestDatabase
     else
       File.expand_path('../database.ci.yml', __FILE__)
     end
-    
+
     # Setup database connection
     YAML.load(File.open(filename).read).values.each do |config|
       begin

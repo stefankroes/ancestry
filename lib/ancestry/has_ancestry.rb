@@ -7,7 +7,7 @@ class << ActiveRecord::Base
         raise Ancestry::AncestryException.new("Unknown option for has_ancestry: #{key.inspect} => #{value.inspect}.")
       end
     end
-    
+
     # Include instance methods
     include Ancestry::InstanceMethods
 
@@ -35,7 +35,7 @@ class << ActiveRecord::Base
 
     # Validate that the ancestor ids don't include own id
     validate :ancestry_exclude_self
-    
+
     # Named scopes
     scope :roots, lambda { where(ancestry_column => nil) }
     scope :ancestors_of, lambda { |object| where(to_node(object).ancestor_conditions) }
@@ -45,7 +45,7 @@ class << ActiveRecord::Base
     scope :siblings_of, lambda { |object| where(to_node(object).sibling_conditions) }
     scope :ordered_by_ancestry, lambda { reorder("(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}") }
     scope :ordered_by_ancestry_and, lambda { |order| reorder("(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}, #{order}") }
-    
+
     # Update descendants with new ancestry before save
     before_save :update_descendants_with_new_ancestry
 
@@ -65,7 +65,7 @@ class << ActiveRecord::Base
       # Validate depth column
       validates_numericality_of depth_cache_column, :greater_than_or_equal_to => 0, :only_integer => true, :allow_nil => false
     end
-    
+
     # Create named scopes for depth
     {:before_depth => '<', :to_depth => '<=', :at_depth => '=', :from_depth => '>=', :after_depth => '>'}.each do |scope_name, operator|
       scope scope_name, lambda { |depth|
@@ -78,9 +78,12 @@ class << ActiveRecord::Base
     after_touch :touch_ancestors_callback
     after_destroy :touch_ancestors_callback
   end
-  
-  # Alias has_ancestry with acts_as_tree, if it's available.
-  if !defined?(ActsAsTree) 
-    alias_method :acts_as_tree, :has_ancestry
+end
+
+ActiveSupport.on_load :active_record do
+  if not(ActiveRecord::Base.respond_to?(:acts_as_tree))
+    class << ActiveRecord::Base
+      alias_method :acts_as_tree, :has_ancestry
+    end
   end
 end
