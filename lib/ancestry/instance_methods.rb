@@ -198,10 +198,12 @@ module Ancestry
     def has_children?
       self.children.exists?({})
     end
+    alias_method :children?, :has_children?
 
     def is_childless?
       !has_children?
     end
+    alias_method :childless?, :is_childless?
 
     # Siblings
     
@@ -221,10 +223,12 @@ module Ancestry
     def has_siblings?
       self.siblings.count > 1
     end
+    alias_method :siblings?, :has_siblings?
 
     def is_only_child?
       !has_siblings?
     end
+    alias_method :only_child?, :is_only_child?
 
     # Descendants
     
