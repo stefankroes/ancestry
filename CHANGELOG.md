@@ -57,7 +57,7 @@ are added. The patch version is bumped when bugs are fixed.
 ## Version 1.1.4 (2009-11-07)
 * Thanks to a patch from tom taylor, Ancestry now works with different primary keys
 
-# Version 1.1.3 (2009-11-01)
+## Version 1.1.3 (2009-11-01)
 * Fixed a pretty bad bug where several operations took far too many queries
 
 ## Version 1.1.2 (2009-10-29)
