@@ -1,14 +1,20 @@
 require 'rubygems'
 require 'bundler/setup'
+
 require 'active_record'
 require 'active_support/test_case'
 require 'active_support/buffered_logger'
+
+require 'simplecov'
+require 'coveralls'
+SimpleCov.formatter = Coveralls::SimpleCov::Formatter
+SimpleCov.start do
+  add_filter '/test/'
+end
+
 require 'test/unit'
 require 'debugger'
-require 'coveralls'
 require 'logger'
-
-Coveralls.wear!
 
 # Make absolutely sure we are testing local ancestry
 require File.expand_path('../../lib/ancestry', __FILE__)
