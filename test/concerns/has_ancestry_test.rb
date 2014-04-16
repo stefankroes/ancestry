@@ -1,4 +1,4 @@
-require_relative '../environment'
+require File.expand_path('../../environment', __FILE__)
 
 class HasAncestryTreeTest < ActiveSupport::TestCase
   def test_default_ancestry_column

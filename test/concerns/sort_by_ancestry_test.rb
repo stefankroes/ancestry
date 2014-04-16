@@ -1,4 +1,4 @@
-require_relative '../environment'
+require File.expand_path('../../environment', __FILE__)
 
 class SortByAncestryTest < ActiveSupport::TestCase
   def test_sort_by_ancestry

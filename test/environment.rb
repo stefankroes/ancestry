@@ -14,7 +14,7 @@ SimpleCov.start do
 end
 
 require 'test/unit'
-require 'debugger'
+require 'debugger' unless RUBY_VERSION.start_with?('1.8')
 require 'logger'
 
 # Make absolutely sure we are testing local ancestry

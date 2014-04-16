@@ -1,4 +1,4 @@
-require_relative '../environment'
+require File.expand_path('../../environment', __FILE__)
 
 class TouchingTest < ActiveSupport::TestCase
   def test_touch_option_disabled
@@ -22,7 +22,7 @@ class TouchingTest < ActiveSupport::TestCase
       :touch => true
     ) do |model|
 
-      way_back = Time.new(1984)
+      way_back = Time.utc(1984)
       recently = Time.now - 1.minute
 
       parent_1         = model.create!(:updated_at => way_back)

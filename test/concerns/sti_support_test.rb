@@ -1,4 +1,4 @@
-require_relative '../environment'
+require File.expand_path('../../environment', __FILE__)
 
 class StiSupportTest < ActiveSupport::TestCase
   def test_sti_support

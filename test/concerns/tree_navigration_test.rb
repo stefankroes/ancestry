@@ -1,4 +1,4 @@
-require_relative '../environment'
+require File.expand_path('../../environment', __FILE__)
 
 class TreeNavigationTest < ActiveSupport::TestCase
   def test_tree_navigation
@@ -13,7 +13,7 @@ class TreeNavigationTest < ActiveSupport::TestCase
         # Parent assertions
         assert_equal nil, lvl0_node.parent_id
         assert_equal nil, lvl0_node.parent
-        refute lvl0_node.parent_id?
+        assert !lvl0_node.parent_id?
         # Root assertions
         assert_equal lvl0_node.id, lvl0_node.root_id
         assert_equal lvl0_node, lvl0_node.root

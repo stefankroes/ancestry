@@ -1,4 +1,4 @@
-require_relative '../environment'
+require File.expand_path('../../environment', __FILE__)
 
 class DefaultScopesTest < ActiveSupport::TestCase
   def test_node_excluded_by_default_scope_should_still_move_with_parent
