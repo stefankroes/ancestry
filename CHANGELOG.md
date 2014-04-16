@@ -7,6 +7,15 @@ mature and complete when it was published. The major version is only bumped when
 backwards compatibility is broken. The minor version is bumped when new features
 are added. The patch version is bumped when bugs are fixed.
 
+## Version 2.1.0 (2014-04-16)
+* Added arrange_serializable (thx krishandley, chicagogrrl)
+* Add the :touch to update ancestors on save (thx adammck)
+* Change conditions into arel (thx mlitwiniuk)
+* Added children? & siblings? alias (thx bigtunacan)
+* closure_tree compatibility (thx gzigzigzeo)
+* Performance tweak (thx mjc)
+* Improvements to organization (thx xsuchy, ryakh)
+
 ## Version 2.0.0 (2013-05-17)
 * Removed rails 2 compatibility
 * Added table name to condition constructing methods (thx aflatter)
