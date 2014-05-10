@@ -170,13 +170,14 @@ module Ancestry
     end
 
     # Build ancestry from parent id's for migration purposes
-    def build_ancestry_from_parent_ids! parent_id = nil, ancestry = nil, parent_column = :parent_id
+    def build_ancestry_from_parent_ids! options = {}
+      parent_column = options[:parent_column]||:parent_id
       self.ancestry_base_class.unscoped do
-        self.ancestry_base_class.where(parent_column => parent_id).find_each do |node|
+        self.ancestry_base_class.where(parent_column => options[:parent_id]).find_each do |node|
           node.without_ancestry_callbacks do
-            node.update_attribute ancestry_column, ancestry
+            node.update_attribute ancestry_column, options[:ancestry]
           end
-          build_ancestry_from_parent_ids! node.id, if ancestry.nil? then "#{node.id}" else "#{ancestry}/#{node.id}" end
+          build_ancestry_from_parent_ids! parent_id:node.id, ancestry:if options[:ancestry].nil? then "#{node.id}" else "#{options[:ancestry]}/#{node.id}" end, parent_column:parent_column
         end
       end
     end
