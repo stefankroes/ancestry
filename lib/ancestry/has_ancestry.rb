@@ -8,6 +8,8 @@ class << ActiveRecord::Base
       end
     end
 
+    self.const_set(:ANCESTRY_PATTERN, /\A[0-9]+(\/[0-9]+)*\Z/) unless defined?(self::ANCESTRY_PATTERN)
+
     # Include instance methods
     include Ancestry::InstanceMethods
 
@@ -31,7 +33,7 @@ class << ActiveRecord::Base
     self.touch_ancestors = options[:touch] || false
 
     # Validate format of ancestry column value
-    validates_format_of ancestry_column, :with => Ancestry::ANCESTRY_PATTERN, :allow_nil => true
+    validates_format_of ancestry_column, :with => const_get(:ANCESTRY_PATTERN), :allow_nil => true
 
     # Validate that the ancestor ids don't include own id
     validate :ancestry_exclude_self

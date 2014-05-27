@@ -294,7 +294,7 @@ module Ancestry
 
     # Validates the ancestry, but can also be applied if validation is bypassed to determine if chidren should be affected
     def sane_ancestry?
-      ancestry.nil? || (ancestry.to_s =~ Ancestry::ANCESTRY_PATTERN && !ancestor_ids.include?(self.id))
+      ancestry.nil? || (ancestry.to_s =~ self.class.const_get(:ANCESTRY_PATTERN) && !ancestor_ids.include?(self.id))
     end
 
     def unscoped_find id
