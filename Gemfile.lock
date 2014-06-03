@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    ancestry (2.0.0)
+    ancestry (2.1.0)
       activerecord (>= 3.0.0)
 
 GEM

@@ -1,4 +1,4 @@
-require_relative '../environment'
+require File.expand_path('../../environment', __FILE__)
 
 class ValidationsTest < ActiveSupport::TestCase
   def test_ancestry_column_validation

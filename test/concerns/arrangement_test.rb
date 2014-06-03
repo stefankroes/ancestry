@@ -1,4 +1,4 @@
-require_relative '../environment'
+require File.expand_path('../../environment', __FILE__)
 
 class ArrangementTest < ActiveSupport::TestCase
   def test_arrangement
@@ -31,7 +31,7 @@ class ArrangementTest < ActiveSupport::TestCase
            [{"ancestry"=>"1", "id"=>3, "children"=>[]},
             {"ancestry"=>"1", "id"=>2, "children"=>[]}]}]
 
-      assert_equal model.arrange_serializable(order: "id desc"), result
+      assert_equal model.arrange_serializable(:order => "id desc"), result
     end
   end
 
@@ -40,19 +40,19 @@ class ArrangementTest < ActiveSupport::TestCase
       descending_nodes_lvl0 = model.arrange :order => 'id desc'
       ascending_nodes_lvl0 = model.arrange :order => 'id asc'
 
-      descending_nodes_lvl0.keys.zip(ascending_nodes_lvl0.keys.reverse).each do |descending_node, ascending_node|
+      Hash[descending_nodes_lvl0.keys.zip(ascending_nodes_lvl0.keys.reverse)].each do |descending_node, ascending_node|
         assert_equal descending_node, ascending_node
         descending_nodes_lvl1 = descending_nodes_lvl0[descending_node]
         ascending_nodes_lvl1 = ascending_nodes_lvl0[ascending_node]
-        descending_nodes_lvl1.keys.zip(ascending_nodes_lvl1.keys.reverse).each do |descending_node, ascending_node|
+        Hash[descending_nodes_lvl1.keys.zip(ascending_nodes_lvl1.keys.reverse)].each do |descending_node, ascending_node|
           assert_equal descending_node, ascending_node
           descending_nodes_lvl2 = descending_nodes_lvl1[descending_node]
           ascending_nodes_lvl2 = ascending_nodes_lvl1[ascending_node]
-          descending_nodes_lvl2.keys.zip(ascending_nodes_lvl2.keys.reverse).each do |descending_node, ascending_node|
+          Hash[descending_nodes_lvl2.keys.zip(ascending_nodes_lvl2.keys.reverse)].each do |descending_node, ascending_node|
             assert_equal descending_node, ascending_node
             descending_nodes_lvl3 = descending_nodes_lvl2[descending_node]
             ascending_nodes_lvl3 = ascending_nodes_lvl2[ascending_node]
-            descending_nodes_lvl3.keys.zip(ascending_nodes_lvl3.keys.reverse).each do |descending_node, ascending_node|
+            Hash[descending_nodes_lvl3.keys.zip(ascending_nodes_lvl3.keys.reverse)].each do |descending_node, ascending_node|
               assert_equal descending_node, ascending_node
             end
           end

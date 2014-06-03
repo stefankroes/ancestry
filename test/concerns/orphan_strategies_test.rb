@@ -1,4 +1,4 @@
-require_relative '../environment'
+require File.expand_path('../../environment', __FILE__)
 
 class OphanStrategiesTest < ActiveSupport::TestCase
   def test_default_orphan_strategy

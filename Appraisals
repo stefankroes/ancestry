@@ -3,6 +3,7 @@
     appraise "#{db_type}-ar-#{ar_version.split('.').first(2).join}" do
       gem 'activerecord', ar_version
       gem db_type
+      gem 'mime-types', '~> 1.0', :platforms => :ruby_18
     end
   end
 end

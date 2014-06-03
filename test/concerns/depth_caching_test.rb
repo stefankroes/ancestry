@@ -1,4 +1,4 @@
-require_relative '../environment'
+require File.expand_path('../../environment', __FILE__)
 
 class DepthCachingTest < ActiveSupport::TestCase
   def test_depth_caching
