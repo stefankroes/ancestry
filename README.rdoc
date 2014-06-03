@@ -57,7 +57,7 @@ To navigate an Ancestry model, use the following methods on any instance / recor
   child_ids        Returns a list of child ids
   has_children?    Returns true if the record has any children, false otherwise
   is_childless?    Returns true is the record has no children, false otherwise
-  siblings         Scopes the model on siblings of the record, the record itself is included
+  siblings         Scopes the model on siblings of the record, the record itself is included*
   sibling_ids      Returns a list of sibling ids
   has_siblings?    Returns true if the record's parent has more than one child
   is_only_child?   Returns true if the record is the only child of its parent
@@ -66,6 +66,8 @@ To navigate an Ancestry model, use the following methods on any instance / recor
   subtree          Scopes the model on descendants and itself
   subtree_ids      Returns a list of all ids in the record's subtree
   depth            Return the depth of the node, root nodes are at depth 0
+  
+* If the record is a root, other root records are considered siblings
 
 = Options for has_ancestry
 
