@@ -16,7 +16,7 @@ class TouchingTest < ActiveSupport::TestCase
     end
   end
 
-  def test_touch_option_enabled
+  def test_touch_option_enabled_propagates_with_modification
     AncestryTestDatabase.with_model(
       :extra_columns => {:updated_at => :datetime},
       :touch => true
@@ -45,7 +45,7 @@ class TouchingTest < ActiveSupport::TestCase
     end
   end
 
-  def test_touch_option_enabled_only_propagates_when_modified
+  def test_touch_option_enabled_doesnt_propagate_without_modification
     AncestryTestDatabase.with_model(
       :extra_columns => {:updated_at => :datetime},
       :touch => true
@@ -54,9 +54,10 @@ class TouchingTest < ActiveSupport::TestCase
       way_back = Time.new(1984)
       recently = Time.now - 1.minute
 
-      parent      = model.create!(:updated_at => way_back)
-      child       = model.create!(:updated_at => way_back, :parent => parent)
-      grandchild  = model.create!(:updated_at => way_back, :parent => child)
+      parent      = model.create!
+      child       = model.create!(:parent => parent)
+      grandchild  = model.create!(:parent => child)
+      model.update_all(updated_at: way_back)
       grandchild.save
 
       assert_equal way_back, grandchild.reload.updated_at, "main record updated_at timestamp was touched"
