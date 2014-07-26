@@ -14,7 +14,6 @@ SimpleCov.start do
 end
 
 require 'test/unit'
-require 'debugger'
 require 'logger'
 
 # Make absolutely sure we are testing local ancestry
