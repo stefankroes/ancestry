@@ -271,7 +271,7 @@ In the example above, the ancestry column is created as a string. This puts a li
 
 The materialised path pattern requires Ancestry to use a 'like' condition in order to fetch descendants. This should not be particularly slow however since the the condition never starts with a wildcard which allows the DBMS to use the column index. If you have any data on performance with a large number of records, please drop me line.
 
-= Contributing and licence
+= Contributing and license
 
 I will try to keep Ancestry up to date with changing versions of Rails and Ruby and also with any bug reports I might receive. I will implement new features on request as I see fit and have time.
 
