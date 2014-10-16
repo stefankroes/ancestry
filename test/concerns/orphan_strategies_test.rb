@@ -83,6 +83,8 @@ class OphanStrategiesTest < ActiveSupport::TestCase
       assert_equal(model.find(n3.id).parent,n1, "orphan's not parentified" )
       assert_equal(model.find(n5.id).ancestor_ids,[n1.id,n4.id], "ancestry integrity not maintained")
       n1.destroy                          # delete a root node with desecendants
+      assert_equal(model.find(n3.id).ancestry,nil," new root node has no empty ancestry string")
+      assert_equal(model.find(n3.id).valid?,true," new root node is not valid")
       assert_equal(model.find(n3.id).parent_id,nil," Children of the deleted root not rootfied")
       assert_equal(model.find(n5.id).ancestor_ids,[n4.id],"ancestry integrity not maintained")
     end
