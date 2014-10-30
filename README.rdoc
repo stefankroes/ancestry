@@ -1,5 +1,6 @@
 {<img src="https://travis-ci.org/stefankroes/ancestry.png?branch=master" alt="Build Status" />}[https://travis-ci.org/stefankroes/ancestry]
 {<img src="https://coveralls.io/repos/stefankroes/ancestry/badge.png" alt="Coverage Status" />}[https://coveralls.io/r/stefankroes/ancestry]
+{<img src="https://badges.gitter.im/Join Chat.svg" alt="Gitter" />}[https://gitter.im/stefankroes/ancestry?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge]
 
 = Ancestry
 
@@ -66,7 +67,7 @@ To navigate an Ancestry model, use the following methods on any instance / recor
   subtree          Scopes the model on descendants and itself
   subtree_ids      Returns a list of all ids in the record's subtree
   depth            Return the depth of the node, root nodes are at depth 0
-  
+
 * If the record is a root, other root records are considered siblings
 
 = Options for has_ancestry
