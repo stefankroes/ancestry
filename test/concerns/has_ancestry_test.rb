@@ -57,6 +57,28 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
+  def single_instance_caches_parent_calls
+    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
+      root = roots.first
+      child = root.children.first
+      other = root.children.last
+
+      assert_same child.parent, child.parent
+      refute_same child.parent, other.parent
+    end
+  end
+
+  def single_instance_caches_root_calls
+    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
+      root = roots.first
+      child = root.children.first
+      other = root.children.last
+
+      assert_same child.root, child.root
+      refute_same child.root, other.root
+    end
+  end
+
   def test_setup_test_nodes
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       assert_equal Array, roots.class
