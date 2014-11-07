@@ -103,6 +103,11 @@ class AncestryTestDatabase
   end
 end
 
+class UUIDAncestryTestDatabase < ActiveRecord::Base
+  ANCESTRY_PATTERN = /\A[\w\-]+(\/[\w\-]+)*\z/
+  has_ancestry
+end
+
 AncestryTestDatabase.setup
 
 puts "\nLoaded Ancestry test suite environment:"
