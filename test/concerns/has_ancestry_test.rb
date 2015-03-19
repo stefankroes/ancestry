@@ -57,6 +57,18 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
+  def test_set_parent_with_non_default_ancestry_column
+    AncestryTestDatabase.with_model :depth => 3, :width => 3, :ancestry_column => :alternative_ancestry do |model, roots|
+      root1, root2, root3 = roots.map(&:first)
+      assert_no_difference 'root1.descendants.size' do
+        assert_difference 'root2.descendants.size', root1.subtree.size do
+          root1.parent = root2
+          root1.save!
+        end
+      end
+    end
+  end
+
   def test_setup_test_nodes
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       assert_equal Array, roots.class
