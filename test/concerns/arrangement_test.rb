@@ -35,6 +35,28 @@ class ArrangementTest < ActiveSupport::TestCase
     end
   end
 
+  def test_arrange_serializable_with_block
+    AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, roots|
+      expected_result = [{
+          "id"=>4,
+          "children"=>
+           [{"id"=>6},
+            {"id"=>5}]},
+         {
+          "id"=>1,
+          "children"=>
+           [{"id"=>3},
+            {"id"=>2}]}]
+      result = model.arrange_serializable(order: "id desc") do |parent, children|
+        out = {}
+        out["id"] = parent.id
+        out["children"] = children if children.count > 1
+        out
+      end
+      assert_equal result, expected_result
+    end
+  end
+
   def test_arrange_order_option
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
       descending_nodes_lvl0 = model.arrange :order => 'id desc'
