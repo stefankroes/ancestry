@@ -39,18 +39,18 @@ class ArrangementTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, roots|
       expected_result = [{
           "id"=>4,
-          "childs"=>
+          "children"=>
            [{"id"=>6},
             {"id"=>5}]},
          {
           "id"=>1,
-          "childs"=>
+          "children"=>
            [{"id"=>3},
             {"id"=>2}]}]
       result = model.arrange_serializable(order: "id desc") do |parent, children|
         out = {}
         out["id"] = parent.id
-        out["childs"] = children if children.count > 1
+        out["children"] = children if children.count > 1
         out
       end
       assert_equal result, expected_result

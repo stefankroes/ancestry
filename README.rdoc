@@ -190,7 +190,7 @@ Or plain hashes:
   TreeNode.arrange_serializable do |parent, children|
     {
        my_id: parent.id
-       my_childs: children
+       my_children: children
     }
   end
 
