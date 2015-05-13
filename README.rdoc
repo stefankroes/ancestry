@@ -177,6 +177,23 @@ To get the arranged nodes as a nested array of hashes for serialization:
     }
   ]
 
+You can also supply your own serialization logic using blocks:
+
+For example, using Active Model Serializers:
+
+  TreeNode.arrange_serializable do |parent, children|
+    MySerializer.new(parent, children: children)
+  end
+
+Or plain hashes:
+
+  TreeNode.arrange_serializable do |parent, children|
+    {
+       my_id: parent.id
+       my_childs: children
+    }
+  end
+
 The result of arrange_serializable can easily be serialized to json with 'to_json', or some other format:
 
   TreeNode.arrange_serializable.to_json
