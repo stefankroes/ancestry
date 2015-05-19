@@ -18,6 +18,10 @@ class << ActiveRecord::Base
     cattr_accessor :ancestry_column
     self.ancestry_column = options[:ancestry_column] || :ancestry
 
+    def self.ancestry_arel
+      arel_table[ancestry_column]
+    end
+
     # Create orphan strategy accessor and set to option or default (writer comes from DynamicClassMethods)
     cattr_reader :orphan_strategy
     self.orphan_strategy = options[:orphan_strategy] || :destroy
@@ -37,7 +41,7 @@ class << ActiveRecord::Base
     validate :ancestry_exclude_self
 
     # Named scopes
-    scope :roots, lambda { where(ancestry_column => nil) }
+    scope :roots, lambda { where(ancestry_arel.eq(nil).or(ancestry_arel.eq(''))) }
     scope :ancestors_of, lambda { |object| where(to_node(object).ancestor_conditions) }
     scope :children_of, lambda { |object| where(to_node(object).child_conditions) }
     scope :descendants_of, lambda { |object| where(to_node(object).descendant_conditions) }
