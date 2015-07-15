@@ -10,20 +10,51 @@ Ancestry is a gem/plugin that allows the records of a Ruby on Rails ActiveRecord
 
 To apply Ancestry to any ActiveRecord model, follow these simple steps:
 
-1. Install
-   - <b>Rails 2</b>
-     - See 1-3-stable branch
-   - <b>Rails 3</b>
-     - Add to Gemfile: <b>gem 'ancestry'</b>
-     - Install required gems: <b>bundle install</b>
+== Install
+=== Rails 2
+- See 1-3-stable branch
+=== Rails 3
+- Add to Gemfile:
+   # Gemfile
+   
+   gem 'ancestry'
+- Install required gems:
+   $ bundle install
 
-2. Add ancestry column to your table
-   - Create migration: <b>rails g migration add_ancestry_to_[table] ancestry:string</b>
-   - Add index to migration: <b>add_index [table], :ancestry</b> (UP) / <b>remove_index [table], :ancestry</b> (DOWN)
-   - Migrate your database: <b>rake db:migrate</b>
+== Add ancestry column to your table
+- Create migration:
+   $ rails g migration add_ancestry_to_[table] ancestry:string
+- Add index to migration:
+   # db/migrate/[date]_add_ancestry_to_[table].rb
+   
+   class AddAncestryTo[Table] < ActiveRecord::Migration
+      # Rails 4 Syntax
+      def change
+         add_column [table], :ancestry, :string
+         add_index [table], :ancestry
+      end
+      
+      # Rails 3 Syntax
+      def up
+         add_column [table], :ancestry, :string
+         add_index [table], :ancestry
+      end
+      
+      def down
+         remove_column [table], :ancestry
+         remove_index [table], :ancestry
+      end
+      
+- Migrate your database:
+   $ rake db:migrate
 
-3. Add ancestry to your model
-   - Add to app/models/[model].rb: <b>has_ancestry</b>
+== Add ancestry to your model
+- Add to app/models/[model].rb:
+   # app/models/[model.rb]
+   
+   class [Model] < ActiveRecord::Base
+      has_ancestry
+   end
 
 Your model is now a tree!
 
