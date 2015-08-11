@@ -17,6 +17,17 @@ module Ancestry
       end
     end
 
+    # Scope that returns all the leaves
+    def leaves
+      id_column = "#{table_name}.id"
+      id_column_as_text = sql_cast_as_text(id_column)
+      parent_ancestry = sql_concat("#{table_name}.#{ancestry_column}", "'/'", id_column_as_text)
+
+      joins("LEFT JOIN #{table_name} AS c ON c.#{ancestry_column} = #{id_column_as_text} OR c.#{ancestry_column} = #{parent_ancestry}").
+        group(id_column).
+        having('COUNT(c.id) = 0')
+    end
+
     # Orphan strategy writer
     def orphan_strategy= orphan_strategy
       # Check value of orphan strategy, only rootify, adopt, restrict or destroy is allowed
@@ -224,6 +235,26 @@ module Ancestry
           @primary_key_is_an_integer = !ANCESTRY_UNCAST_TYPES.include?(type_for_attribute(primary_key))
         end
       end
+    end
+
+    private
+
+    def sql_concat *parts
+      if ActiveRecord::Base.connection.adapter_name.downcase == 'sqlite'
+        parts.join(' || ')
+      else
+        "CONCAT(#{parts.join(', ')})"
+      end
+    end
+
+    def sql_cast_as_text column
+      text_type = if ActiveRecord::Base.connection.adapter_name.downcase == 'mysql'
+        'CHAR'
+      else
+        'TEXT'
+      end
+
+      "CAST(#{column} AS #{text_type})"
     end
   end
 end
