@@ -255,8 +255,13 @@ module Ancestry
     # Descendants
 
     def descendant_conditions
+      # note the ASCII for '/' and ':' in relation to numbers: '/0123456789:'
       t = get_arel_table
-      t[get_ancestry_column].matches("#{child_ancestry}/%").or(t[get_ancestry_column].eq(child_ancestry))
+      if t[get_ancestry_column].respond_to?(:between)
+        t[get_ancestry_column].between("#{child_ancestry}".."#{child_ancestry}/:")
+      else
+        t[get_ancestry_column].gteq(child_ancestry).and(t[get_ancestry_column].lt("#{child_ancestry}/:"))
+      end
     end
 
     def descendants depth_options = {}
