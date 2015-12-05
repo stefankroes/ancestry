@@ -36,5 +36,5 @@ services:
   - postgresql
 
 before_script:
-  - mysql -e 'create database ancestry_test;' || true
-  - psql -c 'create database ancestry_test;' -U postgres || true
+  - mysql -e 'CREATE DATABASE ancestry_test CHARACTER SET utf8 COLLATE utf8_general_ci;' || true
+  - psql -c 'CREATE DATABASE ancestry_test;' -U postgres || true
