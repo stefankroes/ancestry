@@ -1,65 +1,76 @@
 PATH
   remote: .
   specs:
-    ancestry (2.0.0)
+    ancestry (1.4.1)
       activerecord (>= 3.0.0)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    activemodel (4.0.2)
-      activesupport (= 4.0.2)
+    activemodel (4.0.13)
+      activesupport (= 4.0.13)
       builder (~> 3.1.0)
-    activerecord (4.0.2)
-      activemodel (= 4.0.2)
+    activerecord (4.0.13)
+      activemodel (= 4.0.13)
       activerecord-deprecated_finders (~> 1.0.2)
-      activesupport (= 4.0.2)
+      activesupport (= 4.0.13)
       arel (~> 4.0.0)
-    activerecord-deprecated_finders (1.0.3)
-    activesupport (4.0.2)
-      i18n (~> 0.6, >= 0.6.4)
+    activerecord-deprecated_finders (1.0.4)
+    activesupport (4.0.13)
+      i18n (~> 0.6, >= 0.6.9)
       minitest (~> 4.2)
       multi_json (~> 1.3)
       thread_safe (~> 0.1)
       tzinfo (~> 0.3.37)
-    appraisal (1.0.0.beta1)
+    appraisal (2.1.0)
       bundler
       rake
-      thor (~> 0.18.1)
-    arel (4.0.1)
-    atomic (1.1.14)
+      thor (>= 0.14.0)
+    arel (4.0.2)
     builder (3.1.4)
-    columnize (0.3.6)
-    coveralls (0.7.0)
-      multi_json (~> 1.3)
-      rest-client
-      simplecov (>= 0.7)
-      term-ansicolor
-      thor
-    docile (1.1.1)
-    i18n (0.6.9)
-    json (1.8.1)
-    mime-types (2.0)
+    coveralls (0.8.10)
+      json (~> 1.8)
+      rest-client (>= 1.6.8, < 2)
+      simplecov (~> 0.11.0)
+      term-ansicolor (~> 1.3)
+      thor (~> 0.19.1)
+      tins (~> 1.6.0)
+    docile (1.1.5)
+    domain_name (0.5.25)
+      unf (>= 0.0.5, < 1.0.0)
+    http-cookie (1.0.2)
+      domain_name (~> 0.5)
+    i18n (0.7.0)
+    json (1.8.3)
+    mime-types (2.99)
     minitest (4.7.5)
-    multi_json (1.8.2)
-    pg (0.17.1)
-    rake (10.1.0)
-    rdoc (4.0.1)
-      json (~> 1.4)
-    rest-client (1.6.7)
-      mime-types (>= 1.16)
-    simplecov (0.8.2)
+    multi_json (1.11.2)
+    mysql (2.9.1)
+    netrc (0.11.0)
+    pg (0.18.4)
+    power_assert (0.2.5)
+    rake (10.4.2)
+    rdoc (4.2.0)
+    rest-client (1.8.0)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 3.0)
+      netrc (~> 0.7)
+    simplecov (0.11.1)
       docile (~> 1.1.0)
-      multi_json
-      simplecov-html (~> 0.8.0)
-    simplecov-html (0.8.0)
-    term-ansicolor (1.2.2)
-      tins (~> 0.8)
-    thor (0.18.1)
-    thread_safe (0.1.3)
-      atomic
-    tins (0.13.1)
-    tzinfo (0.3.38)
+      json (~> 1.8)
+      simplecov-html (~> 0.10.0)
+    simplecov-html (0.10.0)
+    term-ansicolor (1.3.2)
+      tins (~> 1.0)
+    test-unit (3.1.5)
+      power_assert
+    thor (0.19.1)
+    thread_safe (0.3.5)
+    tins (1.6.0)
+    tzinfo (0.3.46)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.1)
 
 PLATFORMS
   ruby
@@ -67,7 +78,13 @@ PLATFORMS
 DEPENDENCIES
   activerecord (~> 4.0.2)
   ancestry!
-  appraisal (= 1.0.0.beta1)
+  appraisal
   coveralls
+  mysql
   pg
+  rake (~> 10.0)
   rdoc
+  test-unit
+
+BUNDLED WITH
+   1.11.0
