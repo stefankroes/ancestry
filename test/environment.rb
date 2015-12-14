@@ -3,7 +3,6 @@ require 'bundler/setup'
 
 require 'active_record'
 require 'active_support/test_case'
-require 'active_support/buffered_logger'
 
 require 'simplecov'
 require 'coveralls'
