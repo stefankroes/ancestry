@@ -3,6 +3,11 @@ require_relative '../environment'
 class SortByAncestryTest < ActiveSupport::TestCase
   def test_sort_by_ancestry
     AncestryTestDatabase.with_model do |model|
+      # - n1
+      #   - n2
+      #     - n3
+      #     - n4
+      #   - n5
       n1 = model.create!
       n2 = model.create!(:parent => n1)
       n3 = model.create!(:parent => n2)
@@ -10,7 +15,19 @@ class SortByAncestryTest < ActiveSupport::TestCase
       n5 = model.create!(:parent => n1)
 
       records = model.sort_by_ancestry(model.all.sort_by(&:id).reverse)
-      assert_equal [n1, n2, n4, n3, n5].map(&:id), records.map(&:id)
+      if records[1] == n2
+        if records[2] == n3
+          assert_equal [n1, n2, n3, n4, n5].map(&:id), records.map(&:id)
+        else
+          assert_equal [n1, n2, n4, n3, n5].map(&:id), records.map(&:id)
+        end
+      else
+        if records[3] == n3
+          assert_equal [n1, n5, n2, n3, n4].map(&:id), records.map(&:id)
+        else
+          assert_equal [n1, n5, n2, n4, n3].map(&:id), records.map(&:id)
+        end
+      end
     end
   end
 
