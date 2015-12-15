@@ -43,8 +43,8 @@ class << ActiveRecord::Base
     scope :descendants_of, lambda { |object| where(to_node(object).descendant_conditions) }
     scope :subtree_of, lambda { |object| where(to_node(object).subtree_conditions) }
     scope :siblings_of, lambda { |object| where(to_node(object).sibling_conditions) }
-    scope :ordered_by_ancestry, lambda { reorder("(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}") }
-    scope :ordered_by_ancestry_and, lambda { |order| reorder("(case when #{table_name}.#{ancestry_column} is null then 0 else 1 end), #{table_name}.#{ancestry_column}, #{order}") }
+    scope :ordered_by_ancestry, lambda { reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}") }
+    scope :ordered_by_ancestry_and, lambda { |order| reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, #{order}") }
 
     # Update descendants with new ancestry before save
     before_save :update_descendants_with_new_ancestry
