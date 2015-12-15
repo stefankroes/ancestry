@@ -1,17 +1,9 @@
-source 'http://rubygems.org'
+source 'https://rubygems.org'
 
 gemspec
 
-group :development, :test do
-  gem 'debugger' if RUBY_VERSION =~ /\A1.9/
-end
-
-group :development do
-  gem 'rdoc'
-end
-
-group :test do
-  gem 'sqlite3'
-  gem 'pg'
-  gem 'mysql'
-end
+gem 'appraisal', '1.0.0.beta1'
+gem 'rdoc'
+gem 'coveralls', require: false
+gem 'activerecord', '~> 4.0.2'
+gem 'pg'

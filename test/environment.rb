@@ -1,25 +1,48 @@
 require 'rubygems'
-
-if ENV['ar'].nil?
-  gem 'activerecord'
-else 
-  gem 'activerecord', ENV['ar']
-end
+require 'bundler/setup'
 
 require 'active_record'
 require 'active_support/test_case'
+require 'active_support/buffered_logger'
+
+require 'simplecov'
+require 'coveralls'
+SimpleCov.formatter = Coveralls::SimpleCov::Formatter
+SimpleCov.start do
+  add_filter '/test/'
+  add_filter '/vendor/'
+end
+
 require 'test/unit'
+require 'logger'
 
-# this is to make absolutely sure we test this one, not the one
-# installed on the system.
+# Make absolutely sure we are testing local ancestry
 require File.expand_path('../../lib/ancestry', __FILE__)
-
-require 'debugger' if RUBY_VERSION =~ /\A1.9/
 
 class AncestryTestDatabase
   def self.setup
-    ActiveRecord::Base.logger = ActiveSupport::BufferedLogger.new('log/test.log')
-    ActiveRecord::Base.establish_connection YAML.load(File.open(File.join(File.dirname(__FILE__), 'database.yml')).read)[ENV['db'] || 'sqlite3']
+    # Silence I18n and Activerecord logging
+    I18n.enforce_available_locales = false if I18n.respond_to? :enforce_available_locales=
+    ActiveRecord::Base.logger = Logger.new(STDERR)
+    ActiveRecord::Base.logger.level = Logger::Severity::UNKNOWN
+
+    # Assume Travis CI database config if no custom one exists
+    filename = if File.exists?(File.expand_path('../database.yml', __FILE__))
+      File.expand_path('../database.yml', __FILE__)
+    else
+      File.expand_path('../database.ci.yml', __FILE__)
+    end
+
+    # Setup database connection
+    YAML.load(File.open(filename).read).values.each do |config|
+      begin
+        ActiveRecord::Base.establish_connection config
+        break if ActiveRecord::Base.connection
+      rescue LoadError, RuntimeError
+        # Try if adapter can be loaded for next config
+      end
+    end
+    raise 'Could not load any database adapter!' unless ActiveRecord::Base.connected?
   end
 
   def self.with_model options = {}
@@ -35,7 +58,7 @@ class AncestryTestDatabase
         table.send type, name
       end unless extra_columns.nil?
     end
-    
+
     testmethod = caller[0][/`.*'/][1..-2]
     model_name = testmethod.camelize + "TestNode"
 
@@ -44,7 +67,17 @@ class AncestryTestDatabase
       const_set model_name, model
 
       model.table_name = 'test_nodes'
-      model.send :default_scope, default_scope_params if default_scope_params.present?
+
+      if default_scope_params.present?
+
+        # Rails < 3.1 doesn't support lambda default_scopes (only hashes)
+        # But Rails >= 4 logs deprecation warnings for hash default_scopes
+        if ActiveRecord::VERSION::STRING < "3.1"
+          model.send :default_scope, { :conditions => default_scope_params }
+        else
+          model.send :default_scope, lambda { model.where(default_scope_params) }
+        end
+      end
 
       model.has_ancestry options unless options.delete(:skip_ancestry)
 
@@ -72,7 +105,7 @@ end
 
 AncestryTestDatabase.setup
 
-puts "\nRunning Ancestry test suite:"
+puts "\nLoaded Ancestry test suite environment:"
 puts "  Ruby: #{RUBY_VERSION}"
 puts "  ActiveRecord: #{ActiveRecord::VERSION::STRING}"
 puts "  Database: #{ActiveRecord::Base.connection.adapter_name}\n\n"
