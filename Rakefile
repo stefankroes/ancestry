@@ -1,4 +1,4 @@
-require 'rake'
+require 'bundler/setup'
 require 'rake/testtask'
 require 'rdoc/task'
 

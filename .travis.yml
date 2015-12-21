@@ -1,24 +1,28 @@
 sudo: false
 
 rvm:
-  - 1.9.2
   - 1.9.3
-  - 2.0.0
-  - 2.1.0
+  - 2.2.2
 
 gemfile:
   - gemfiles/sqlite3_ar_30.gemfile
-  - gemfiles/sqlite3_ar_31.gemfile
-  - gemfiles/sqlite3_ar_32.gemfile
-  - gemfiles/sqlite3_ar_40.gemfile
-  - gemfiles/mysql_ar_30.gemfile
-  - gemfiles/mysql_ar_31.gemfile
-  - gemfiles/mysql_ar_32.gemfile
-  - gemfiles/mysql_ar_40.gemfile
   - gemfiles/pg_ar_30.gemfile
+  - gemfiles/mysql_ar_30.gemfile
+  - gemfiles/sqlite3_ar_31.gemfile
   - gemfiles/pg_ar_31.gemfile
+  - gemfiles/mysql_ar_31.gemfile
+  - gemfiles/sqlite3_ar_32.gemfile
   - gemfiles/pg_ar_32.gemfile
+  - gemfiles/mysql_ar_32.gemfile
+  - gemfiles/sqlite3_ar_40.gemfile
   - gemfiles/pg_ar_40.gemfile
+  - gemfiles/mysql_ar_40.gemfile
+  - gemfiles/sqlite3_ar_41.gemfile
+  - gemfiles/pg_ar_41.gemfile
+  - gemfiles/mysql_ar_41.gemfile
+  - gemfiles/sqlite3_ar_42.gemfile
+  - gemfiles/pg_ar_42.gemfile
+  - gemfiles/mysql_ar_42.gemfile
 
 matrix:
   exclude:
@@ -29,13 +33,10 @@ matrix:
     - rvm: 1.9.2
       gemfile: gemfiles/pg_ar_40.gemfile
 
-addons:
-  apt:
-    packages:
-      - mysql
-      - postgresql
-      - sqlite3
+services:
+  - mysql
+  - postgresql
 
 before_script:
-  - mysql -e 'create database ancestry_test;'
-  - psql -c 'create database ancestry_test;' -U postgres
+  - mysql -e 'create database ancestry_test;' || true
+  - psql -c 'create database ancestry_test;' -U postgres || true
