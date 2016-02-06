@@ -275,7 +275,7 @@ module Ancestry
 
     def subtree_conditions
       t = get_arel_table
-      t[get_primary_key_column].eq(self.id).or(t[get_ancestry_column].matches("#{child_ancestry}/%")).or(t[get_ancestry_column].eq(child_ancestry))
+      descendant_conditions.or(t[get_primary_key_column].eq(self.id))
     end
 
     def subtree depth_options = {}
