@@ -1,20 +1,129 @@
 require_relative '../environment'
 
 class ArrangementTest < ActiveSupport::TestCase
+  def root_node(model)
+    model.order(:id).first
+  end
+
+  def middle_node(model)
+    root_node(model).children.sort_by(&:id).first
+  end
+
+  def leaf_node(model)
+    model.order("id DESC").first
+  end
+
+  # Walk the tree of arranged nodes and measure the number of children and
+  #   the expected ids at each depth
+  def assert_tree(arranged_nodes, size_at_depth)
+    return if size_at_depth.empty?
+
+    assert_equal size_at_depth[0], arranged_nodes.size
+    arranged_nodes.each do |node, children|
+      assert_equal size_at_depth[1], children.size
+      assert_equal node.children.sort_by(&:id), children.keys.sort_by(&:id)
+
+      assert_tree(children, size_at_depth[1..-1])
+    end
+  end
+
+  # Walk the tree of arranged nodes (which should be a single path) and measure
+  #   the number of children and the expected ids at each depth
+  def assert_tree_path(arranged_nodes, expected_ids)
+    if expected_ids.empty?
+      assert_equal 0, arranged_nodes.size
+      return
+    end
+
+    assert_equal 1, arranged_nodes.size
+    arranged_nodes.each do |node, children|
+      assert_equal expected_ids[0], node.id
+
+      assert_tree_path(children, expected_ids[1..-1])
+    end
+  end
+
   def test_arrangement
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
-      id_sorter = Proc.new do |a, b|; a.id <=> b.id; end
-      arranged_nodes = model.arrange
-      assert_equal 3, arranged_nodes.size
-      arranged_nodes.each do |node, children|
-        assert_equal node.children.sort(&id_sorter), children.keys.sort(&id_sorter)
-        children.each do |node, children|
-          assert_equal node.children.sort(&id_sorter), children.keys.sort(&id_sorter)
-          children.each do |node, children|
-            assert_equal 0, children.size
-          end
-        end
-      end
+      assert_tree model.arrange, [3, 3, 3, 0]
+    end
+  end
+
+  def test_subtree_arrange_root_node
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+      assert_tree root_node(model).subtree.arrange, [1, 2, 2, 0]
+    end
+  end
+
+  def test_subtree_arrange_middle_node
+    AncestryTestDatabase.with_model :depth => 4, :width => 2 do |model, roots|
+      assert_tree middle_node(model).subtree.arrange, [1, 2, 2, 0]
+    end
+  end
+
+  def test_subtree_arrange_leaf_node
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+      assert_tree leaf_node(model).subtree.arrange, [1, 0]
+    end
+  end
+
+  def test_descendants_arrange_root_node
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+      assert_tree root_node(model).descendants.arrange, [2, 2, 0]
+    end
+  end
+
+  def test_descendants_arrange_middle_node
+    AncestryTestDatabase.with_model :depth => 4, :width => 2 do |model, roots|
+      assert_tree middle_node(model).descendants.arrange, [2, 2, 0]
+    end
+  end
+
+  def test_descendants_arrange_leaf_node
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+      assert_tree leaf_node(model).descendants.arrange, [0]
+    end
+  end
+
+  def test_path_arrange_root_node
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+      test_node = root_node(model)
+      assert_tree_path test_node.path.arrange, test_node.path_ids
+    end
+  end
+
+  def test_path_arrange_middle_node
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+      test_node = middle_node(model)
+      assert_tree_path test_node.path.arrange, test_node.path_ids
+    end
+  end
+
+  def test_path_arrange_leaf_node
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+      test_node = leaf_node(model)
+      assert_tree_path test_node.path.arrange, test_node.path_ids
+    end
+  end
+
+  def test_ancestors_arrange_root_node
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+      test_node = root_node(model)
+      assert_tree_path test_node.ancestors.arrange, test_node.ancestor_ids
+    end
+  end
+
+  def test_ancestors_arrange_middle_node
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+      test_node = middle_node(model)
+      arranged_nodes = test_node.ancestors.arrange, test_node.ancestor_ids
+    end
+  end
+
+  def test_ancestors_arrange_leaf_node
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+      test_node = leaf_node(model)
+      arranged_nodes = test_node.ancestors.arrange, test_node.ancestor_ids
     end
   end
 
