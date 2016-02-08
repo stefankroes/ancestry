@@ -29,8 +29,7 @@ module Ancestry
 
     # Delimiter writer
     def ancestry_delimiter= ancestry_delimiter
-      # Check value of the delimiter. Restrict if it's numeric.
-      if ancestry_delimiter =~ /^\D+$/
+      if ancestry_delimiter !~ /\A#{primary_key_format}\Z/
         class_variable_set :@@ancestry_delimiter, ancestry_delimiter
       else
         raise Ancestry::AncestryException.new("Invalid delimiter, only non-numeric characters are allowed.")
@@ -38,7 +37,7 @@ module Ancestry
     end
 
     def ancestry_pattern
-      /\A[0-9]+(#{Regexp.escape(ancestry_delimiter)}[0-9]+)*\Z/
+      /\A#{primary_key_format}(?:#{Regexp.escape(ancestry_delimiter)}#{primary_key_format})*\Z/
     end
 
     # Arrangement

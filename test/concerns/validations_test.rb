@@ -15,6 +15,20 @@ class ValidationsTest < ActiveSupport::TestCase
     end
   end
 
+  def test_ancestry_column_validation_with_strings
+    AncestryTestDatabase.with_model :primary_key_format => "[A-Z]+" do |model|
+      node = model.create
+      ['A', 'A/B', 'A/B/C', 'AAA/BB', nil].each do |value|
+        node.send :write_attribute, model.ancestry_column, value
+        node.valid?; assert node.errors[model.ancestry_column].blank?
+      end
+      ['A-Z'].each do |value|
+        node.send :write_attribute, model.ancestry_column, value
+        node.valid?; assert !node.errors[model.ancestry_column].blank?
+      end
+    end
+  end
+
   def test_validate_ancestry_exclude_self
     AncestryTestDatabase.with_model do |model|
       parent = model.create!

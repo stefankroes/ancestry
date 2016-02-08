@@ -118,11 +118,10 @@ The has_ancestry methods supports the following options:
                          - Migrate: add_column [table], :ancestry_depth, :integer, :default => 0
                          - Build cache: TreeNode.rebuild_depth_cache!
   :depth_cache_column    Pass in a symbol to store depth cache in a different column
-  :primary_key_format    Supply a regular expression that matches the format of your primary key.
-                         By default, primary keys only match integers ([0-9]+).
+  :primary_key_format    Supply a regular expression that matches the format of your primary key. (default: [0-9]+).
   :touch                 Instruct Ancestry to touch the ancestors of a node when it changes, to
                          invalidate nested key-based caches. (default: false)
-
+  :delimiter             The symbol used in ancestry column to separate keys (default: '/')
 = (Named) Scopes
 
 Where possible, the navigation methods return scopes instead of records, this means additional ordering, conditions, limits, etc. can be applied and that the result can be either retrieved, counted or checked for existence. For example:

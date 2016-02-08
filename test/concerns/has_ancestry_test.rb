@@ -51,6 +51,26 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
+  def test_default_primary_key_format
+    AncestryTestDatabase.with_model do |model|
+      assert_equal "[0-9]+", model.primary_key_format
+    end
+  end
+
+  def test_non_default_primary_key_format
+    AncestryTestDatabase.with_model :primary_key_format => '[A-Z]+' do |model|
+      assert_equal '[A-Z]+', model.primary_key_format
+    end
+  end
+
+  def test_setting_invalid_ancestry_delimiter
+    AncestryTestDatabase.with_model do |model|
+      assert_raise Ancestry::AncestryException do
+        model.ancestry_delimiter = '1'
+      end
+    end
+  end
+
   def test_invalid_has_ancestry_options
     assert_raise Ancestry::AncestryException do
       Class.new(ActiveRecord::Base).has_ancestry :this_option_doesnt_exist => 42
