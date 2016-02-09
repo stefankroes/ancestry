@@ -39,6 +39,5 @@ EOF
   s.add_runtime_dependency 'activerecord', '>= 3.0.0'
   s.add_development_dependency 'rake',      '~> 10.0'
   s.add_development_dependency 'test-unit'
-  s.add_development_dependency 'pg'
-  s.add_development_dependency 'mysql'
+  s.add_development_dependency 'sqlite3'
 end

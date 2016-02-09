@@ -2,7 +2,7 @@ sqlite3:
   adapter: sqlite3
   database: ":memory:"
   timeout: 500
-postgresql:
+pg:
   adapter: postgresql
   database: ancestry_test
   username: postgres
