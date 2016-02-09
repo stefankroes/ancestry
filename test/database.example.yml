@@ -1,7 +1,7 @@
 sqlite3:
   adapter: sqlite3
   database: ":memory:"
-postgresql:
+pg:
   adapter: postgresql
   database: ancestry_test
   username: ancestry
