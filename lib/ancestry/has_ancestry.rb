@@ -3,7 +3,7 @@ class << ActiveRecord::Base
     # Check options
     raise Ancestry::AncestryException.new("Options for has_ancestry must be in a hash.") unless options.is_a? Hash
     options.each do |key, value|
-      unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch].include? key
+      unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :primary_key_format].include? key
         raise Ancestry::AncestryException.new("Unknown option for has_ancestry: #{key.inspect} => #{value.inspect}.")
       end
     end
@@ -30,8 +30,11 @@ class << ActiveRecord::Base
     cattr_accessor :touch_ancestors
     self.touch_ancestors = options[:touch] || false
 
+    cattr_accessor :primary_key_format
+    self.primary_key_format = options[:primary_key_format] || Ancestry::ANCESTRY_PATTERN
+
     # Validate format of ancestry column value
-    validates_format_of ancestry_column, :with => Ancestry::ANCESTRY_PATTERN, :allow_nil => true
+    validates_format_of ancestry_column, :with => self.primary_key_format, :allow_nil => true
 
     # Validate that the ancestor ids don't include own id
     validate :ancestry_exclude_self

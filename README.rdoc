@@ -119,6 +119,9 @@ The has_ancestry methods supports the following options:
   :depth_cache_column    Pass in a symbol to store depth cache in a different column
   :primary_key_format    Supply a regular expression that matches the format of your primary key.
                          By default, primary keys only match integers ([0-9]+).
+                         Make sure to use an expression that matches one but also multiple IDs,
+                         separated by a / (slash). The complete default expression is:
+                         /\A[0-9]+(\/[0-9]+)*\Z/
   :touch                 Instruct Ancestry to touch the ancestors of a node when it changes, to
                          invalidate nested key-based caches. (default: false)
 
