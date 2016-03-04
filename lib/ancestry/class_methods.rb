@@ -42,23 +42,20 @@ module Ancestry
     # Arrange array of nodes into a nested hash of the form
     # {node => children}, where children = {} if the node has no children
     def arrange_nodes(nodes)
-      arranged = ActiveSupport::OrderedHash.new
+      root_id = nil
       min_depth = Float::INFINITY
       index = Hash.new { |h, k| h[k] = ActiveSupport::OrderedHash.new }
 
       nodes.each do |node|
-        children = index[node.id]
-        index[node.parent_id][node] = children
-
+        index[node.parent_id][node] = index[node.id]
         depth = node.depth
         if depth < min_depth
           min_depth = depth
-          arranged.clear
+          root_id = node.parent_id
         end
-        arranged[node] = children if depth == min_depth
       end
 
-      arranged
+      index[root_id]
     end
 
      # Arrangement to nested array
