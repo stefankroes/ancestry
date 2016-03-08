@@ -220,13 +220,14 @@ module Ancestry
     end
 
     def sql_cast_as_text column
-      text_type = if ActiveRecord::Base.connection.adapter_name.downcase == 'mysql'
+      #need mysql2 as new rails version support the mysql2 gem only
+      text_type = if ActiveRecord::Base.connection.adapter_name.downcase == 'mysql2'
         'CHAR'
       else
         'TEXT'
       end
-
-      "CAST(#{column} AS #{text_type})"
+      # updated mysql thrown error if utf is not defined
+      "CAST(#{column} AS #{text_type}) collate utf8_unicode_ci"
     end
   end
 end
