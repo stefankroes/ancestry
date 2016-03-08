@@ -16,7 +16,7 @@ module Ancestry
         end
       end
     end
-    
+
     # Scope that returns all the leaves
     def leaves
       id_column = "#{table_name}.id"
@@ -27,7 +27,7 @@ module Ancestry
         group(id_column).
         having('COUNT(c.id) = 0')
     end
-    
+
     # Orphan strategy writer
     def orphan_strategy= orphan_strategy
       # Check value of orphan strategy, only rootify, adopt, restrict or destroy is allowed
@@ -53,23 +53,18 @@ module Ancestry
     # Arrange array of nodes into a nested hash of the form
     # {node => children}, where children = {} if the node has no children
     def arrange_nodes(nodes)
-      arranged = ActiveSupport::OrderedHash.new
-      min_depth = Float::INFINITY
-      index = Hash.new { |h, k| h[k] = ActiveSupport::OrderedHash.new }
-
-      nodes.each do |node|
-        children = index[node.id]
-        index[node.parent_id][node] = children
-
-        depth = node.depth
-        if depth < min_depth
-          min_depth = depth
-          arranged.clear
-        end
-        arranged[node] = children if depth == min_depth
+      # Get all nodes ordered by ancestry and start sorting them into an empty hash
+      nodes.inject(ActiveSupport::OrderedHash.new) do |arranged_nodes, node|
+        # Find the insertion point for that node by going through its ancestors
+        node.ancestor_ids.inject(arranged_nodes) do |insertion_point, ancestor_id|
+          insertion_point.each do |parent, children|
+            # Change the insertion point to children if node is a descendant of this parent
+            insertion_point = children if ancestor_id == parent.id
+          end
+          insertion_point
+        end[node] = ActiveSupport::OrderedHash.new
+        arranged_nodes
       end
-
-      arranged
     end
 
      # Arrangement to nested array
@@ -212,6 +207,26 @@ module Ancestry
           end
         end
       end
+    end
+
+    private
+
+    def sql_concat *parts
+      if ActiveRecord::Base.connection.adapter_name.downcase == 'sqlite'
+        parts.join(' || ')
+      else
+        "CONCAT(#{parts.join(', ')})"
+      end
+    end
+
+    def sql_cast_as_text column
+      text_type = if ActiveRecord::Base.connection.adapter_name.downcase == 'mysql'
+        'CHAR'
+      else
+        'TEXT'
+      end
+
+      "CAST(#{column} AS #{text_type})"
     end
   end
 end
