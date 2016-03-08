@@ -16,7 +16,18 @@ module Ancestry
         end
       end
     end
+    
+    # Scope that returns all the leaves
+    def leaves
+      id_column = "#{table_name}.id"
+      id_column_as_text = sql_cast_as_text(id_column)
+      parent_ancestry = sql_concat("#{table_name}.#{ancestry_column}", "'/'", id_column_as_text)
 
+      joins("LEFT JOIN #{table_name} AS c ON c.#{ancestry_column} = #{id_column_as_text} OR c.#{ancestry_column} = #{parent_ancestry}").
+        group(id_column).
+        having('COUNT(c.id) = 0')
+    end
+    
     # Orphan strategy writer
     def orphan_strategy= orphan_strategy
       # Check value of orphan strategy, only rootify, adopt, restrict or destroy is allowed
