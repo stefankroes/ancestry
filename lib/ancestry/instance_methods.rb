@@ -90,7 +90,7 @@ module Ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
 
-      "#{self.send "#{self.ancestry_base_class.ancestry_column}"}/#{id}"
+      [self.send(ancestry_base_class.ancestry_column), id].compact.join("/")
     end
 
     # Ancestors
