@@ -295,7 +295,7 @@ module Ancestry
     end
 
     def ancestry_callbacks_disabled?
-      !!@disable_ancestry_callbacks
+      defined?(@disable_ancestry_callbacks) && @disable_ancestry_callbacks
     end
 
   private
