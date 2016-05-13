@@ -13,10 +13,10 @@ To apply Ancestry to any ActiveRecord model, follow these simple steps:
 == Install
 === Rails 2
 - See 1-3-stable branch
-=== Rails 3
+=== Rails 3 and 4
 - Add to Gemfile:
    # Gemfile
-   
+
    gem 'ancestry'
 - Install required gems:
    $ bundle install
@@ -26,32 +26,32 @@ To apply Ancestry to any ActiveRecord model, follow these simple steps:
    $ rails g migration add_ancestry_to_[table] ancestry:string
 - Add index to migration:
    # db/migrate/[date]_add_ancestry_to_[table].rb
-   
+
    class AddAncestryTo[Table] < ActiveRecord::Migration
       # Rails 4 Syntax
       def change
          add_column [table], :ancestry, :string
          add_index [table], :ancestry
       end
-      
+
       # Rails 3 Syntax
       def up
          add_column [table], :ancestry, :string
          add_index [table], :ancestry
       end
-      
+
       def down
          remove_column [table], :ancestry
          remove_index [table], :ancestry
       end
-      
+
 - Migrate your database:
    $ rake db:migrate
 
 == Add ancestry to your model
 - Add to app/models/[model].rb:
    # app/models/[model.rb]
-   
+
    class [Model] < ActiveRecord::Base
       has_ancestry
    end
@@ -326,4 +326,4 @@ I will try to keep Ancestry up to date with changing versions of Rails and Ruby 
 
 Question? Bug report? Faulty/incomplete documentation? Feature request? Please post an issue on 'http://github.com/stefankroes/ancestry/issues'. Make sure you have read the documentation and you have included tests and documentation with any pull request.
 
-Copyright (c) 2013 Stefan Kroes, released under the MIT license
+Copyright (c) 2016 Stefan Kroes, released under the MIT license
