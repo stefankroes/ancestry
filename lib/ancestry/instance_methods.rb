@@ -76,7 +76,7 @@ module Ancestry
         if self.ancestry_base_class.touch_ancestors
 
           # Touch each of the old *and* new ancestors
-          self.class.where(id: (ancestor_ids + ancestor_ids_was).uniq).each do |ancestor|
+          unscoped_current_and_previous_ancestors.each do |ancestor|
             ancestor.without_ancestry_callbacks do
               ancestor.touch
             end
@@ -315,6 +315,12 @@ module Ancestry
     def unscoped_descendants
       self.ancestry_base_class.unscoped do
         self.ancestry_base_class.where descendant_conditions
+      end
+    end
+
+    def unscoped_current_and_previous_ancestors
+      self.ancestry_base_class.unscoped do
+        self.ancestry_base_class.where id: (ancestor_ids + ancestor_ids_was).uniq
       end
     end
 
