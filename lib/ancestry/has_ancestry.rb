@@ -74,9 +74,9 @@ class << ActiveRecord::Base
       }
     end
 
-    after_save :touch_ancestors_callback
     after_touch :touch_ancestors_callback
     after_destroy :touch_ancestors_callback
+    after_save :touch_ancestors_callback, if: :changed?
   end
 end
 

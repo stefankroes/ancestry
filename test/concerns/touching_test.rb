@@ -16,7 +16,7 @@ class TouchingTest < ActiveSupport::TestCase
     end
   end
 
-  def test_touch_option_enabled
+  def test_touch_option_enabled_propagates_with_modification
     AncestryTestDatabase.with_model(
       :extra_columns => {:updated_at => :datetime},
       :touch => true
@@ -42,6 +42,27 @@ class TouchingTest < ActiveSupport::TestCase
 
       assert_equal way_back, grandchild_1_1_2.reload.updated_at, "old sibling was touched"
       assert_equal way_back, child_1_2.reload.updated_at,        "unrelated record was touched"
+    end
+  end
+
+  def test_touch_option_enabled_doesnt_propagate_without_modification
+    AncestryTestDatabase.with_model(
+      :extra_columns => {:updated_at => :datetime},
+      :touch => true
+    ) do |model|
+
+      way_back = Time.new(1984)
+      recently = Time.now - 1.minute
+
+      parent      = model.create!
+      child       = model.create!(:parent => parent)
+      grandchild  = model.create!(:parent => child)
+      model.update_all(updated_at: way_back)
+      grandchild.save
+
+      assert_equal way_back, grandchild.reload.updated_at, "main record updated_at timestamp was touched"
+      assert_equal way_back, child.reload.updated_at,      "parent record was touched"
+      assert_equal way_back, parent.reload.updated_at,     "grandparent record was touched"
     end
   end
 end
