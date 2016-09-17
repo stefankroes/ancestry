@@ -225,21 +225,34 @@ module Ancestry
 
     # Siblings
 
-    def sibling_conditions
+    def sibling_conditions arel_conditions = {}
       t = get_arel_table
-      t[get_ancestry_column].eq(read_attribute(self.ancestry_base_class.ancestry_column))
+      conditions = t[get_ancestry_column].eq(read_attribute(self.ancestry_base_class.ancestry_column))
+      if arel_conditions[:exclude_self] == true
+        uuid = self.send(self.ancestry_base_class.primary_key.to_sym)
+        conditions = conditions.and(t[self.ancestry_base_class.primary_key].not_eq(uuid))
+      end
+      conditions
     end
 
     def siblings
       self.ancestry_base_class.where sibling_conditions
     end
 
+    def siblings_only
+      self.ancestry_base_class.where sibling_conditions(exclude_self: true)
+    end
+
     def sibling_ids
       siblings.select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
     end
 
+    def siblings_only_ids
+      siblings_only.select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
+    end
+
     def has_siblings?
-      self.siblings.count > 1
+      self.siblings_only.count > 0
     end
     alias_method :siblings?, :has_siblings?
 
