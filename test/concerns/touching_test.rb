@@ -12,7 +12,7 @@ class TouchingTest < ActiveSupport::TestCase
       child  = model.create!(:updated_at => yesterday, :parent => parent)
 
       child.update_attributes(:name => "Changed")
-      assert_equal yesterday, parent.updated_at
+      assert_equal yesterday.utc.change(:usec => 0), parent.updated_at.utc.change(:usec => 0)
     end
   end
 
@@ -52,7 +52,6 @@ class TouchingTest < ActiveSupport::TestCase
     ) do |model|
 
       way_back = Time.new(1984)
-      recently = Time.now - 1.minute
 
       parent      = model.create!
       child       = model.create!(:parent => parent)

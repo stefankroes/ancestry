@@ -116,14 +116,14 @@ class ArrangementTest < ActiveSupport::TestCase
   def test_ancestors_arrange_middle_node
     AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
       test_node = middle_node(model)
-      arranged_nodes = test_node.ancestors.arrange, test_node.ancestor_ids
+      assert_tree_path test_node.ancestors.arrange, test_node.ancestor_ids
     end
   end
 
   def test_ancestors_arrange_leaf_node
     AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
       test_node = leaf_node(model)
-      arranged_nodes = test_node.ancestors.arrange, test_node.ancestor_ids
+      assert_tree_path test_node.ancestors.arrange, test_node.ancestor_ids
     end
   end
 
@@ -171,20 +171,20 @@ class ArrangementTest < ActiveSupport::TestCase
       descending_nodes_lvl0 = model.arrange :order => 'id desc'
       ascending_nodes_lvl0 = model.arrange :order => 'id asc'
 
-      descending_nodes_lvl0.keys.zip(ascending_nodes_lvl0.keys.reverse).each do |descending_node, ascending_node|
-        assert_equal descending_node, ascending_node
-        descending_nodes_lvl1 = descending_nodes_lvl0[descending_node]
-        ascending_nodes_lvl1 = ascending_nodes_lvl0[ascending_node]
-        descending_nodes_lvl1.keys.zip(ascending_nodes_lvl1.keys.reverse).each do |descending_node, ascending_node|
-          assert_equal descending_node, ascending_node
-          descending_nodes_lvl2 = descending_nodes_lvl1[descending_node]
-          ascending_nodes_lvl2 = ascending_nodes_lvl1[ascending_node]
-          descending_nodes_lvl2.keys.zip(ascending_nodes_lvl2.keys.reverse).each do |descending_node, ascending_node|
-            assert_equal descending_node, ascending_node
-            descending_nodes_lvl3 = descending_nodes_lvl2[descending_node]
-            ascending_nodes_lvl3 = ascending_nodes_lvl2[ascending_node]
-            descending_nodes_lvl3.keys.zip(ascending_nodes_lvl3.keys.reverse).each do |descending_node, ascending_node|
-              assert_equal descending_node, ascending_node
+      descending_nodes_lvl0.keys.zip(ascending_nodes_lvl0.keys.reverse).each do |descending_node1, ascending_node1|
+        assert_equal descending_node1, ascending_node1
+        descending_nodes_lvl1 = descending_nodes_lvl0[descending_node1]
+        ascending_nodes_lvl1 = ascending_nodes_lvl0[ascending_node1]
+        descending_nodes_lvl1.keys.zip(ascending_nodes_lvl1.keys.reverse).each do |descending_node2, ascending_node2|
+          assert_equal descending_node2, ascending_node2
+          descending_nodes_lvl2 = descending_nodes_lvl1[descending_node2]
+          ascending_nodes_lvl2 = ascending_nodes_lvl1[ascending_node2]
+          descending_nodes_lvl2.keys.zip(ascending_nodes_lvl2.keys.reverse).each do |descending_node3, ascending_node3|
+            assert_equal descending_node3, ascending_node3
+            descending_nodes_lvl3 = descending_nodes_lvl2[descending_node3]
+            ascending_nodes_lvl3 = ascending_nodes_lvl2[ascending_node3]
+            descending_nodes_lvl3.keys.zip(ascending_nodes_lvl3.keys.reverse).each do |descending_node4, ascending_node4|
+              assert_equal descending_node4, ascending_node4
             end
           end
         end

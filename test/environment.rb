@@ -27,7 +27,7 @@ class AncestryTestDatabase
     ActiveRecord::Base.logger.level = Logger::Severity::UNKNOWN
 
     # Assume Travis CI database config if no custom one exists
-    filename = if File.exists?(File.expand_path('../database.yml', __FILE__))
+    filename = if File.exist?(File.expand_path('../database.yml', __FILE__))
       File.expand_path('../database.yml', __FILE__)
     else
       File.expand_path('../database.ci.yml', __FILE__)

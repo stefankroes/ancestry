@@ -63,7 +63,7 @@ class ScopesTest < ActiveSupport::TestCase
       end
 
       parent = model.create
-      assert child = parent.children.create
+      assert parent.children.create
     end
   end
 end
