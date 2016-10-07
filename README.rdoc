@@ -1,6 +1,7 @@
-{<img src="https://travis-ci.org/stefankroes/ancestry.png?branch=master" alt="Build Status" />}[https://travis-ci.org/stefankroes/ancestry]
-{<img src="https://coveralls.io/repos/stefankroes/ancestry/badge.png" alt="Coverage Status" />}[https://coveralls.io/r/stefankroes/ancestry]
+{<img src="https://travis-ci.org/stefankroes/ancestry.svg?branch=master" alt="Build Status" />}[https://travis-ci.org/stefankroes/ancestry]
+{<img src="https://coveralls.io/repos/stefankroes/ancestry/badge.svg" alt="Coverage Status" />}[https://coveralls.io/r/stefankroes/ancestry]
 {<img src="https://badges.gitter.im/Join Chat.svg" alt="Gitter" />}[https://gitter.im/stefankroes/ancestry?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge]
+{<img src="https://hakiri.io/github/stefankroes/ancestry/master.svg" alt="Security" />}[https://hakiri.io/github/stefankroes/ancestry/master]
 
 = Ancestry
 
