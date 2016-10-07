@@ -65,7 +65,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
       assert_raise Ancestry::AncestryException do
         root.destroy
       end
-      assert_nothing_raised Ancestry::AncestryException do
+      assert_nothing_raised do
         root.children.first.children.first.destroy
       end
     end

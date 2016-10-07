@@ -3,10 +3,10 @@ require_relative '../environment'
 class BuildAncestryTest < ActiveSupport::TestCase
   def test_build_ancestry_from_parent_ids
     AncestryTestDatabase.with_model :skip_ancestry => true, :extra_columns => {:parent_id => :integer} do |model|
-      [model.create!].each do |parent|
-        (Array.new(5) { model.create! :parent_id => parent.id }).each do |parent|
-          (Array.new(5) { model.create! :parent_id => parent.id }).each do |parent|
-            (Array.new(5) { model.create! :parent_id => parent.id })
+      [model.create!].each do |parent1|
+        (Array.new(5) { model.create! :parent_id => parent1.id }).each do |parent2|
+          (Array.new(5) { model.create! :parent_id => parent2.id }).each do |parent3|
+            (Array.new(5) { model.create! :parent_id => parent3.id })
           end
         end
       end
@@ -27,14 +27,14 @@ class BuildAncestryTest < ActiveSupport::TestCase
       assert_equal 1, roots.size
 
       # Assert it has 5 children
-      roots.each do |parent|
-        assert_equal 5, parent.children.count
-        parent.children.each do |parent|
-          assert_equal 5, parent.children.count
-          parent.children.each do |parent|
-            assert_equal 5, parent.children.count
-            parent.children.each do |parent|
-              assert_equal 0, parent.children.count
+      roots.each do |parent1|
+        assert_equal 5, parent1.children.count
+        parent1.children.each do |parent2|
+          assert_equal 5, parent2.children.count
+          parent2.children.each do |parent3|
+            assert_equal 5, parent3.children.count
+            parent3.children.each do |parent4|
+              assert_equal 0, parent4.children.count
             end
           end
         end
