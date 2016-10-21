@@ -43,6 +43,7 @@ class << ActiveRecord::Base
     scope :descendants_of, lambda { |object| where(to_node(object).descendant_conditions) }
     scope :subtree_of, lambda { |object| where(to_node(object).subtree_conditions) }
     scope :siblings_of, lambda { |object| where(to_node(object).sibling_conditions) }
+    scope :siblings_only_of, lambda { |object| where(to_node(object).sibling_conditions(exclude_self: true)) }
     scope :ordered_by_ancestry, lambda { reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}") }
     scope :ordered_by_ancestry_and, lambda { |order| reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, #{order}") }
 

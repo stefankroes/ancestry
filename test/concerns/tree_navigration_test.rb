@@ -26,6 +26,8 @@ class TreeNavigationTest < ActiveSupport::TestCase
         # Siblings assertions
         assert_equal roots.map(&:first).map(&:id), lvl0_node.sibling_ids
         assert_equal roots.map(&:first), lvl0_node.siblings
+        assert_equal roots.map(&:first).map(&:id) - [lvl0_node.id], lvl0_node.siblings_only_ids
+        assert_equal roots.map(&:first).reject {|n| n == lvl0_node}, lvl0_node.siblings_only
         assert lvl0_node.has_siblings?
         assert !lvl0_node.is_only_child?
         # Descendants assertions
@@ -59,6 +61,8 @@ class TreeNavigationTest < ActiveSupport::TestCase
           # Siblings assertions
           assert_equal lvl0_children.map(&:first).map(&:id), lvl1_node.sibling_ids
           assert_equal lvl0_children.map(&:first), lvl1_node.siblings
+          assert_equal lvl0_children.map(&:first).map(&:id) - [lvl1_node.id], lvl1_node.siblings_only_ids
+          assert_equal lvl0_children.map(&:first).reject {|n| n == lvl1_node}, lvl1_node.siblings_only
           assert lvl1_node.has_siblings?
           assert !lvl1_node.is_only_child?
           # Descendants assertions
@@ -92,6 +96,8 @@ class TreeNavigationTest < ActiveSupport::TestCase
             # Siblings assertions
             assert_equal lvl1_children.map(&:first).map(&:id), lvl2_node.sibling_ids
             assert_equal lvl1_children.map(&:first), lvl2_node.siblings
+            assert_equal lvl1_children.map(&:first).map(&:id) - [lvl2_node.id], lvl2_node.siblings_only_ids
+            assert_equal lvl1_children.map(&:first).reject {|n| n == lvl2_node}, lvl2_node.siblings_only
             assert lvl2_node.has_siblings?
             assert !lvl2_node.is_only_child?
             # Descendants assertions

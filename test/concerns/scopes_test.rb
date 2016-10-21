@@ -22,6 +22,9 @@ class ScopesTest < ActiveSupport::TestCase
         # Assertions for siblings_of named scope
         assert_equal test_node.siblings.to_a, model.siblings_of(test_node).to_a
         assert_equal test_node.siblings.to_a, model.siblings_of(test_node.id).to_a
+        # Assertions for siblings_only_of named scope
+        assert_equal test_node.siblings_only.to_a, model.siblings_only_of(test_node).to_a
+        assert_equal test_node.siblings_only.to_a, model.siblings_only_of(test_node.id).to_a
       end
     end
   end
