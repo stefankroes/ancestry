@@ -108,8 +108,7 @@ module Ancestry
     end
 
     def ancestor_conditions
-      t = get_arel_table
-      t[get_primary_key_column].in(ancestor_ids)
+      self.ancestry_base_class.ancestor_conditions(self)
     end
 
     def ancestors depth_options = {}
@@ -129,8 +128,7 @@ module Ancestry
     end
 
     def path_conditions
-      t = get_arel_table
-      t[get_primary_key_column].in(path_ids)
+      self.ancestry_base_class.path_conditions(self)
     end
 
     def path depth_options = {}
@@ -197,8 +195,7 @@ module Ancestry
     # Children
 
     def child_conditions
-      t = get_arel_table
-      t[get_ancestry_column].eq(child_ancestry)
+      self.ancestry_base_class.child_conditions(self)
     end
 
     def children
@@ -226,8 +223,7 @@ module Ancestry
     # Siblings
 
     def sibling_conditions
-      t = get_arel_table
-      t[get_ancestry_column].eq(read_attribute(self.ancestry_base_class.ancestry_column))
+      self.ancestry_base_class.sibling_conditions(self)
     end
 
     def siblings
@@ -255,13 +251,7 @@ module Ancestry
     # Descendants
 
     def descendant_conditions
-      t = get_arel_table
-      # rails has case sensitive matching.
-      if ActiveRecord::VERSION::MAJOR >= 5
-        t[get_ancestry_column].matches("#{child_ancestry}/%", nil, true).or(t[get_ancestry_column].eq(child_ancestry))
-      else
-        t[get_ancestry_column].matches("#{child_ancestry}/%").or(t[get_ancestry_column].eq(child_ancestry))
-      end
+      self.ancestry_base_class.descendant_conditions(self)
     end
 
     def descendants depth_options = {}
@@ -279,8 +269,7 @@ module Ancestry
     # Subtree
 
     def subtree_conditions
-      t = get_arel_table
-      descendant_conditions.or(t[get_primary_key_column].eq(self.id))
+      self.ancestry_base_class.subtree_conditions(self)
     end
 
     def subtree depth_options = {}
@@ -331,18 +320,6 @@ module Ancestry
 
     def unscoped_find id
       self.ancestry_base_class.unscoped { self.ancestry_base_class.find(id) }
-    end
-
-    def get_arel_table
-      self.ancestry_base_class.arel_table
-    end
-
-    def get_primary_key_column
-      self.ancestry_base_class.primary_key.to_sym
-    end
-
-    def get_ancestry_column
-      self.ancestry_base_class.ancestry_column.to_sym
     end
   end
 end
