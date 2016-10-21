@@ -12,3 +12,8 @@ mysql:
   database: ancestry_test
   username: travis
   encoding: utf8
+mysql2:
+  adapter: mysql2
+  database: ancestry_test
+  username: travis
+  encoding: utf8
