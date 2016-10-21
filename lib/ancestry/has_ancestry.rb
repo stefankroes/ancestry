@@ -45,6 +45,7 @@ class << ActiveRecord::Base
     scope :siblings_of, lambda { |object| where(to_node(object).sibling_conditions) }
     scope :ordered_by_ancestry, lambda { reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}") }
     scope :ordered_by_ancestry_and, lambda { |order| reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, #{order}") }
+    scope :path_of, lambda { |object| to_node(object).path }
 
     # Update descendants with new ancestry before save
     before_save :update_descendants_with_new_ancestry
