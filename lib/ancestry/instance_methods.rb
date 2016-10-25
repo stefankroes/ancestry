@@ -256,7 +256,12 @@ module Ancestry
 
     def descendant_conditions
       t = get_arel_table
-      t[get_ancestry_column].matches("#{child_ancestry}/%").or(t[get_ancestry_column].eq(child_ancestry))
+      # rails has case sensitive matching.
+      if defined?(ActiveRecord.version) && ActiveRecord.version.to_s >= "5"
+        t[get_ancestry_column].matches("#{child_ancestry}/%", nil, true).or(t[get_ancestry_column].eq(child_ancestry))
+      else
+        t[get_ancestry_column].matches("#{child_ancestry}/%").or(t[get_ancestry_column].eq(child_ancestry))
+      end
     end
 
     def descendants depth_options = {}
