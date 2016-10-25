@@ -5,6 +5,15 @@ a nice looking [Changelog](keepachangelog.com).
 
 ## Version [Unreleased] <small>...</small>
 
+## Version [2.2.1] <small>2016-10-25</small>
+
+Sorry for blip, local master got out of sync with upstream master.
+Missed 2 commits (which are feature adds)
+
+### Added
+* Use like (vs ilike) for rails 5.0 (performance enhancement)
+* Use `COALESCE` for sorting on pg, mysql, and sqlite vs `CASE`
+
 ## Version [2.2.0] <small>2016-10-25</small>
 
 ### Added
@@ -127,12 +136,12 @@ a nice looking [Changelog](keepachangelog.com).
 * Validations
 
 
-[Unreleased]: https://github.com/stefankroes/ancestry/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/stefankroes/ancestry/compare/v2.2.1...HEAD
+[2.2.1]: https://github.com/stefankroes/ancestry/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/stefankroes/ancestry/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/stefankroes/ancestry/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/stefankroes/ancestry/compare/v1.3.0...v2.0.0
 [1.3.0]: https://github.com/stefankroes/ancestry/compare/v1.2.5...v1.3.0
-
 [1.2.5]: https://github.com/stefankroes/ancestry/compare/v1.2.4...v1.2.5
 [1.2.4]: https://github.com/stefankroes/ancestry/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/stefankroes/ancestry/compare/v1.2.2...v1.2.3
