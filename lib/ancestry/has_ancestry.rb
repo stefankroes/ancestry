@@ -43,13 +43,20 @@ class << ActiveRecord::Base
     scope :descendants_of, lambda { |object| where(to_node(object).descendant_conditions) }
     scope :subtree_of, lambda { |object| where(to_node(object).subtree_conditions) }
     scope :siblings_of, lambda { |object| where(to_node(object).sibling_conditions) }
-    if %w(mysql mysql2 sqlite postgresql).include?(connection.adapter_name.downcase)
-      scope :ordered_by_ancestry, lambda { reorder("coalesce(#{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, '')") }
-      scope :ordered_by_ancestry_and, lambda { |order| reorder("coalesce(#{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, ''), #{order}") }
-    else
-      scope :ordered_by_ancestry, lambda { reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}") }
-      scope :ordered_by_ancestry_and, lambda { |order| reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, #{order}") }
-    end
+    scope :ordered_by_ancestry, lambda {
+      if %w(mysql mysql2 sqlite postgresql).include?(connection.adapter_name.downcase)
+        reorder("coalesce(#{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, '')")
+      else
+        reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, #{order}")
+      end
+    }
+    scope :ordered_by_ancestry_and, lambda { |order|
+      if %w(mysql mysql2 sqlite postgresql).include?(connection.adapter_name.downcase)
+        reorder("coalesce(#{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, ''), #{order}")
+      else
+        reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}")
+      end
+    }
     scope :path_of, lambda { |object| to_node(object).path }
 
     # Update descendants with new ancestry before save
