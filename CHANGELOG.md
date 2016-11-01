@@ -5,6 +5,14 @@ a nice looking [Changelog](keepachangelog.com).
 
 ## Version [Unreleased] <small>...</small>
 
+## Version [2.2.2] <small>2016-11-01</small>
+
+### Changed
+
+* Use `COALESCE` only for sorting versions greater than 5.0
+* Fixed bug with explicit order clauses (introduced in 2.2.0)
+* No longer load schema on `has_ancestry` load (thx @ledermann)
+
 ## Version [2.2.1] <small>2016-10-25</small>
 
 Sorry for blip, local master got out of sync with upstream master.
@@ -136,7 +144,8 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[Unreleased]: https://github.com/stefankroes/ancestry/compare/v2.2.1...HEAD
+[Unreleased]: https://github.com/stefankroes/ancestry/compare/v2.2.2...HEAD
+[2.2.2]: https://github.com/stefankroes/ancestry/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/stefankroes/ancestry/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/stefankroes/ancestry/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/stefankroes/ancestry/compare/v2.0.0...v2.1.0
