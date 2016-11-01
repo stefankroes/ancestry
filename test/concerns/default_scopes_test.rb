@@ -17,6 +17,8 @@ class DefaultScopesTest < ActiveSupport::TestCase
       child.update_attributes :deleted_at => nil
 
       assert child.reload.ancestors.include? new_grandparent
+      assert_equal new_grandparent, child.reload.ancestors.first
+      assert_equal parent, child.reload.ancestors.last
     end
   end
 
