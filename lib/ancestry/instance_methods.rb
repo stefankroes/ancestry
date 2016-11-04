@@ -93,6 +93,32 @@ module Ancestry
       if self.send("#{self.ancestry_base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.ancestry_base_class.ancestry_column}_was"}/#{id}" end
     end
 
+    # Counter Cache
+    def increame_parent_counter_cache
+      self.class.increment_counter _counter_cache_column, parent_id
+    end
+
+    def decreame_parent_counter_cache
+      self.class.decrement_counter _counter_cache_column, parent_id
+    end
+
+    def update_parent_counter_cache
+      if ancestry_was = send("#{self.ancestry_base_class.ancestry_column.to_s}_was")
+        parent_id_was = ancestry_was.to_s.split('/').map(&:to_i).last
+        self.class.decrement_counter _counter_cache_column, parent_id_was
+      end
+
+      parent_id && self.class.increment_counter(_counter_cache_column, parent_id)
+    end
+
+    def _counter_cache_column
+      self.ancestry_base_class.counter_cache_column.to_s
+    end
+
+    def ancestry_present?
+      send("#{self.ancestry_base_class.ancestry_column.to_s}?")
+    end
+
     # Ancestors
 
     def ancestry_changed?

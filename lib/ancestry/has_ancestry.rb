@@ -90,6 +90,10 @@ class << ActiveRecord::Base
       else options[:counter_cache]
         self.counter_cache_column = options[:counter_cache]
       end
+
+      after_create :increame_parent_counter_cache, if: :ancestry_present?
+      after_destroy :decreame_parent_counter_cache, if: :ancestry_present?
+      after_update :update_parent_counter_cache, if: :ancestry_changed?
     end
 
     # Create named scopes for depth
