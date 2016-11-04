@@ -3,7 +3,7 @@ class << ActiveRecord::Base
     # Check options
     raise Ancestry::AncestryException.new("Options for has_ancestry must be in a hash.") unless options.is_a? Hash
     options.each do |key, value|
-      unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch].include? key
+      unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache].include? key
         raise Ancestry::AncestryException.new("Unknown option for has_ancestry: #{key.inspect} => #{value.inspect}.")
       end
     end
@@ -79,6 +79,17 @@ class << ActiveRecord::Base
 
       # Validate depth column
       validates_numericality_of depth_cache_column, :greater_than_or_equal_to => 0, :only_integer => true, :allow_nil => false
+    end
+
+    # Create counter cache column accessor and set to option or default
+    if options[:counter_cache]
+      cattr_accessor :counter_cache_column
+
+      if options[:counter_cache] == true
+        self.counter_cache_column = :children_count
+      else options[:counter_cache]
+        self.counter_cache_column = options[:counter_cache]
+      end
     end
 
     # Create named scopes for depth
