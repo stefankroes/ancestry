@@ -87,7 +87,7 @@ class << ActiveRecord::Base
 
       if options[:counter_cache] == true
         self.counter_cache_column = :children_count
-      else options[:counter_cache]
+      else
         self.counter_cache_column = options[:counter_cache]
       end
 
