@@ -43,22 +43,26 @@ class << ActiveRecord::Base
     scope :descendants_of, lambda { |object| where(to_node(object).descendant_conditions) }
     scope :subtree_of, lambda { |object| where(to_node(object).subtree_conditions) }
     scope :siblings_of, lambda { |object| where(to_node(object).sibling_conditions) }
-    scope :ordered_by_ancestry, lambda {
-      if %w(mysql mysql2 sqlite postgresql).include?(connection.adapter_name.downcase) &&
-        defined?(ActiveRecord.version) && ActiveRecord.version.to_s >= "5"
+    if %w(mysql mysql2 sqlite sqlite3 postgresql).include?(connection_config[:adapter].downcase) &&
+      defined?(ActiveRecord.version) && ActiveRecord.version.to_s >= "5"
+      scope :ordered_by_ancestry, lambda {
         reorder("coalesce(#{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, '')")
-      else
+      }
+    else
+      scope :ordered_by_ancestry, lambda {
         reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}")
-      end
-    }
-    scope :ordered_by_ancestry_and, lambda { |order|
-      if %w(mysql mysql2 sqlite postgresql).include?(connection.adapter_name.downcase) &&
-        defined?(ActiveRecord.version) && ActiveRecord.version.to_s >= "5"
+      }
+    end
+    if %w(mysql mysql2 sqlite sqlite3 postgresql).include?(connection_config[:adapter].downcase) &&
+      defined?(ActiveRecord.version) && ActiveRecord.version.to_s >= "5"
+      scope :ordered_by_ancestry_and, lambda { |order|
         reorder("coalesce(#{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, ''), #{order}")
-      else
+      }
+    else
+      scope :ordered_by_ancestry_and, lambda { |order|
         reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, #{order}")
-      end
-    }
+      }
+    end
     scope :path_of, lambda { |object| to_node(object).path }
 
     # Update descendants with new ancestry before save
