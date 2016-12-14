@@ -38,6 +38,7 @@ class << ActiveRecord::Base
 
     # Named scopes
     scope :roots, lambda { where(ancestry_column => nil) }
+    scope :leaves, lambda { joins("LEFT JOIN #{table_name} AS c ON c.#{ancestry_column} = CAST(#{table_name}.id AS text) OR c.#{ancestry_column} = #{table_name}.#{ancestry_column} || '/' || #{table_name}.id").group("#{table_name}.id").having('COUNT(c.id) = 0') }
     scope :ancestors_of, lambda { |object| where(to_node(object).ancestor_conditions) }
     scope :children_of, lambda { |object| where(to_node(object).child_conditions) }
     scope :descendants_of, lambda { |object| where(to_node(object).descendant_conditions) }
