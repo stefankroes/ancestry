@@ -16,7 +16,7 @@ module Ancestry
             # ... replace old ancestry with new ancestry
             descendant.without_ancestry_callbacks do
               descendant.update_attribute(
-                self.ancestry_base_class.ancestry_column,
+                self.get_ancestry_column,
                 descendant.read_attribute(descendant.class.ancestry_column).gsub(
                   /^#{self.child_ancestry}/,
                   if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
@@ -90,13 +90,13 @@ module Ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
 
-      if self.send("#{self.ancestry_base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.ancestry_base_class.ancestry_column}_was"}/#{id}" end
+      if self.send("#{get_ancestry_column}_was").blank? then id.to_s else "#{self.send "#{get_ancestry_column}_was"}/#{id}" end
     end
 
     # Ancestors
 
     def ancestry_changed?
-      changed.include?(self.ancestry_base_class.ancestry_column.to_s)
+      changed.include?(get_ancestry_column.to_s)
     end
 
     def parse_ancestry_column obj
@@ -104,7 +104,7 @@ module Ancestry
     end
 
     def ancestor_ids
-      parse_ancestry_column(read_attribute(self.ancestry_base_class.ancestry_column))
+      parse_ancestry_column(read_attribute(get_ancestry_column))
     end
 
     def ancestor_conditions
@@ -121,7 +121,7 @@ module Ancestry
     end
 
     def ancestor_ids_was
-      parse_ancestry_column(changed_attributes[self.ancestry_base_class.ancestry_column.to_s])
+      parse_ancestry_column(changed_attributes[get_ancestry_column.to_s])
     end
 
     def path_ids
@@ -152,7 +152,7 @@ module Ancestry
     # Parent
 
     def parent= parent
-      write_attribute(self.ancestry_base_class.ancestry_column, if parent.nil? then nil else parent.child_ancestry end)
+      write_attribute(get_ancestry_column, if parent.nil? then nil else parent.child_ancestry end)
     end
 
     def parent_id= parent_id
@@ -186,7 +186,7 @@ module Ancestry
     end
 
     def is_root?
-      read_attribute(self.ancestry_base_class.ancestry_column).blank?
+      read_attribute(get_ancestry_column).blank?
     end
     alias :root? :is_root?
 
@@ -206,7 +206,7 @@ module Ancestry
     end
 
     def child_ids
-      children.select(self.ancestry_base_class.primary_key).map(&self.ancestry_base_class.primary_key.to_sym)
+      children.select(get_primary_key_column).map(&get_primary_key_column)
     end
 
     def has_children?
@@ -227,7 +227,7 @@ module Ancestry
 
     def sibling_conditions
       t = get_arel_table
-      t[get_ancestry_column].eq(read_attribute(self.ancestry_base_class.ancestry_column))
+      t[get_ancestry_column].eq(read_attribute(get_ancestry_column))
     end
 
     def siblings
@@ -235,7 +235,7 @@ module Ancestry
     end
 
     def sibling_ids
-      siblings.select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
+      siblings.select(get_primary_key_column).collect(&get_primary_key_column)
     end
 
     def has_siblings?
@@ -269,7 +269,7 @@ module Ancestry
     end
 
     def descendant_ids depth_options = {}
-      descendants(depth_options).select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
+      descendants(depth_options).select(get_primary_key_column).collect(&get_primary_key_column)
     end
 
     def descendant_of?(node)
@@ -288,7 +288,7 @@ module Ancestry
     end
 
     def subtree_ids depth_options = {}
-      subtree(depth_options).select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
+      subtree(depth_options).select(get_primary_key_column).collect(&get_primary_key_column)
     end
 
     # Callback disabling
@@ -325,7 +325,7 @@ module Ancestry
 
     # Validates the ancestry, but can also be applied if validation is bypassed to determine if children should be affected
     def sane_ancestry?
-      ancestry_value = read_attribute(self.ancestry_base_class.ancestry_column)
+      ancestry_value = read_attribute(get_ancestry_column)
       ancestry_value.nil? || (ancestry_value.to_s =~ Ancestry::ANCESTRY_PATTERN && !ancestor_ids.include?(self.id))
     end
 
