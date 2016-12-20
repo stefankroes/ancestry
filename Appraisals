@@ -1,5 +1,5 @@
 %w(mysql pg sqlite3).each do |db_type|
-  %w(3.0.20 3.1.12 3.2.22 4.0.13 4.1.14 4.2.5 5.0.0.1).each do |ar_version|
+  %w(3.2.22.5 4.0.13 4.1.16 4.2.7.1 5.0.0.1).each do |ar_version|
     # rails 5.0 only supports 'mysql2' driver
     # rails 4.2 supports both
     db_gem = db_type

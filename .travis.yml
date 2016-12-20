@@ -2,26 +2,21 @@ sudo: false
 
 rvm:
   - 1.9.3
-  - 2.2.5
-  - 2.3.1
+  - 2.2.6
+  - 2.3.3
 
 gemfile:
-  - gemfiles/mysql_ar_30.gemfile
-  - gemfiles/mysql_ar_31.gemfile
+gemfile:
   - gemfiles/mysql_ar_32.gemfile
   - gemfiles/mysql_ar_40.gemfile
   - gemfiles/mysql_ar_41.gemfile
   - gemfiles/mysql_ar_42.gemfile
   - gemfiles/mysql2_ar_50.gemfile
-  - gemfiles/pg_ar_30.gemfile
-  - gemfiles/pg_ar_31.gemfile
   - gemfiles/pg_ar_32.gemfile
   - gemfiles/pg_ar_40.gemfile
   - gemfiles/pg_ar_41.gemfile
   - gemfiles/pg_ar_42.gemfile
   - gemfiles/pg_ar_50.gemfile
-  - gemfiles/sqlite3_ar_30.gemfile
-  - gemfiles/sqlite3_ar_31.gemfile
   - gemfiles/sqlite3_ar_32.gemfile
   - gemfiles/sqlite3_ar_40.gemfile
   - gemfiles/sqlite3_ar_41.gemfile
@@ -48,41 +43,17 @@ matrix:
       gemfile: gemfiles/pg_ar_50.gemfile
     - rvm: 1.9.3
       gemfile: gemfiles/sqlite3_ar_50.gemfile
-    - rvm: 2.2.5
-      gemfile: gemfiles/mysql_ar_30.gemfile
-    - rvm: 2.2.5
-      gemfile: gemfiles/mysql_ar_31.gemfile
-    - rvm: 2.2.5
+    - rvm: 2.2.6
       gemfile: gemfiles/mysql_ar_32.gemfile
-    - rvm: 2.2.5
-      gemfile: gemfiles/pg_ar_30.gemfile
-    - rvm: 2.2.5
-      gemfile: gemfiles/pg_ar_31.gemfile
-    - rvm: 2.2.5
+    - rvm: 2.2.6
       gemfile: gemfiles/pg_ar_32.gemfile
-    - rvm: 2.2.5
-      gemfile: gemfiles/sqlite3_ar_30.gemfile
-    - rvm: 2.2.5
-      gemfile: gemfiles/sqlite3_ar_31.gemfile
-    - rvm: 2.2.5
+    - rvm: 2.2.6
       gemfile: gemfiles/sqlite3_ar_32.gemfile
-    - rvm: 2.3.1
-      gemfile: gemfiles/mysql_ar_30.gemfile
-    - rvm: 2.3.1
-      gemfile: gemfiles/mysql_ar_31.gemfile
-    - rvm: 2.3.1
+    - rvm: 2.3.3
       gemfile: gemfiles/mysql_ar_32.gemfile
-    - rvm: 2.3.1
-      gemfile: gemfiles/pg_ar_30.gemfile
-    - rvm: 2.3.1
-      gemfile: gemfiles/pg_ar_31.gemfile
-    - rvm: 2.3.1
+    - rvm: 2.3.3
       gemfile: gemfiles/pg_ar_32.gemfile
-    - rvm: 2.3.1
-      gemfile: gemfiles/sqlite3_ar_30.gemfile
-    - rvm: 2.3.1
-      gemfile: gemfiles/sqlite3_ar_31.gemfile
-    - rvm: 2.3.1
+    - rvm: 2.3.3
       gemfile: gemfiles/sqlite3_ar_32.gemfile
 
 services:

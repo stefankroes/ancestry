@@ -36,7 +36,7 @@ EOF
   ]
   
   s.required_ruby_version     = '>= 1.8.7'
-  s.add_runtime_dependency 'activerecord', '>= 3.0.0'
+  s.add_runtime_dependency 'activerecord', '>= 3.2.0'
   s.add_development_dependency 'yard'
   s.add_development_dependency 'rake',      '~> 10.0'
   s.add_development_dependency 'test-unit'
