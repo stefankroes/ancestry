@@ -206,7 +206,7 @@ module Ancestry
     end
 
     def child_ids
-      children.select(self.ancestry_base_class.primary_key).map(&self.ancestry_base_class.primary_key.to_sym)
+      children.pluck(self.ancestry_base_class.primary_key)
     end
 
     def has_children?
@@ -235,7 +235,7 @@ module Ancestry
     end
 
     def sibling_ids
-      siblings.select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
+      siblings.pluck(self.ancestry_base_class.primary_key)
     end
 
     def has_siblings?
@@ -269,7 +269,7 @@ module Ancestry
     end
 
     def descendant_ids depth_options = {}
-      descendants(depth_options).select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
+      descendants(depth_options).pluck(self.ancestry_base_class.primary_key)
     end
 
     def descendant_of?(node)
@@ -288,7 +288,7 @@ module Ancestry
     end
 
     def subtree_ids depth_options = {}
-      subtree(depth_options).select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
+      subtree(depth_options).pluck(self.ancestry_base_class.primary_key)
     end
 
     # Callback disabling
