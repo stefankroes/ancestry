@@ -31,6 +31,7 @@ EOF
     'lib/ancestry/exceptions.rb',
     'lib/ancestry/class_methods.rb',
     'lib/ancestry/instance_methods.rb',
+    'lib/ancestry/materialized_path.rb',
     'MIT-LICENSE',
     'README.rdoc'
   ]

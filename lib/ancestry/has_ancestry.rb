@@ -14,6 +14,9 @@ class << ActiveRecord::Base
     # Include dynamic class methods
     extend Ancestry::ClassMethods
 
+    # Include class methods that implement materialized path methods
+    extend Ancestry::MaterializedPath
+
     # Create ancestry column accessor and set to option or default
     cattr_accessor :ancestry_column
     self.ancestry_column = options[:ancestry_column] || :ancestry
@@ -38,11 +41,12 @@ class << ActiveRecord::Base
 
     # Named scopes
     scope :roots, lambda { where(ancestry_column => nil) }
-    scope :ancestors_of, lambda { |object| where(to_node(object).ancestor_conditions) }
-    scope :children_of, lambda { |object| where(to_node(object).child_conditions) }
-    scope :descendants_of, lambda { |object| where(to_node(object).descendant_conditions) }
-    scope :subtree_of, lambda { |object| where(to_node(object).subtree_conditions) }
-    scope :siblings_of, lambda { |object| where(to_node(object).sibling_conditions) }
+    scope :ancestors_of, lambda { |object| where(ancestor_conditions(object)) }
+    scope :path_of, lambda { |object| where(path_conditions(object)) }
+    scope :children_of, lambda { |object| where(child_conditions(object)) }
+    scope :descendants_of, lambda { |object| where(descendant_conditions(object)) }
+    scope :subtree_of, lambda { |object| where(subtree_conditions(object)) }
+    scope :siblings_of, lambda { |object| where(sibling_conditions(object)) }
     scope :ordered_by_ancestry, lambda {
       if %w(mysql mysql2 sqlite postgresql).include?(connection.adapter_name.downcase) && ActiveRecord::VERSION::MAJOR >= 5
         reorder("coalesce(#{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, '')")
