@@ -29,14 +29,8 @@ module Ancestry
 
     # Arrangement
     def arrange options = {}
-      scope =
-        if options[:order].nil?
-          self.ancestry_base_class.ordered_by_ancestry
-        else
-          self.ancestry_base_class.ordered_by_ancestry_and options.delete(:order)
-        end
       # Get all nodes ordered by ancestry and start sorting them into an empty hash
-      arrange_nodes scope.where(options)
+      arrange_nodes self.ancestry_base_class.ordered_by_ancestry_and(options.delete(:order)).where(options)
     end
 
     # Arrange array of nodes into a nested hash of the form
