@@ -1,5 +1,9 @@
 module Ancestry
   module MaterializedPath
+    def root_conditions
+      arel_table[ancestry_column].eq(nil)
+    end
+
     def ancestor_conditions(object)
       t = arel_table
       node = to_node(object)
