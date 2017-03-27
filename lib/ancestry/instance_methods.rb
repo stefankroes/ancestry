@@ -199,7 +199,7 @@ module Ancestry
     end
 
     def children
-      self.ancestry_base_class.where child_conditions
+      (self.try(:ancestry_child_class) || self.ancestry_base_class).where child_conditions
     end
 
     def child_ids

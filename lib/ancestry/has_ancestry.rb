@@ -95,6 +95,12 @@ class << ActiveRecord::Base
     after_destroy :touch_ancestors_callback
     after_save :touch_ancestors_callback, if: :changed?
   end
+
+  def set_ancestry_child_class(klass)
+    raise Ancestry::AncestryIntegrityException.new("Invalid child class: #{klass} is not a sub-class of #{self}.") unless self.ancestry_base_class.subclasses.include? klass
+    cattr_accessor :ancestry_child_class
+    self.ancestry_child_class = klass
+  end
 end
 
 ActiveSupport.on_load :active_record do
