@@ -18,7 +18,7 @@ class DefaultScopesTest < ActiveSupport::TestCase
 
       assert child.reload.ancestors.include? new_grandparent
       assert_equal new_grandparent, child.reload.ancestors.first
-      assert_equal parent, child.reload.ancestors.last
+      assert_equal parent, child.reload.ancestors.to_a.last
     end
   end
 
