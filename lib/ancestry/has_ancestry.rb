@@ -93,7 +93,12 @@ class << ActiveRecord::Base
 
     after_touch :touch_ancestors_callback
     after_destroy :touch_ancestors_callback
-    after_save :touch_ancestors_callback, if: :changed?
+
+    if ActiveRecord::VERSION::STRING >= '5.1.0'
+      after_save :touch_ancestors_callback, if: :saved_changes?
+    else
+      after_save :touch_ancestors_callback, if: :changed?
+    end
   end
 end
 
