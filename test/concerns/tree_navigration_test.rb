@@ -11,8 +11,8 @@ class TreeNavigationTest < ActiveSupport::TestCase
         assert_equal [lvl0_node], lvl0_node.path
         assert_equal 0, lvl0_node.depth
         # Parent assertions
-        assert_equal nil, lvl0_node.parent_id
-        assert_equal nil, lvl0_node.parent
+        assert_nil lvl0_node.parent_id
+        assert_nil lvl0_node.parent
         refute lvl0_node.parent_id?
         # Root assertions
         assert_equal lvl0_node.id, lvl0_node.root_id
