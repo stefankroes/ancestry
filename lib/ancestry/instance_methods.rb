@@ -213,7 +213,7 @@ module Ancestry
     end
 
     def has_children?
-      self.children.exists?({})
+      self.children.exists?
     end
     alias_method :children?, :has_children?
 
