@@ -97,9 +97,13 @@ class << ActiveRecord::Base
 end
 
 ActiveSupport.on_load :active_record do
-  if not(ActiveRecord::Base.respond_to?(:acts_as_tree))
     class << ActiveRecord::Base
-      alias_method :acts_as_tree, :has_ancestry
+      def acts_as_tree(*args)
+        if defined?(super)
+          super
+        else
+          has_ancestry(*args)
+        end
+      end
     end
-  end
 end
