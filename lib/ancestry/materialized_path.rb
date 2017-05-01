@@ -1,5 +1,14 @@
 module Ancestry
   module MaterializedPath
+    def self.extended(base)
+      base.validates_format_of base.ancestry_column, :with => Ancestry::ANCESTRY_PATTERN, :allow_nil => true
+      base.send(:include, InstanceMethods)
+    end
+
+    def root_conditions
+      arel_table[ancestry_column].eq(nil)
+    end
+
     def ancestor_conditions(object)
       t = arel_table
       node = to_node(object)
@@ -39,6 +48,14 @@ module Ancestry
       t = arel_table
       node = to_node(object)
       t[ancestry_column].eq(node[ancestry_column])
+    end
+
+    module InstanceMethods
+      # Validates the ancestry, but can also be applied if validation is bypassed to determine if children should be affected
+      def sane_ancestry?
+        ancestry_value = read_attribute(self.ancestry_base_class.ancestry_column)
+        ancestry_value.nil? || (ancestry_value.to_s =~ Ancestry::ANCESTRY_PATTERN && !ancestor_ids.include?(self.id))
+      end
     end
   end
 end

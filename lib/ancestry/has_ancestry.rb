@@ -9,22 +9,10 @@ module Ancestry
         end
       end
 
-      # Include instance methods
-      include Ancestry::InstanceMethods
-
-      # Include dynamic class methods
-      extend Ancestry::ClassMethods
-
-      # Include class methods that implement materialized path methods
-      extend Ancestry::MaterializedPath
 
       # Create ancestry column accessor and set to option or default
       cattr_accessor :ancestry_column
       self.ancestry_column = options[:ancestry_column] || :ancestry
-
-      # Create orphan strategy accessor and set to option or default (writer comes from DynamicClassMethods)
-      cattr_reader :orphan_strategy
-      self.orphan_strategy = options[:orphan_strategy] || :destroy
 
       # Save self as base class (for STI)
       cattr_accessor :ancestry_base_class
@@ -34,14 +22,23 @@ module Ancestry
       cattr_accessor :touch_ancestors
       self.touch_ancestors = options[:touch] || false
 
-      # Validate format of ancestry column value
-      validates_format_of ancestry_column, :with => Ancestry::ANCESTRY_PATTERN, :allow_nil => true
+      # Include instance methods
+      include Ancestry::InstanceMethods
+
+      # Include dynamic class methods
+      extend Ancestry::ClassMethods
+
+      extend Ancestry::MaterializedPath
+
+      # Create orphan strategy accessor and set to option or default (writer comes from DynamicClassMethods)
+      cattr_reader :orphan_strategy
+      self.orphan_strategy = options[:orphan_strategy] || :destroy
 
       # Validate that the ancestor ids don't include own id
       validate :ancestry_exclude_self
 
       # Named scopes
-      scope :roots, lambda { where(ancestry_column => nil) }
+      scope :roots, lambda { where(root_conditions) }
       scope :ancestors_of, lambda { |object| where(ancestor_conditions(object)) }
       scope :path_of, lambda { |object| where(path_conditions(object)) }
       scope :children_of, lambda { |object| where(child_conditions(object)) }

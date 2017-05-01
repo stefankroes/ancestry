@@ -318,12 +318,6 @@ module Ancestry
       end
     end
 
-    # Validates the ancestry, but can also be applied if validation is bypassed to determine if children should be affected
-    def sane_ancestry?
-      ancestry_value = read_attribute(self.ancestry_base_class.ancestry_column)
-      ancestry_value.nil? || (ancestry_value.to_s =~ Ancestry::ANCESTRY_PATTERN && !ancestor_ids.include?(self.id))
-    end
-
     def unscoped_find id
       self.ancestry_base_class.unscoped { self.ancestry_base_class.find(id) }
     end
