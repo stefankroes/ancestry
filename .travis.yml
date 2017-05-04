@@ -3,6 +3,7 @@ sudo: false
 rvm:
   - 2.2.6
   - 2.3.3
+  - 2.4.1
 
 gemfile:
   - gemfiles/mysql_ar_42.gemfile
@@ -23,6 +24,9 @@ matrix:
       gemfile: gemfiles/pg_ar_32.gemfile
     - rvm: 1.9.3
       gemfile: gemfiles/sqlite3_ar_32.gemfile
+  exclude:
+    - rvm: 2.4.1
+      gemfile: gemfiles/mysql_ar_42.gemfile
 
 services:
   - mysql
