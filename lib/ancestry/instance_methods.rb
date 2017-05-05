@@ -17,7 +17,7 @@ module Ancestry
               self.ancestry_base_class.ancestry_column,
               descendant.read_attribute(descendant.class.ancestry_column).gsub(
                 /^#{self.child_ancestry}/,
-                if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
+                if ancestors? then "#{read_attribute self.class.ancestry_column }/#{id}" else id.to_s end
               )
             )
           end
@@ -82,6 +82,11 @@ module Ancestry
     end
 
     # Ancestors
+
+    def ancestors?
+      # ancestor_ids.present?
+      read_attribute(self.ancestry_base_class.ancestry_column).present?
+    end
 
     def ancestry_changed?
       changed.include?(self.ancestry_base_class.ancestry_column.to_s)
@@ -148,19 +153,19 @@ module Ancestry
     end
 
     def parent_id= parent_id
-      self.parent = if parent_id.blank? then nil else unscoped_find(parent_id) end
+      self.parent = ancestors? ? unscoped_find(parent_id) : nil
     end
 
     def parent_id
-      if ancestor_ids.empty? then nil else ancestor_ids.last end
+      ancestor_ids.last if ancestors?
     end
 
     def parent
-      if parent_id.blank? then nil else unscoped_find(parent_id) end
+      unscoped_find(parent_id) if ancestors?
     end
 
     def parent_id?
-      parent_id.present?
+      ancestors?
     end
 
     def parent_of?(node)
@@ -170,11 +175,11 @@ module Ancestry
     # Root
 
     def root_id
-      if ancestor_ids.empty? then id else ancestor_ids.first end
+      ancestors? ? ancestor_ids.first : id
     end
 
     def root
-      if root_id == id then self else unscoped_find(root_id) end
+      ancestors? ? unscoped_find(root_id) : self
     end
 
     def is_root?
