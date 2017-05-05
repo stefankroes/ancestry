@@ -5,6 +5,16 @@ a nice looking [Changelog](keepachangelog.com).
 
 ## Version [Unreleased] <small>...</small>
 
+## Changed
+
+* Dropping Rails 3.0 and 3.1. Added Rails 5.1 support (thx @ledermann)
+
+## Fixes
+
+* Performance: Use `pluck` vs `map` for ids (thx @njakobsen and @culturecode)
+* Fixed acts_as_tree compatibility (thx @crazymykl)
+* Fixed loading ActiveRails prematurely (thx @vovimayhem)
+
 ## Version [2.2.2] <small>2016-11-01</small>
 
 ### Changed
