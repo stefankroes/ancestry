@@ -17,8 +17,8 @@ EOF
 
   s.version = Ancestry::VERSION
 
-  s.author   = 'Stefan Kroes'
-  s.email    = 's.a.kroes@gmail.com'
+  s.authors  = ['Stefan Kroes', 'Keenan Brock']
+  s.email    = 'keenan@thebrocks.net'
   s.homepage = 'http://github.com/stefankroes/ancestry'
   s.license  = 'MIT'
 
