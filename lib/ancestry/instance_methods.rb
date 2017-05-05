@@ -7,22 +7,19 @@ module Ancestry
 
     # Update descendants with new ancestry
     def update_descendants_with_new_ancestry
-      # Skip this if callbacks are disabled
-      unless ancestry_callbacks_disabled?
-        # If node is not a new record and ancestry was updated and the new ancestry is sane ...
-        if ancestry_changed? && !new_record? && sane_ancestry?
-          # ... for each descendant ...
-          unscoped_descendants.each do |descendant|
-            # ... replace old ancestry with new ancestry
-            descendant.without_ancestry_callbacks do
-              descendant.update_attribute(
-                self.ancestry_base_class.ancestry_column,
-                descendant.read_attribute(descendant.class.ancestry_column).gsub(
-                  /^#{self.child_ancestry}/,
-                  if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
-                )
+      # If enabled and node is existing and ancestry was updated and the new ancestry is sane ...
+      if !ancestry_callbacks_disabled? && !new_record? && ancestry_changed? && sane_ancestry?
+        # ... for each descendant ...
+        unscoped_descendants.each do |descendant|
+          # ... replace old ancestry with new ancestry
+          descendant.without_ancestry_callbacks do
+            descendant.update_attribute(
+              self.ancestry_base_class.ancestry_column,
+              descendant.read_attribute(descendant.class.ancestry_column).gsub(
+                /^#{self.child_ancestry}/,
+                if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
               )
-            end
+            )
           end
         end
       end
@@ -30,56 +27,47 @@ module Ancestry
 
     # Apply orphan strategy
     def apply_orphan_strategy
-      # Skip this if callbacks are disabled
-      unless ancestry_callbacks_disabled?
-        # If this isn't a new record ...
-        unless new_record?
-          # ... make all children root if orphan strategy is rootify
-          if self.ancestry_base_class.orphan_strategy == :rootify
-            unscoped_descendants.each do |descendant|
-              descendant.without_ancestry_callbacks do
-                descendant.update_attribute descendant.class.ancestry_column, (if descendant.ancestry == child_ancestry then nil else descendant.ancestry.gsub(/^#{child_ancestry}\//, '') end)
+      if !ancestry_callbacks_disabled? && !new_record?
+        case self.ancestry_base_class.orphan_strategy
+        when :rootify # make all children root if orphan strategy is rootify
+          unscoped_descendants.each do |descendant|
+            descendant.without_ancestry_callbacks do
+              new_ancestry = if descendant.ancestry == child_ancestry
+                nil
+              else
+                descendant.ancestry.gsub(/^#{child_ancestry}\//, '')
               end
+              descendant.update_attribute descendant.class.ancestry_column, new_ancestry
             end
-          # ... destroy all descendants if orphan strategy is destroy
-          elsif self.ancestry_base_class.orphan_strategy == :destroy
-            unscoped_descendants.each do |descendant|
-              descendant.without_ancestry_callbacks do
-                descendant.destroy
-              end
-            end
-          # ... make child elements of this node, child of its parent if orphan strategy is adopt
-          elsif self.ancestry_base_class.orphan_strategy == :adopt
-            descendants.each do |descendant|
-              descendant.without_ancestry_callbacks do
-                new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")
-                # check for empty string if it's then set to nil
-                new_ancestry = nil if new_ancestry.empty?
-                descendant.update_attribute descendant.class.ancestry_column, new_ancestry || nil
-              end
-            end
-          # ... throw an exception if it has children and orphan strategy is restrict
-          elsif self.ancestry_base_class.orphan_strategy == :restrict
-            raise Ancestry::AncestryException.new('Cannot delete record because it has descendants.') unless is_childless?
           end
+        when :destroy # destroy all descendants if orphan strategy is destroy
+          unscoped_descendants.each do |descendant|
+            descendant.without_ancestry_callbacks do
+              descendant.destroy
+            end
+          end
+        when :adopt # make child elements of this node, child of its parent
+          descendants.each do |descendant|
+            descendant.without_ancestry_callbacks do
+              new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")
+              # check for empty string if it's then set to nil
+              new_ancestry = nil if new_ancestry.empty?
+              descendant.update_attribute descendant.class.ancestry_column, new_ancestry || nil
+            end
+          end
+        when :restrict # throw an exception if it has children
+          raise Ancestry::AncestryException.new('Cannot delete record because it has descendants.') unless is_childless?
         end
       end
     end
 
     # Touch each of this record's ancestors
     def touch_ancestors_callback
-
-      # Skip this if callbacks are disabled
-      unless ancestry_callbacks_disabled?
-
-        # Only touch if the option is enabled
-        if self.ancestry_base_class.touch_ancestors
-
-          # Touch each of the old *and* new ancestors
-          self.class.where(id: (ancestor_ids + ancestor_ids_was).uniq).each do |ancestor|
-            ancestor.without_ancestry_callbacks do
-              ancestor.touch
-            end
+      if !ancestry_callbacks_disabled? && self.ancestry_base_class.touch_ancestors
+        # Touch each of the old *and* new ancestors
+        self.class.where(id: (ancestor_ids + ancestor_ids_was).uniq).each do |ancestor|
+          ancestor.without_ancestry_callbacks do
+            ancestor.touch
           end
         end
       end
