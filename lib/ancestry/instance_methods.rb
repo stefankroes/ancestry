@@ -76,7 +76,7 @@ module Ancestry
         if self.ancestry_base_class.touch_ancestors
 
           # Touch each of the old *and* new ancestors
-          self.class.where(id: (ancestor_ids + ancestor_ids_was).uniq).each do |ancestor|
+          self.class.unscope(where: :type).where(id: (ancestor_ids + ancestor_ids_was).uniq).each do |ancestor|
             ancestor.without_ancestry_callbacks do
               ancestor.touch
             end
