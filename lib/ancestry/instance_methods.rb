@@ -152,8 +152,8 @@ module Ancestry
       write_attribute(self.ancestry_base_class.ancestry_column, if parent.nil? then nil else parent.child_ancestry end)
     end
 
-    def parent_id= parent_id
-      self.parent = ancestors? ? unscoped_find(parent_id) : nil
+    def parent_id= new_parent_id
+      self.parent = new_parent_id.present? ? unscoped_find(new_parent_id) : nil
     end
 
     def parent_id
