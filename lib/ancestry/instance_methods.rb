@@ -279,6 +279,12 @@ module Ancestry
       subtree(depth_options).pluck(self.ancestry_base_class.primary_key)
     end
 
+    # Leaves
+
+    def leaves
+      subtree.select{|node| node.childless? }
+    end
+
     # Callback disabling
 
     def without_ancestry_callbacks
