@@ -5,15 +5,21 @@ a nice looking [Changelog](keepachangelog.com).
 
 ## Version [Unreleased] <small>...</small>
 
+## Version [3.0.0] <small>2017-05-18</small>
+
 ## Changed
 
-* Dropping Rails 3.0 and 3.1. Added Rails 5.1 support (thx @ledermann)
+* Dropping Rails 3.0, and 3.1. Added Rails 5.1 support (thx @ledermann)
+* Dropping Rails 4.0, 4.1 for build reasons. Since 4.2 is supported, all 4.x should still work.
 
 ## Fixes
 
 * Performance: Use `pluck` vs `map` for ids (thx @njakobsen and @culturecode)
 * Fixed acts_as_tree compatibility (thx @crazymykl)
 * Fixed loading ActiveRails prematurely (thx @vovimayhem)
+* Fixes exist (thx @ledermann)
+* Properly touches parents when different class for STI (thx @samtgarson)
+* Fixed issues with parent_id (only present on master) (thx @domcleal)
 
 ## Version [2.2.2] <small>2016-11-01</small>
 
@@ -154,7 +160,8 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[Unreleased]: https://github.com/stefankroes/ancestry/compare/v2.2.2...HEAD
+[Unreleased]: https://github.com/stefankroes/ancestry/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/stefankroes/ancestry/compare/v2.2.2...v3.0.0
 [2.2.2]: https://github.com/stefankroes/ancestry/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/stefankroes/ancestry/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/stefankroes/ancestry/compare/v2.1.0...v2.2.0
