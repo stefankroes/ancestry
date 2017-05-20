@@ -14,7 +14,12 @@ Gem::Specification.new do |s|
   arrangement of (sub)tree into hashes and different strategies for dealing with
   orphaned records.
 EOF
-
+  s.metadata = {
+    "homepage_uri" => "https://github.com/stefankroes/ancestry",
+    "changelog_uri" => "https://github.com/stefankroes/ancestry/blob/master/CHANGELOG.md",
+    "source_code_uri" => "https://github.com/stefankroes/ancestry/",
+    "bug_tracker_uri" => "https://github.com/stefankroes/ancestry/issues",
+  }
   s.version = Ancestry::VERSION
 
   s.authors  = ['Stefan Kroes', 'Keenan Brock']
