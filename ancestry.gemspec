@@ -33,7 +33,7 @@ EOF
     'lib/ancestry/instance_methods.rb',
     'lib/ancestry/materialized_path.rb',
     'MIT-LICENSE',
-    'README.rdoc'
+    'README.md'
   ]
   
   s.required_ruby_version     = '>= 1.8.7'
