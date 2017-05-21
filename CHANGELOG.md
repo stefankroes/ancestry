@@ -1,7 +1,7 @@
 # Ancestry Changelog
 
 Doing our best at supporting [SemVer](http://semver.org/) with
-a nice looking [Changelog](keepachangelog.com).
+a nice looking [Changelog](http://keepachangelog.com).
 
 ## Version [Unreleased] <small>...</small>
 
