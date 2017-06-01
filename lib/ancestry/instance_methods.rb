@@ -87,6 +87,7 @@ module Ancestry
       # ancestor_ids.present?
       read_attribute(self.ancestry_base_class.ancestry_column).present?
     end
+    alias :has_parent? :ancestors?
 
     def ancestry_changed?
       changed.include?(self.ancestry_base_class.ancestry_column.to_s)
