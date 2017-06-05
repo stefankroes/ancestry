@@ -40,7 +40,6 @@ module Ancestry
       # Named scopes
       scope :roots, lambda { where(root_conditions) }
       scope :ancestors_of, lambda { |object| where(ancestor_conditions(object)) }
-      scope :path_of, lambda { |object| where(path_conditions(object)) }
       scope :children_of, lambda { |object| where(child_conditions(object)) }
       scope :descendants_of, lambda { |object| where(descendant_conditions(object)) }
       scope :subtree_of, lambda { |object| where(subtree_conditions(object)) }
