@@ -307,19 +307,27 @@ module Ancestry
     end
 
     def unscoped_descendants
-      self.ancestry_base_class.unscoped do
-        self.ancestry_base_class.where descendant_conditions
+      unscoped_where do |scope|
+        scope.where descendant_conditions
       end
     end
 
     def unscoped_current_and_previous_ancestors
-      self.ancestry_base_class.unscoped do
-        self.ancestry_base_class.where id: (ancestor_ids + ancestor_ids_was).uniq
+      unscoped_where do |scope|
+        scope.where id: (ancestor_ids + ancestor_ids_was).uniq
       end
     end
 
     def unscoped_find id
-      self.ancestry_base_class.unscoped { self.ancestry_base_class.find(id) }
+      unscoped_where do |scope|
+        scope.find id
+      end
+    end
+
+    def unscoped_where
+      self.ancestry_base_class.unscoped_where do |scope|
+        yield scope
+      end
     end
   end
 end
