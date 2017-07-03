@@ -99,9 +99,9 @@ module Ancestry
       parents = {}
       exceptions = [] if options[:report] == :list
 
-      self.ancestry_base_class.unscoped do
+      unscoped_where do |scope|
         # For each node ...
-        self.ancestry_base_class.find_each do |node|
+        scope.find_each do |node|
           begin
             # ... check validity of ancestry column
             if !node.valid? and !node.errors[node.class.ancestry_column].blank?
@@ -137,9 +137,9 @@ module Ancestry
       parents = {}
       # Wrap the whole thing in a transaction ...
       self.ancestry_base_class.transaction do
-        self.ancestry_base_class.unscoped do
+        unscoped_where do |scope|
           # For each node ...
-          self.ancestry_base_class.find_each do |node|
+          scope.find_each do |node|
             # ... set its ancestry to nil if invalid
             if !node.valid? and !node.errors[node.class.ancestry_column].blank?
               node.without_ancestry_callbacks do
@@ -158,7 +158,7 @@ module Ancestry
           end
 
           # For each node ...
-          self.ancestry_base_class.find_each do |node|
+          scope.find_each do |node|
             # ... rebuild ancestry from parents array
             ancestry, parent = nil, parents[node.id]
             until parent.nil?
@@ -174,8 +174,8 @@ module Ancestry
 
     # Build ancestry from parent id's for migration purposes
     def build_ancestry_from_parent_ids! parent_id = nil, ancestry = nil
-      self.ancestry_base_class.unscoped do
-        self.ancestry_base_class.where(:parent_id => parent_id).find_each do |node|
+      unscoped_where do |scope|
+        scope.where(:parent_id => parent_id).find_each do |node|
           node.without_ancestry_callbacks do
             node.update_attribute ancestry_column, ancestry
           end
@@ -189,11 +189,21 @@ module Ancestry
       raise Ancestry::AncestryException.new("Cannot rebuild depth cache for model without depth caching.") unless respond_to? :depth_cache_column
 
       self.ancestry_base_class.transaction do
-        self.ancestry_base_class.unscoped do
-          self.ancestry_base_class.find_each do |node|
+        unscoped_where do |scope|
+          scope.find_each do |node|
             node.update_attribute depth_cache_column, node.depth
           end
         end
+      end
+    end
+
+    def unscoped_where
+      if ActiveRecord::VERSION::MAJOR < 4
+        self.ancestry_base_class.unscoped do
+          yield self.ancestry_base_class
+        end
+      else
+        yield self.ancestry_base_class.unscope(:where)
       end
     end
   end
