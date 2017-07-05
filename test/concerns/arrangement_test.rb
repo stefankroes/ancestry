@@ -194,14 +194,7 @@ class ArrangementTest < ActiveSupport::TestCase
 
   def test_arrangement_nesting
     AncestryTestDatabase.with_model :extra_columns => {:name => :string} do |model|
-
-      # Rails < 3.1 doesn't support lambda default_scopes (only hashes)
-      # But Rails >= 4 logs deprecation warnings for hash default_scopes
-      if ActiveRecord::VERSION::STRING < "3.1"
-        model.send :default_scope, model.order('name')
-      else
-        model.send :default_scope, lambda { model.order('name') }
-      end
+      model.send :default_scope, lambda { model.order('name') }
 
       model.create!(:name => 'Linux').children.create! :name => 'Debian'
 

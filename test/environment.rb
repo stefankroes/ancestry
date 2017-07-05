@@ -79,14 +79,7 @@ class AncestryTestDatabase
       model.table_name = 'test_nodes'
 
       if default_scope_params.present?
-
-        # Rails < 3.1 doesn't support lambda default_scopes (only hashes)
-        # But Rails >= 4 logs deprecation warnings for hash default_scopes
-        if ActiveRecord::VERSION::STRING < "3.1"
-          model.send :default_scope, { :conditions => default_scope_params }
-        else
-          model.send :default_scope, lambda { model.where(default_scope_params) }
-        end
+        model.send :default_scope, lambda { model.where(default_scope_params) }
       end
 
       model.has_ancestry options unless options.delete(:skip_ancestry)
