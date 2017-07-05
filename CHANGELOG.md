@@ -5,6 +5,17 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 ## Version [Unreleased] <small>...</small>
 
+## Version [3.0.1] <small>2017-07-05</small>
+
+## Fixes
+
+* added gem metadata
+* fixed keep a changelog link (thx @mattbrictson)
+* added alias has_parent?
+* fixed bug where unscoping too much (thx @brendon)
+* fixed tests on mysql 5.7 and rails 3.2
+* Dropped 3.1 scope changes
+
 ## Version [3.0.0] <small>2017-05-18</small>
 
 ## Changed
@@ -160,7 +171,8 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[Unreleased]: https://github.com/stefankroes/ancestry/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/stefankroes/ancestry/compare/v3.0.1...HEAD
+[3.0.0]: https://github.com/stefankroes/ancestry/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/stefankroes/ancestry/compare/v2.2.2...v3.0.0
 [2.2.2]: https://github.com/stefankroes/ancestry/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/stefankroes/ancestry/compare/v2.2.0...v2.2.1
