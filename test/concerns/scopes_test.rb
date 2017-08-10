@@ -31,7 +31,12 @@ class ScopesTest < ActiveSupport::TestCase
 
   def test_order_by
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
-      expected = model.all.sort_by { |m| [m.ancestry || "", m.id.to_i] }
+      # not thrilled with this. mac postgres has odd sorting requirements
+      if ENV["BUNDLE_GEMFILE"].to_s =~ /pg/ && RUBY_PLATFORM != "x86_64-darwin16"
+        expected = model.all.sort_by { |m| [m.ancestry.to_s.gsub('/',''), m.id.to_i] }
+      else
+        expected = model.all.sort_by { |m| [m.ancestry.to_s, m.id.to_i] }
+      end
       actual = model.ordered_by_ancestry_and(:id)
       assert_equal expected.map { |r| [r.ancestry, r.id.to_s] }, actual.map { |r| [r.ancestry, r.id.to_s] }
     end
