@@ -51,7 +51,7 @@ module Ancestry
           reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}", order)
         end
       }
-      scope :ordered_by_ancestry_and, Proc.new { |order| ordered_by_ancestry_and(order) }
+      scope :ordered_by_ancestry_and, Proc.new { |order| ordered_by_ancestry(order) }
       scope :path_of, lambda { |object| to_node(object).path }
 
       # Update descendants with new ancestry before save
