@@ -34,19 +34,7 @@ $ bundle install
 ## Add ancestry column to your table
 * Create migration:
 ```bash
-$ rails g migration add_ancestry_to_[table] ancestry:string
-```
-
-*   Add index to migration:
-```ruby
-# db/migrate/[date]_add_ancestry_to_[table].rb
-
-class AddAncestryTo[Table] < ActiveRecord::Migration
-   def change
-      add_column [table], :ancestry, :string
-      add_index [table], :ancestry
-   end
-end
+$ rails g migration add_ancestry_to_[table] ancestry:string:index
 ```
 
 *   Migrate your database:
