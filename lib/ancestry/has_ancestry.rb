@@ -41,6 +41,7 @@ module Ancestry
       scope :roots, lambda { where(root_conditions) }
       scope :ancestors_of, lambda { |object| where(ancestor_conditions(object)) }
       scope :children_of, lambda { |object| where(child_conditions(object)) }
+      scope :indirects_of, lambda { |object| where(indirect_conditions(object)) }
       scope :descendants_of, lambda { |object| where(descendant_conditions(object)) }
       scope :subtree_of, lambda { |object| where(subtree_conditions(object)) }
       scope :siblings_of, lambda { |object| where(sibling_conditions(object)) }
