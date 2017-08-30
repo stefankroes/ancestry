@@ -79,7 +79,7 @@ module Ancestry
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
       
       if ActiveRecord::VERSION::STRING >= '5.1.0'
-        if self.will_save_change_to_attribute?(self.ancestry_base_class.ancestry_column)
+        if self.saved_change_to_attribute?(self.ancestry_base_class.ancestry_column)
           x = self.attribute_before_last_save(self.ancestry_base_class.ancestry_column)
         end
         x ||= self.attribute_in_database(self.ancestry_base_class.ancestry_column)
