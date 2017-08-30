@@ -105,7 +105,9 @@ record:
     has_siblings?    Returns true if the record's parent has more than one child
     is_only_child?   Returns true if the record is the only child of its parent
     descendants      Scopes the model on direct and indirect children of the record
-    descendant_ids   Returns a list of a descendant ids
+    descendant_ids   Returns a list of descendant ids
+    indirects        Scopes the model on indirect children of the record
+    indirect_ids     Returns a list of indirect child ids
     subtree          Scopes the model on descendants and itself
     subtree_ids      Returns a list of all ids in the record's subtree
     depth            Return the depth of the node, root nodes are at depth 0
@@ -152,7 +154,8 @@ For convenience, a couple of named scopes are included at the class level:
     roots                   Root nodes
     ancestors_of(node)      Ancestors of node, node can be either a record or an id
     children_of(node)       Children of node, node can be either a record or an id
-    descendants_of(node)    Descendants of node, node can be either a record or an id
+    descendants_of(node)    Descendants of node, node can be either a record or an id  
+    indirects_of(node)      Indirect children of node, node can be either a record or an id
     subtree_of(node)        Subtree of node, node can be either a record or an id
     siblings_of(node)       Siblings of node, node can be either a record or an id
 
