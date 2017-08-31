@@ -263,7 +263,7 @@ module Ancestry
     end
 
     def descendant_of?(node)
-      ancestor_ids.include?(node.id)
+      ancestor_ids[0..-2].include?(node.id)
     end
 
     # Indirects
