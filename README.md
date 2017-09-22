@@ -213,11 +213,12 @@ Ancestry can arrange an entire subtree into nested hashes for easy navigation
 after retrieval from the database.  TreeNode.arrange could for example return:
 
 ```ruby
-{ #<TreeNode id: 100018, name: "Stinky", ancestry: nil>
-  => { #<TreeNode id: 100019, name: "Crunchy", ancestry: "100018">
-    => { #<TreeNode id: 100020, name: "Squeeky", ancestry: "100018/100019">
-      => {}
-    }
+{
+  #<TreeNode id: 100018, name: "Stinky", ancestry: nil> => {
+    #<TreeNode id: 100019, name: "Crunchy", ancestry: "100018"> => {
+      #<TreeNode id: 100020, name: "Squeeky", ancestry: "100018/100019"> => {}
+    },
+    #<TreeNode id: 100021, name: "Squishy", ancestry: "100018"> => {}
   }
 }
 ```
