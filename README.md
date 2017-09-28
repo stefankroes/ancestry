@@ -97,7 +97,7 @@ record:
     path             Scopes model on path records of the record
     children         Scopes the model on children of the record
     child_ids        Returns a list of child ids
-    has_parent?     Returns true if the record has a parent, false otherwise
+    has_parent?      Returns true if the record has a parent, false otherwise
     has_children?    Returns true if the record has any children, false otherwise
     is_childless?    Returns true is the record has no children, false otherwise
     siblings         Scopes the model on siblings of the record, the record itself is included*
