@@ -48,7 +48,6 @@ module Ancestry
         if node.depth == min_depth || !nodes_ids.include?(node.parent_id)
           arranged[node] = children
         end
-
       end
 
       arranged
