@@ -50,6 +50,14 @@ module Ancestry
       t[ancestry_column].eq(node[ancestry_column])
     end
 
+    # idintifies leaves that belongs to the object (excluding itself)
+    def leaf_conditions(object)
+      t = arel_table
+      node = to_node(object)
+      all_ancestor_ids = self.ancestry_base_class.all.map(&:ancestor_ids).flatten.uniq
+      t[primary_key].not_in_all(all_ancestor_ids).and(descendant_conditions(object).or(t[primary_key].eq(node.id)))
+    end
+
     module InstanceMethods
       # Validates the ancestry, but can also be applied if validation is bypassed to determine if children should be affected
       def sane_ancestry?

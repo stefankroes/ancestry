@@ -22,6 +22,9 @@ class ScopesTest < ActiveSupport::TestCase
         # Assertions for siblings_of named scope
         assert_equal test_node.siblings.to_a, model.siblings_of(test_node).to_a
         assert_equal test_node.siblings.to_a, model.siblings_of(test_node.id).to_a
+        # Assertions for leaves_of named scope
+        assert_equal test_node.leaves.to_a, model.leaves_of(test_node).to_a
+        assert_equal test_node.leaves.to_a, model.leaves_of(test_node.id).to_a
         # Assertions for path_of named scope
         assert_equal test_node.path.to_a, model.path_of(test_node).to_a
         assert_equal test_node.path.to_a, model.path_of(test_node.id).to_a
