@@ -269,6 +269,32 @@ module Ancestry
       ancestor_ids.include?(node.id)
     end
 
+    # Leaves
+
+    # def leaf_conditions
+    #   self.ancestry_base_class.leaf_conditions(self)
+    # end
+    def leaf_conditions
+      self.ancestry_base_class.leaf_conditions(self)
+    end
+
+    def leaves
+      self.ancestry_base_class.where leaf_conditions
+    end
+
+    def leaf_ids
+      self.leaves.pluck(self.ancestry_base_class.primary_key)
+    end
+
+    def is_leaf?
+      self.leaves.to_a == [self]
+    end
+    alias_method :leaf?, :is_leaf?
+
+    def leaf_of?(node)
+      node.leaf_ids.include?(self.id)
+    end
+
     # Subtree
 
     def subtree_conditions
