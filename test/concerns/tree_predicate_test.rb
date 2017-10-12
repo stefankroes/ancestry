@@ -31,6 +31,11 @@ class TreePredicateTest < ActiveSupport::TestCase
         # Descendants assertions
         assert children.map { |n| !root.descendant_of?(n) }.all?
         assert children.map { |n| n.descendant_of?(root) }.all?
+        # Leaves assertions
+        assert !root.is_leaf?
+        assert children.map { |n| n.is_leaf? }.all?
+        assert children.map { |n| !root.leaf_of?(n) }.all?
+        assert children.map { |n| n.leaf_of?(root) }.all?
       end
     end
   end
