@@ -266,7 +266,7 @@ Or plain hashes:
 ```ruby
 TreeNode.arrange_serializable do |parent, children|
   {
-     my_id: parent.id
+     my_id: parent.id,
      my_children: children
   }
 end
