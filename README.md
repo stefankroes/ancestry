@@ -203,7 +203,7 @@ instead.
 
 Ancestry works fine with STI. Just create a STI inheritance hierarchy and
 build an Ancestry tree from the different classes/models. All Ancestry
-relations that where described above will return nodes of any model type. If
+relations that were described above will return nodes of any model type. If
 you do only want nodes of a specific subclass you'll have to add a condition
 on type for that.
 
