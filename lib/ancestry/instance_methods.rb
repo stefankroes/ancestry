@@ -78,7 +78,13 @@ module Ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
 
-      if self.send("#{self.ancestry_base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.ancestry_base_class.ancestry_column}_was"}/#{id}" end
+      ancestry_value = if ActiveRecord::VERSION::STRING >= '5.1.0'
+        saved_changes? ? self.send("#{self.ancestry_base_class.ancestry_column}_before_last_save") : self.send("#{self.ancestry_base_class.ancestry_column}")
+      else
+        self.send("#{self.ancestry_base_class.ancestry_column}_was")
+      end
+
+      if ancestry_value.blank? then id.to_s else "#{ancestry_value}/#{id}" end
     end
 
     # Ancestors
@@ -90,7 +96,12 @@ module Ancestry
     alias :has_parent? :ancestors?
 
     def ancestry_changed?
-      changed.include?(self.ancestry_base_class.ancestry_column.to_s)
+      relevant_changes = if ActiveRecord::VERSION::STRING >= '5.1.0'
+        changes_to_save.keys
+      else
+        changed
+      end
+      relevant_changes.include?(self.ancestry_base_class.ancestry_column.to_s)
     end
 
     def parse_ancestry_column obj
