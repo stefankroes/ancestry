@@ -115,7 +115,7 @@ record:
 
 # Options for `has_ancestry`
 
-The has_ancestry methods supports the following options:
+The has_ancestry method supports the following options:
 
     :ancestry_column       Pass in a symbol to store ancestry in a different column
     :orphan_strategy       Instruct Ancestry what to do with children of a node that is destroyed:
