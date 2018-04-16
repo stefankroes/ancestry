@@ -407,7 +407,7 @@ remove the limitation entirely. Changing it to a text will however decrease
 performance because an index cannot be put on the column in that case.
 
 The materialised path pattern requires Ancestry to use a 'like' condition in
-order to fetch descendants. The wild character (`%`) is on the left of the
+order to fetch descendants. The wild character (`%`) is on the right of the
 query, so indexes should be used.
 
 # Contributing and license
