@@ -3,7 +3,24 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
-## Version [Unreleased] <small>...</small>
+## Version [4.0.0] <small>TBD</small>
+
+## Changed (proposed)
+
+* Dropping Rails 3.x and 4.x (will use Active Record `or` syntax)
+* Dropping builds for ruby 1.9.3, 2.0, 2.1, and 2.2
+* Dropping `*_conditions` methods. (will use Active Record `or` syntax)
+* Do not automatically call custom `ancestry` order clauses for scopes.
+
+## Version [3.0.2] <small>2018-04-24</small>
+
+## Fixes
+
+* fixed `order_by_ancestry` bug
+* fixed order tests for postgres on mac (it uses a different collation)
+* fixed documentation (thx @besquared, @danfrenette, @eiwi1101, @isimluk, @mabusaad, @tilsammans)
+* added missing `Ancestry::version`
+* added Rails 5.2 support (thx @jjuliano)
 
 ## Version [3.0.1] <small>2017-07-05</small>
 
@@ -171,8 +188,10 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[Unreleased]: https://github.com/stefankroes/ancestry/compare/v3.0.1...HEAD
-[3.0.0]: https://github.com/stefankroes/ancestry/compare/v3.0.0...v3.0.1
+[Unreleased]: https://github.com/stefankroes/ancestry/compare/v3.0.2...HEAD
+[4.0.0]: https://github.com/stefankroes/ancestry/compare/v3.0.2...HEAD
+[3.0.2]: https://github.com/stefankroes/ancestry/compare/v3.0.1...v3.0.2
+[3.0.1]: https://github.com/stefankroes/ancestry/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/stefankroes/ancestry/compare/v2.2.2...v3.0.0
 [2.2.2]: https://github.com/stefankroes/ancestry/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/stefankroes/ancestry/compare/v2.2.0...v2.2.1
