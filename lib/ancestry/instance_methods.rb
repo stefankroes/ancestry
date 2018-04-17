@@ -17,13 +17,7 @@ module Ancestry
           # ... replace old ancestry with new ancestry
           descendant.without_ancestry_callbacks do
             descendant.update_attribute(
-              self.ancestry_base_class.ancestry_column,
-              descendant.read_attribute(descendant.class.ancestry_column).gsub(
-                # child_ancestry_was
-                /^#{self.child_ancestry}/,
-                # future child_ancestry
-                if ancestors? then "#{read_attribute self.class.ancestry_column }/#{id}" else id.to_s end
-              )
+              :ancestor_ids, path_ids + (descendant.ancestor_ids - path_ids_was)
             )
           end
         end
@@ -37,13 +31,7 @@ module Ancestry
         when :rootify # make all children root if orphan strategy is rootify
           unscoped_descendants.each do |descendant|
             descendant.without_ancestry_callbacks do
-              new_ancestry = if descendant.ancestry == child_ancestry
-                nil
-              else
-                # child_ancestry did not change so child_ancestry_was will work here
-                descendant.ancestry.gsub(/^#{child_ancestry}\//, '')
-              end
-              descendant.update_attribute descendant.class.ancestry_column, new_ancestry
+              descendant.update_attribute :ancestor_ids, descendant.ancestor_ids - path_ids
             end
           end
         when :destroy # destroy all descendants if orphan strategy is destroy
@@ -55,10 +43,7 @@ module Ancestry
         when :adopt # make child elements of this node, child of its parent
           descendants.each do |descendant|
             descendant.without_ancestry_callbacks do
-              new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")
-              # check for empty string if it's then set to nil
-              new_ancestry = nil if new_ancestry.empty?
-              descendant.update_attribute descendant.class.ancestry_column, new_ancestry || nil
+              descendant.update_attribute :ancestor_ids, descendant.ancestor_ids.delete_if { |x| x == self.id }
             end
           end
         when :restrict # throw an exception if it has children
@@ -76,19 +61,6 @@ module Ancestry
             ancestor.touch
           end
         end
-      end
-    end
-
-    # The ancestry value for this record's children (before save)
-    # This is technically child_ancestry_was
-    def child_ancestry
-      # New records cannot have children
-      raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
-
-      if self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}").blank?
-        id.to_s
-      else
-        "#{self.send "#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}"}/#{id}"
       end
     end
 
@@ -149,6 +121,14 @@ module Ancestry
       end
     end
 
+    def ancestor_ids=(value)
+      if value.present?
+        write_attribute(self.ancestry_base_class.ancestry_column, value.join("/"))
+      else
+        write_attribute(self.ancestry_base_class.ancestry_column, nil)
+      end
+    end
+
     def ancestor_ids
       parse_ancestry_column(read_attribute(self.ancestry_base_class.ancestry_column))
     end
@@ -187,6 +167,10 @@ module Ancestry
       ancestor_ids + [id]
     end
 
+    def path_ids_was
+      ancestor_ids_was + [id]
+    end
+
     def path_conditions
       self.ancestry_base_class.path_conditions(self)
     end
@@ -212,7 +196,7 @@ module Ancestry
     # currently parent= does not work in after save callbacks
     # assuming that parent hasn't changed
     def parent= parent
-      write_attribute(self.ancestry_base_class.ancestry_column, if parent.nil? then nil else parent.child_ancestry end)
+      self.ancestor_ids = parent ? parent.path_ids : []
     end
 
     def parent_id= new_parent_id
@@ -222,13 +206,10 @@ module Ancestry
     def parent_id
       ancestor_ids.last if ancestors?
     end
+    alias :parent_id? :ancestors?
 
     def parent
       unscoped_find(parent_id) if ancestors?
-    end
-
-    def parent_id?
-      ancestors?
     end
 
     def parent_of?(node)
@@ -246,7 +227,7 @@ module Ancestry
     end
 
     def is_root?
-      read_attribute(self.ancestry_base_class.ancestry_column).blank?
+      !ancestors?
     end
     alias :root? :is_root?
 
@@ -292,6 +273,7 @@ module Ancestry
       self.ancestry_base_class.where sibling_conditions
     end
 
+    # NOTE: includes self
     def sibling_ids
       siblings.pluck(self.ancestry_base_class.primary_key)
     end
@@ -307,7 +289,8 @@ module Ancestry
     alias_method :only_child?, :is_only_child?
 
     def sibling_of?(node)
-      self.ancestry == node.ancestry
+      # self.ancestor_ids == node.ancestor_ids
+      self.read_attribute(self.ancestry_base_class.ancestry_column) == node.read_attribute(self.ancestry_base_class.ancestry_column)
     end
 
     # Descendants

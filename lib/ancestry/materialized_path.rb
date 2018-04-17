@@ -68,6 +68,19 @@ module Ancestry
         ancestry_value = read_attribute(self.ancestry_base_class.ancestry_column)
         ancestry_value.nil? || (ancestry_value.to_s =~ Ancestry::ANCESTRY_PATTERN && !ancestor_ids.include?(self.id))
       end
+
+      # The ancestry value for this record's children (before save)
+      # This is technically child_ancestry_was
+      def child_ancestry
+        # New records cannot have children
+        raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
+        # if self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}").blank?
+        #   id.to_s
+        # else
+        #   "#{self.send "#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}"}/#{id}"
+        # end
+        path_ids_was.join("/")
+      end
     end
   end
 end
