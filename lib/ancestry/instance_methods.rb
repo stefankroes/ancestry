@@ -114,13 +114,7 @@ module Ancestry
     end
 
     def ancestor_ids_was
-      relevant_attributes = if ActiveRecord::VERSION::STRING >= '5.1.0'
-        saved_changes.transform_values(&:first)
-      else
-        changed_attributes
-      end
-
-      parse_ancestry_column(relevant_attributes[self.ancestry_base_class.ancestry_column.to_s])
+      parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}_was"))
     end
 
     def path_ids
