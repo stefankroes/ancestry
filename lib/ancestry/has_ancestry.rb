@@ -46,9 +46,9 @@ module Ancestry
       scope :siblings_of, lambda { |object| where(sibling_conditions(object)) }
       scope :ordered_by_ancestry, Proc.new { |order|
         if %w(mysql mysql2 sqlite sqlite3 postgresql).include?(connection.adapter_name.downcase) && ActiveRecord::VERSION::MAJOR >= 5
-          reorder("coalesce(#{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, '')", order)
+          reorder(Arel.sql("coalesce(#{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}, '')"), order)
         else
-          reorder("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}", order)
+          reorder(Arel.sql("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}"), order)
         end
       }
       scope :ordered_by_ancestry_and, Proc.new { |order| ordered_by_ancestry(order) }
