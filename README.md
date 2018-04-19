@@ -83,35 +83,46 @@ node.children.create :name => 'Stinky'
 
 # Navigating your tree
 
-To navigate an Ancestry model, use the following methods on any instance /
-record:
+To navigate an Ancestry model, use the following instance methods:
 
-    parent           Returns the parent of the record, nil for a root node
-    parent_id        Returns the id of the parent of the record, nil for a root node
-    root             Returns the root of the tree the record is in, self for a root node
-    root_id          Returns the id of the root of the tree the record is in
-    root?, is_root?  Returns true if the record is a root node, false otherwise
-    ancestor_ids     Returns a list of ancestor ids, starting with the root id and ending with the parent id
-    ancestors        Scopes the model on ancestors of the record
-    path_ids         Returns a list the path ids, starting with the root id and ending with the node's own id
-    path             Scopes model on path records of the record
-    children         Scopes the model on children of the record
-    child_ids        Returns a list of child ids
-    has_parent?      Returns true if the record has a parent, false otherwise
-    has_children?    Returns true if the record has any children, false otherwise
-    is_childless?    Returns true is the record has no children, false otherwise
-    siblings         Scopes the model on siblings of the record, the record itself is included*
-    sibling_ids      Returns a list of sibling ids
-    has_siblings?    Returns true if the record's parent has more than one child
-    is_only_child?   Returns true if the record is the only child of its parent
-    descendants      Scopes the model on direct and indirect children of the record
-    descendant_ids   Returns a list of a descendant ids
-    subtree          Scopes the model on descendants and itself
-    subtree_ids      Returns a list of all ids in the record's subtree
-    depth            Return the depth of the node, root nodes are at depth 0
+|  method           |return value|
+|-------------------|------------|
+|`parent`           |parent of the record, nil for a root node|
+|`parent_id`        |parent id of the record, nil for a root node|
+|`root`             |root of the record's tree, self for a root node|
+|`root_id`          |root id of the record's tree, self for a root node|
+|`root?` <br/> `is_root?` |  true if the record is a root node, false otherwise|
+|`ancestors`        |ancestors of the record, starting with the root and ending with the parent|
+|`ancestors?`       |true if the record has ancestors (aka not a root node)|
+|`ancestor_ids`     |ancestor ids of the record|
+|`path`             |path of the record, starting with the root and ending with self|
+|`path_ids`         |a list the path ids, starting with the root id and ending with the node's own id|
+|`children`         |direct children of the record|
+|`child_ids`        |direct children's ids|
+|`has_parent?`    <br/> `ancestors?` |true if the record has a parent, false otherwise|
+|`has_children?`  <br/> `children?`  |true if the record has any children, false otherwise|
+|`is_childless?`  <br/> `childless?` |true is the record has no children, false otherwise|
+|`siblings`         |siblings of the record, the record itself is included*|
+|`sibling_ids`      |sibling ids|
+|`has_siblings?`  <br/> `siblings?`   |true if the record's parent has more than one child|
+|`is_only_child?` <br/> `only_child?` |true if the record is the only child of its parent|
+|`descendants`      |direct and indirect children of the record|
+|`descendant_ids`   |direct and indirect children's ids of the record|
+|`subtree`          |the model on descendants and itself|
+|`subtree_ids`      |a list of all ids in the record's subtree|
+|`depth`            |the depth of the node, root nodes are at depth 0|
 
-*   If the record is a root, other root records are considered siblings
+\*   If the record is a root, other root records are considered siblings
+\*   Siblings returns the record itself
 
+There are also instance methods to determine the relationship between 2 nodes:
+
+|method             |return value|
+|-------------------|---------------|
+|`parent_of?(node)`  | node's parent is this record|
+|`root_of?(node)`    | node's root is this record|
+|`ancestor_of?(node)`| node's ancestors include this record|
+|`child_of?(node)`   | node is record's parent|
 
 # Options for `has_ancestry`
 
@@ -143,7 +154,7 @@ example:
 
 ```ruby
 node.children.where(:name => 'Mary').exists?
-node.subtree.order(:name).limit(10).each do; ...; end
+node.subtree.order(:name).limit(10).each { ... }
 node.descendants.count
 ```
 
@@ -301,7 +312,7 @@ the order of siblings depends on their order in the original array.
 # Migrating from plugin that uses parent_id column
 
 Most current tree plugins use a parent_id column (has_ancestry,
-awesome_nested_set, better_nested_set, acts_as_nested_set). With ancestry its
+awesome_nested_set, better_nested_set, acts_as_nested_set). With ancestry it is
 easy to migrate from any of these plugins, to do so, use the
 build_ancestry_from_parent_ids! method on your ancestry model. These steps
 provide a more detailed explanation:
