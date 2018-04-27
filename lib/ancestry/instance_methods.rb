@@ -105,8 +105,7 @@ module Ancestry
     # Ancestors
 
     def ancestors?
-      # ancestor_ids.present?
-      read_attribute(self.ancestry_base_class.ancestry_column).present?
+      ancestor_ids.present?
     end
     alias :has_parent? :ancestors?
 
@@ -121,18 +120,6 @@ module Ancestry
       end
     end
 
-    def ancestor_ids=(value)
-      if value.present?
-        write_attribute(self.ancestry_base_class.ancestry_column, value.join("/"))
-      else
-        write_attribute(self.ancestry_base_class.ancestry_column, nil)
-      end
-    end
-
-    def ancestor_ids
-      parse_ancestry_column(read_attribute(self.ancestry_base_class.ancestry_column))
-    end
-
     def ancestor_conditions
       self.ancestry_base_class.ancestor_conditions(self)
     end
@@ -140,27 +127,6 @@ module Ancestry
     def ancestors depth_options = {}
       return self.ancestry_base_class.none unless ancestors?
       self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where ancestor_conditions
-    end
-
-    # deprecate
-    def ancestor_was_conditions
-      {primary_key_with_table => ancestor_ids_before_last_save}
-    end
-
-    # deprecated - probably don't want to use anymore
-    def ancestor_ids_was
-      parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}_was"))
-    end
-
-    def ancestor_ids_before_last_save
-      parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}"))
-    end
-
-    def parent_id_before_last_save
-      ancestry_was = send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}")
-      return unless ancestry_was.present?
-
-      ancestry_was.split(ANCESTRY_DELIMITER).last.to_i
     end
 
     def path_ids
@@ -289,8 +255,7 @@ module Ancestry
     alias_method :only_child?, :is_only_child?
 
     def sibling_of?(node)
-      # self.ancestor_ids == node.ancestor_ids
-      self.read_attribute(self.ancestry_base_class.ancestry_column) == node.read_attribute(self.ancestry_base_class.ancestry_column)
+      self.ancestor_ids == node.ancestor_ids
     end
 
     # Descendants
@@ -356,14 +321,6 @@ module Ancestry
     end
 
   private
-    ANCESTRY_DELIMITER = '/'.freeze
-
-    def parse_ancestry_column obj
-      return [] unless obj
-      obj_ids = obj.to_s.split(ANCESTRY_DELIMITER)
-      self.class.primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
-    end
-
     def unscoped_descendants
       unscoped_where do |scope|
         scope.where descendant_conditions
