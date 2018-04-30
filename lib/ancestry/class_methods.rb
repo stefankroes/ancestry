@@ -206,5 +206,24 @@ module Ancestry
         yield self.ancestry_base_class.unscope(:where)
       end
     end
+
+    ANCESTRY_UNCAST_TYPES = [:string, :uuid, :text].freeze
+    if ActiveSupport::VERSION::STRING < "4.0"
+      def primary_key_is_an_integer?
+        if defined?(@primary_key_is_an_integer)
+          @primary_key_is_an_integer
+        else
+          @primary_key_is_an_integer = !ANCESTRY_UNCAST_TYPES.include?(columns_hash[primary_key.to_s].type)
+        end
+      end
+    else
+      def primary_key_is_an_integer?
+        if defined?(@primary_key_is_an_integer)
+          @primary_key_is_an_integer
+        else
+          @primary_key_is_an_integer = !ANCESTRY_UNCAST_TYPES.include?(type_for_attribute(primary_key))
+        end
+      end
+    end
   end
 end

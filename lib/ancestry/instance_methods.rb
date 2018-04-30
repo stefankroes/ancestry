@@ -93,10 +93,6 @@ module Ancestry
       changed.include?(self.ancestry_base_class.ancestry_column.to_s)
     end
 
-    def parse_ancestry_column obj
-      obj.to_s.split('/').map { |id| cast_primary_key(id) }
-    end
-
     def ancestor_ids
       parse_ancestry_column(read_attribute(self.ancestry_base_class.ancestry_column))
     end
@@ -288,16 +284,10 @@ module Ancestry
 
   private
 
-    def cast_primary_key(key)
-      if [:string, :uuid, :text].include? primary_key_type
-        key
-      else
-        key.to_i
-      end
-    end
-
-    def primary_key_type
-      @primary_key_type ||= column_for_attribute(self.class.primary_key).type
+    def parse_ancestry_column obj
+      obj_ids = obj.to_s.split('/')
+      obj_ids.map!(&:to_i) if self.class.primary_key_is_an_integer?
+      obj_ids
     end
 
     def unscoped_descendants
