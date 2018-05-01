@@ -86,7 +86,7 @@ module Ancestry
       after_destroy :touch_ancestors_callback
 
       if ActiveRecord::VERSION::STRING >= '5.1.0'
-        after_save :touch_ancestors_callback, if: :saved_changes?
+        after_save :touch_ancestors_callback, if: :has_changes_to_save?
       else
         after_save :touch_ancestors_callback, if: :changed?
       end
