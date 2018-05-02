@@ -5,7 +5,7 @@ module Ancestry
       errors.add(:base, "#{self.class.name.humanize} cannot be a descendant of itself.") if ancestor_ids.include? self.id
     end
 
-    # Update descendants with new ancestry
+    # Update descendants with new ancestry (before save)
     def update_descendants_with_new_ancestry
       # If enabled and node is existing and ancestry was updated and the new ancestry is sane ...
       if !ancestry_callbacks_disabled? && !new_record? && ancestry_changed? && sane_ancestry?
@@ -25,7 +25,7 @@ module Ancestry
       end
     end
 
-    # Apply orphan strategy
+    # Apply orphan strategy (before destroy - no changes)
     def apply_orphan_strategy
       if !ancestry_callbacks_disabled? && !new_record?
         case self.ancestry_base_class.orphan_strategy
@@ -61,7 +61,7 @@ module Ancestry
       end
     end
 
-    # Touch each of this record's ancestors
+    # Touch each of this record's ancestors (after save)
     def touch_ancestors_callback
       if !ancestry_callbacks_disabled? && self.ancestry_base_class.touch_ancestors
         # Touch each of the old *and* new ancestors
@@ -73,7 +73,7 @@ module Ancestry
       end
     end
 
-    # The ancestry value for this record's children
+    # The ancestry value for this record's children (not in after_save_callbacks)
     def child_ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
@@ -105,12 +105,24 @@ module Ancestry
       self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where ancestor_conditions
     end
 
+    # deprecate
     def ancestor_was_conditions
-      {primary_key_with_table => ancestor_ids_was}
+      {primary_key_with_table => ancestor_ids_before_last_save}
     end
 
+    # deprecated - probably don't want to use anymore
     def ancestor_ids_was
       parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}_was"))
+    end
+
+    if ActiveRecord::VERSION::STRING >= '5.1.0'
+      def ancestor_ids_before_last_save
+        parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}_before_last_save"))
+      end
+    else
+      def ancestor_ids_before_last_save
+        parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}_was"))
+      end
     end
 
     def path_ids
@@ -139,6 +151,7 @@ module Ancestry
 
     # Parent
 
+    # currently parent= does not work in after save callbacks
     def parent= parent
       write_attribute(self.ancestry_base_class.ancestry_column, if parent.nil? then nil else parent.child_ancestry end)
     end
@@ -296,9 +309,10 @@ module Ancestry
       end
     end
 
+    # works with after save context (hence before_last_save)
     def unscoped_current_and_previous_ancestors
       unscoped_where do |scope|
-        scope.where id: (ancestor_ids + ancestor_ids_was).uniq
+        scope.where id: (ancestor_ids + ancestor_ids_before_last_save).uniq
       end
     end
 
