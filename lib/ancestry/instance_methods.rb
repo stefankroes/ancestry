@@ -16,7 +16,9 @@ module Ancestry
             descendant.update_attribute(
               self.ancestry_base_class.ancestry_column,
               descendant.read_attribute(descendant.class.ancestry_column).gsub(
+                # child_ancestry_was
                 /^#{self.child_ancestry}/,
+                # future child_ancestry
                 if ancestors? then "#{read_attribute self.class.ancestry_column }/#{id}" else id.to_s end
               )
             )
@@ -35,6 +37,7 @@ module Ancestry
               new_ancestry = if descendant.ancestry == child_ancestry
                 nil
               else
+                # child_ancestry did not change so child_ancestry_was will work here
                 descendant.ancestry.gsub(/^#{child_ancestry}\//, '')
               end
               descendant.update_attribute descendant.class.ancestry_column, new_ancestry
@@ -73,7 +76,8 @@ module Ancestry
       end
     end
 
-    # The ancestry value for this record's children (not in after_save_callbacks)
+    # The ancestry value for this record's children (before save)
+    # This is technically child_ancestry_was
     def child_ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
@@ -152,6 +156,7 @@ module Ancestry
     # Parent
 
     # currently parent= does not work in after save callbacks
+    # assuming that parent hasn't changed
     def parent= parent
       write_attribute(self.ancestry_base_class.ancestry_column, if parent.nil? then nil else parent.child_ancestry end)
     end
