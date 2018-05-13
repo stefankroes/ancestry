@@ -29,6 +29,27 @@ class ScopesTest < ActiveSupport::TestCase
     end
   end
 
+  def test_chained_scopes
+    AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, roots|
+      # before Rails 4.0, the last scope in chained scopes used to ignore earler ones
+      # which resulted in: `Post.active.inactive.to_a` == `Post.inactive.to_a`
+      # https://github.com/rails/rails/commit/cd26b6ae
+      # therefore testing against later AR versions only
+      if ActiveRecord::VERSION::MAJOR >=4
+        roots.each do |root, children|
+          child = children.first
+
+          # the first scope limits the second scope
+          assert_empty model.children_of(root).roots
+          assert_empty model.children_of(root.id).roots
+          # object id in the second scope argument should be found without being affected by the first scope
+          assert_equal model.children_of(root).children_of(root).to_a, model.children_of(root).to_a
+          assert_equal model.children_of(root.id).children_of(root.id).to_a, model.children_of(root.id).to_a
+        end
+      end
+    end
+  end
+
   def test_order_by
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       # not thrilled with this. mac postgres has odd sorting requirements
