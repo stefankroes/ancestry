@@ -41,7 +41,7 @@ module Ancestry
     def subtree_conditions(object)
       t = arel_table
       node = to_node(object)
-      descendant_conditions(object).or(t[primary_key].eq(node.id))
+      descendant_conditions(node).or(t[primary_key].eq(node.id))
     end
 
     def sibling_conditions(object)
