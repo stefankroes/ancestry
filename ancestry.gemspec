@@ -24,7 +24,7 @@ EOF
 
   s.authors  = ['Stefan Kroes', 'Keenan Brock']
   s.email    = 'keenan@thebrocks.net'
-  s.homepage = 'http://github.com/stefankroes/ancestry'
+  s.homepage = 'https://github.com/stefankroes/ancestry'
   s.license  = 'MIT'
 
   s.files = [
