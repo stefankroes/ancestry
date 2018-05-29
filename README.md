@@ -108,6 +108,9 @@ To navigate an Ancestry model, use the following instance methods:
 |`is_only_child?` <br/> `only_child?` |true if the record is the only child of its parent|
 |`descendants`      |direct and indirect children of the record|
 |`descendant_ids`   |direct and indirect children's ids of the record|
+|`leaves`           |leaves of the record (i.e. childless descendants of the node)|
+|`leaf_ids`         |a list of all the leaves' ids of the record|
+|`leaf?` </br> `is_leaf?` |Returns true if the record is a leaf node (ie. childless), false otherwise|
 |`subtree`          |the model on descendants and itself|
 |`subtree_ids`      |a list of all ids in the record's subtree|
 |`depth`            |the depth of the node, root nodes are at depth 0|
@@ -123,6 +126,7 @@ There are also instance methods to determine the relationship between 2 nodes:
 |`root_of?(node)`    | node's root is this record|
 |`ancestor_of?(node)`| node's ancestors include this record|
 |`child_of?(node)`   | node is record's parent|
+|`leaf_of?(node)`    | node's leaves include this record|
 
 # Options for `has_ancestry`
 
@@ -166,6 +170,7 @@ For convenience, a couple of named scopes are included at the class level:
     descendants_of(node)    Descendants of node, node can be either a record or an id
     subtree_of(node)        Subtree of node, node can be either a record or an id
     siblings_of(node)       Siblings of node, node can be either a record or an id
+    leaves_of(node)         Leaves of node, node can be either a record or an id
 
 Thanks to some convenient rails magic, it is even possible to create nodes
 through the children and siblings scopes:

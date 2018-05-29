@@ -274,6 +274,31 @@ module Ancestry
       ancestor_ids.include?(node.id)
     end
 
+    # Leaves
+
+    # FIXME do we want keep this public API for leaves?
+
+    # def leaf_conditions
+    #   self.ancestry_base_class.leaf_conditions
+    # end
+
+    def leaves
+      self.ancestry_base_class.leaves_of(self)
+    end
+
+    def leaf_ids
+      leaves.pluck(self.ancestry_base_class.primary_key)
+    end
+
+    def is_leaf?
+      self.leaves.to_a == [self]
+    end
+    alias_method :leaf?, :is_leaf?
+
+    def leaf_of?(node)
+      node.leaf_ids.include?(self.id)
+    end
+
     # Subtree
 
     def subtree_conditions
