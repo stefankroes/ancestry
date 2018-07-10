@@ -23,9 +23,9 @@ module Ancestry
       id_column_as_text = sql_cast_as_text(id_column)
       parent_ancestry = sql_concat("#{table_name}.#{ancestry_column}", "'/'", id_column_as_text)
 
-      joins("LEFT JOIN #{table_name} AS c ON c.#{ancestry_column} = #{id_column_as_text} OR c.#{ancestry_column} = #{parent_ancestry}").
-        group(id_column).
-        having('COUNT(c.id) = 0')
+      joins("LEFT JOIN #{table_name} AS c ON c.#{ancestry_column} = #{id_column_as_text} OR c.#{ancestry_column} = #{parent_ancestry}")
+        .group(id_column)
+        .having('COUNT(c.id) = 0')
     end
 
     # Orphan strategy writer
@@ -249,7 +249,7 @@ module Ancestry
 
     def sql_cast_as_text column
       text_type = if ActiveRecord::Base.connection.adapter_name.downcase == 'mysql'
-        'CHAR'
+        'CHAR(32)'
       else
         'TEXT'
       end
