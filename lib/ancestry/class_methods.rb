@@ -240,7 +240,7 @@ module Ancestry
     private
 
     def sql_concat *parts
-      if ActiveRecord::Base.connection.adapter_name.downcase == 'sqlite'
+      if %w(sqlite sqlite3).include?(connection.adapter_name.downcase)
         parts.join(' || ')
       else
         "CONCAT(#{parts.join(', ')})"
@@ -248,8 +248,8 @@ module Ancestry
     end
 
     def sql_cast_as_text column
-      text_type = if ActiveRecord::Base.connection.adapter_name.downcase == 'mysql'
-        'CHAR(32)'
+      text_type = if %w(mysql mysql2).include?(connection.adapter_name.downcase)
+        'CHAR'
       else
         'TEXT'
       end
