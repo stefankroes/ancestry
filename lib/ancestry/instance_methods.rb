@@ -1,5 +1,7 @@
 module Ancestry
   module InstanceMethods
+    BEFORE_LAST_SAVE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_before_last_save' : '_was'
+
     # Validate that the ancestors don't include itself
     def ancestry_exclude_self
       errors.add(:base, "#{self.class.name.humanize} cannot be a descendant of itself.") if ancestor_ids.include? self.id
@@ -82,7 +84,11 @@ module Ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
 
-      if self.send("#{self.ancestry_base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.ancestry_base_class.ancestry_column}_was"}/#{id}" end
+      if self.send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}").blank?
+        id.to_s
+      else
+        "#{self.send "#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}"}/#{id}"
+      end
     end
 
     # Ancestors
@@ -119,14 +125,8 @@ module Ancestry
       parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}_was"))
     end
 
-    if ActiveRecord::VERSION::STRING >= '5.1.0'
-      def ancestor_ids_before_last_save
-        parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}_before_last_save"))
-      end
-    else
-      def ancestor_ids_before_last_save
-        parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}_was"))
-      end
+    def ancestor_ids_before_last_save
+      parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}"))
     end
 
     def path_ids
