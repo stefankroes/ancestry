@@ -1,6 +1,7 @@
 module Ancestry
   module InstanceMethods
     BEFORE_LAST_SAVE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_before_last_save' : '_was'
+    IN_DATABASE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_in_database' : '_was'
 
     # Validate that the ancestors don't include itself
     def ancestry_exclude_self
@@ -84,10 +85,10 @@ module Ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
 
-      if self.send("#{self.ancestry_base_class.ancestry_column}_in_database").blank?
+      if self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}").blank?
         id.to_s
       else
-        "#{self.send "#{self.ancestry_base_class.ancestry_column}_in_database"}/#{id}"
+        "#{self.send "#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}"}/#{id}"
       end
     end
 
