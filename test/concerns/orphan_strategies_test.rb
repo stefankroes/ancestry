@@ -89,4 +89,21 @@ class OphanStrategiesTest < ActiveSupport::TestCase
       assert_equal(model.find(n5.id).ancestor_ids,[n4.id],"ancestry integrity not maintained")
     end
   end
+
+  def test_basic_delete
+    AncestryTestDatabase.with_model do |model|
+      n1 = model.create!                  #create a root node
+      n2 = model.create!(:parent => n1)   #create child with parent=root
+      n2.destroy!
+      model.find(n1.id)                   # parent should exist
+
+      n1 = model.create!                  #create a root node
+      n2 = model.create!(:parent => n1)   #create child with parent=root
+      n1.destroy!
+      assert_nil(model.find_by(:id => n2.id)) # child should not exist
+
+      n1 = model.create!                  #create a root node
+      n1.destroy!
+    end
+  end
 end
