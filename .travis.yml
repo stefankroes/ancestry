@@ -1,12 +1,11 @@
 sudo: false
 
 rvm:
-  - 2.2.7
-  - 2.3.4
-  - 2.4.1
+  - 2.4
+#  - 2.5
 
 gemfile:
-  - gemfiles/mysql_ar_42.gemfile
+  - gemfiles/mysql2_ar_42.gemfile
   - gemfiles/mysql2_ar_50.gemfile
   - gemfiles/mysql2_ar_51.gemfile
   - gemfiles/mysql2_ar_52.gemfile
@@ -18,18 +17,6 @@ gemfile:
   - gemfiles/sqlite3_ar_50.gemfile
   - gemfiles/sqlite3_ar_51.gemfile
   - gemfiles/sqlite3_ar_52.gemfile
-
-matrix:
-  include:
-    - rvm: 1.9.3
-      gemfile: gemfiles/mysql_ar_32.gemfile
-    - rvm: 1.9.3
-      gemfile: gemfiles/pg_ar_32.gemfile
-    - rvm: 1.9.3
-      gemfile: gemfiles/sqlite3_ar_32.gemfile
-  exclude:
-    - rvm: 2.4.1
-      gemfile: gemfiles/mysql_ar_42.gemfile
 
 services:
   - mysql
