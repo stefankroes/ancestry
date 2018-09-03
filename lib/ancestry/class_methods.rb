@@ -29,27 +29,25 @@ module Ancestry
 
     # Arrangement
     def arrange options = {}
-      # Get all nodes ordered by ancestry and start sorting them into an empty hash
-      arrange_nodes self.ancestry_base_class.reorder(options.delete(:order)).where(options)
+      # Get all nodes and start sorting them into an empty hash
+      arrange_nodes self.where(options)
     end
 
     # Arrange array of nodes into a nested hash of the form
     # {node => children}, where children = {} if the node has no children
     def arrange_nodes(nodes)
-      arranged = ActiveSupport::OrderedHash.new
-      min_depth = Float::INFINITY
-      index = Hash.new { |h, k| h[k] = ActiveSupport::OrderedHash.new }
+      arranged  = ActiveSupport::OrderedHash.new
+      nodes_ids = nodes.map(&:id)
+      min_depth = nodes.map(&:depth).min
+      index     = Hash.new { |h, k| h[k] = ActiveSupport::OrderedHash.new }
 
       nodes.each do |node|
         children = index[node.id]
         index[node.parent_id][node] = children
 
-        depth = node.depth
-        if depth < min_depth
-          min_depth = depth
-          arranged.clear
+        if node.depth == min_depth || !nodes_ids.include?(node.parent_id)
+          arranged[node] = children
         end
-        arranged[node] = children if depth == min_depth
       end
 
       arranged
