@@ -63,6 +63,16 @@ class ScopesTest < ActiveSupport::TestCase
     end
   end
 
+  def test_order_by_reverse
+    AncestryTestDatabase.with_model(:width => 1, :depth => 3) do |model, roots|
+      child = model.last
+      assert child
+      assert_nothing_raised do #IrreversibleOrderError
+        assert child.ancestors.last
+      end
+    end
+  end
+
   def test_node_creation_through_scope
     AncestryTestDatabase.with_model do |model|
       node = model.create!
