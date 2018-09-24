@@ -19,6 +19,9 @@ class ScopesTest < ActiveSupport::TestCase
         # Assertions for indirects_of named scope
         assert_equal test_node.indirects.to_a, model.indirects_of(test_node).to_a
         assert_equal test_node.indirects.to_a, model.indirects_of(test_node.id).to_a
+        # Assertions for indirect_ids named scope
+        assert_equal test_node.indirect_ids, model.indirects_of(test_node).map(&:id)
+        assert_equal test_node.indirect_ids, model.indirects_of(test_node.id).map(&:id)
         # Assertions for subtree_of named scope
         assert_equal test_node.subtree.to_a, model.subtree_of(test_node).to_a
         assert_equal test_node.subtree.to_a, model.subtree_of(test_node.id).to_a
