@@ -12,13 +12,20 @@ gems, integrity checking, integrity restoration, arrangement of
 (sub)tree into hashes and different strategies for dealing with orphaned
 records.
 
+NOTE:
+
+- Ancestry 3.x supports Rails 5.0 and earlier.
+- Ancestry 4.0 only supports rails 5.0 and higher
+
 # Installation
 
 To apply Ancestry to any `ActiveRecord` model, follow these simple steps:
 
+
 ## Install
 
 * Add to Gemfile:
+
 ```ruby
 # Gemfile
 
@@ -26,6 +33,7 @@ gem 'ancestry'
 ```
 
 * Install required gems:
+
 ```bash
 $ bundle install
 ```
@@ -33,11 +41,13 @@ $ bundle install
 
 ## Add ancestry column to your table
 * Create migration:
+
 ```bash
 $ rails g migration add_ancestry_to_[table] ancestry:string:index
 ```
 
 *   Migrate your database:
+
 ```bash
 $ rake db:migrate
 ```

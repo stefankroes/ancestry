@@ -7,10 +7,25 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 ## Changed (proposed)
 
-* Dropping Rails 3.x and 4.x (will use Active Record `or` syntax)
-* Dropping builds for ruby 1.9.3, 2.0, 2.1, and 2.2
+* Dropping Rails 3.x and 4.x support (will use Active Record `or` syntax)
 * Dropping `*_conditions` methods. (will use Active Record `or` syntax)
 * Do not automatically call custom `ancestry` order clauses for scopes.
+
+## Version [3.0.3] <small>2018-04-24</small>
+
+This branch (3.x) should still be compatible with rails 3 and 4.
+Rails 5.1 and 5.2 support were introduced in this version, but ongoing support
+has been moved to ancestry 4.0
+
+## Fixes
+
+* Reduce object allocation (thx @NickLaMuro)
+* Rails 5.1 fixes (thx @ctrombley)
+* Avoid redundant query to DB in subtree_of scope (thx @Slike9)
+* Syntax tweaks (thx @ekohl, @richardonrails)
+* Fixed reverse ordering
+* Dropped builds for ruby 1.9.3, 2.0, 2.1, and 2.2
+* Dropped builds for Rails 3.x and 4.x (will use Active Record `or` syntax)
 
 ## Version [3.0.2] <small>2018-04-24</small>
 
@@ -188,8 +203,9 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[Unreleased]: https://github.com/stefankroes/ancestry/compare/v3.0.2...HEAD
-[4.0.0]: https://github.com/stefankroes/ancestry/compare/v3.0.2...HEAD
+[Unreleased]: https://github.com/stefankroes/ancestry/compare/v3.0.3...HEAD
+[4.0.0]: https://github.com/stefankroes/ancestry/compare/v3.0.3...HEAD
+[3.0.3]: https://github.com/stefankroes/ancestry/compare/v3.0.1...v3.0.2
 [3.0.2]: https://github.com/stefankroes/ancestry/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/stefankroes/ancestry/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/stefankroes/ancestry/compare/v2.2.2...v3.0.0
