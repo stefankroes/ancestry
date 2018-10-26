@@ -221,7 +221,7 @@ module Ancestry
         if defined?(@primary_key_is_an_integer)
           @primary_key_is_an_integer
         else
-          @primary_key_is_an_integer = !ANCESTRY_UNCAST_TYPES.include?(type_for_attribute(primary_key))
+          @primary_key_is_an_integer = !ANCESTRY_UNCAST_TYPES.include?(type_for_attribute(primary_key).type)
         end
       end
     end
