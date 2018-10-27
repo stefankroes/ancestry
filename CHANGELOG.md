@@ -11,7 +11,14 @@ a nice looking [Changelog](http://keepachangelog.com).
 * Dropping `*_conditions` methods. (will use Active Record `or` syntax)
 * Do not automatically call custom `ancestry` order clauses for scopes.
 
-## Version [3.0.3] <small>2018-04-24</small>
+## Version [3.0.4] <small>2018-10-27</small>
+
+## Fixes
+
+* Properly detects non-integer columns (thx @adam101)
+* Arrange no longer drops nodes due to missing parents (thx @trafium)
+
+## Version [3.0.3] <small>2018-10-23</small>
 
 This branch (3.x) should still be compatible with rails 3 and 4.
 Rails 5.1 and 5.2 support were introduced in this version, but ongoing support
@@ -203,9 +210,10 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[Unreleased]: https://github.com/stefankroes/ancestry/compare/v3.0.3...HEAD
-[4.0.0]: https://github.com/stefankroes/ancestry/compare/v3.0.3...HEAD
-[3.0.3]: https://github.com/stefankroes/ancestry/compare/v3.0.1...v3.0.2
+[Unreleased]: https://github.com/stefankroes/ancestry/compare/v3.0.4...HEAD
+[4.0.0]: https://github.com/stefankroes/ancestry/compare/v3.0.4...HEAD
+[3.0.4]: https://github.com/stefankroes/ancestry/compare/v3.0.3...v3.0.4
+[3.0.3]: https://github.com/stefankroes/ancestry/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/stefankroes/ancestry/compare/v3.0.1...v3.0.2
 [3.0.1]: https://github.com/stefankroes/ancestry/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/stefankroes/ancestry/compare/v2.2.2...v3.0.0
