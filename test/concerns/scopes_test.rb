@@ -120,4 +120,13 @@ class ScopesTest < ActiveSupport::TestCase
       assert parent.children.create
     end
   end
+
+  def test_create_children_from_root
+    AncestryTestDatabase.with_model(:extra_columns => {:name => :string}) do |model|
+      root = model.create
+      record = root.children.create
+      # this should not throw an exception
+      record.reload.parent.children.find_or_create_by! :name => 'abc'
+    end
+  end
 end
