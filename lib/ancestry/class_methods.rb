@@ -27,10 +27,13 @@ module Ancestry
       end
     end
 
-    # Arrangement
+    # Get all nodes and sorting them into an empty hash
     def arrange options = {}
-      # Get all nodes ordered by ancestry and start sorting them into an empty hash
-      arrange_nodes self.ancestry_base_class.reorder(options.delete(:order)).where(options)
+      if (order = options.delete(:order))
+        arrange_nodes self.ancestry_base_class.order(order).where(options)
+      else
+        arrange_nodes self.ancestry_base_class.where(options)
+      end
     end
 
     # Arrange array of nodes into a nested hash of the form
