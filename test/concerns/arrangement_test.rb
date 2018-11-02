@@ -202,7 +202,7 @@ class ArrangementTest < ActiveSupport::TestCase
     end
   end
 
-  # TODO: arrange_nodes broken, dropping some parentless nodes
+  # TODO: don't drop parentless nodes
   def xtest_arrange_partial
     AncestryTestDatabase.with_model do |model|
       # - n1
@@ -216,8 +216,7 @@ class ArrangementTest < ActiveSupport::TestCase
       n4 = model.create!(parent: n2)
       n5 = model.create!(parent: n1)
       assert_equal({n5 => {}, n3 => {}}, model.arrange_nodes([n5, n3]))
-      # ensure n5 comes before n3 in the ordered hash
-      assert_equal(n5.id, model.arrange_nodes([n5, n3]).keys.first.id)
+      assert_equal([n5.id, n3.id], model.arrange_nodes([n5, n3]).keys.map(&:id))
     end
   end
 end
