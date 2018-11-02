@@ -202,8 +202,7 @@ class ArrangementTest < ActiveSupport::TestCase
     end
   end
 
-  # TODO: don't drop parentless nodes
-  def xtest_arrange_partial
+  def test_arrange_partial
     AncestryTestDatabase.with_model do |model|
       # - n1
       #   - n2

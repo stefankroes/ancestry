@@ -48,8 +48,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
     end
   end
 
-  # TODO: don't drop parentless nodes
-  def xtest_sort_by_ancestry_no_parents_same_level
+  def test_sort_by_ancestry_no_parents_same_level
     AncestryTestDatabase.with_model do |model|
       n1, n2, n3, n4, n5, n6 = build_tree(model)
 
@@ -65,8 +64,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
     end
   end
 
-  # TODO: don't drop parentless nodes
-  def xtest_sort_by_ancestry_missing_parent_middle_of_tree
+  def test_sort_by_ancestry_missing_parent_middle_of_tree
     AncestryTestDatabase.with_model do |model|
       n1, n2, n3, n4, n5, n6 = build_tree(model)
 
@@ -149,10 +147,9 @@ class SortByAncestryTest < ActiveSupport::TestCase
     end
   end
 
-  # TODO: don't drop parentless nodes
   # TODO: nodes need to follow original ordering
   # NOTE: even for partial trees, if the input records are ranked, the output works
-  def xtest_sort_by_ancestry_with_sql_sort_paginated_missing_parents_and_children
+  def test_sort_by_ancestry_with_sql_sort_paginated_missing_parents_and_children
     AncestryTestDatabase.with_model :extra_columns => {:rank => :integer} do |model|
       n1, n2, n3, n4, n5, n6 = build_ranked_tree(model)
 
@@ -167,10 +164,8 @@ class SortByAncestryTest < ActiveSupport::TestCase
 
   # in a perfect world, the second case would be matched
   # but since presorting is not used, the best we can assume from input order is that n1 > n2
-  # TODO: don't drop parentless nodes
-  # TODO: follow input order
   # TODO: find a way to rank missing nodes
-  def xtest_sort_by_ancestry_with_block_paginated_missing_parents_and_children
+  def test_sort_by_ancestry_with_block_paginated_missing_parents_and_children
     AncestryTestDatabase.with_model :extra_columns => {:rank => :integer} do |model|
       n1, n2, n3, n4, n5, n6 = build_ranked_tree(model)
       sort = -> (a, b) { a.rank <=> b.rank }
