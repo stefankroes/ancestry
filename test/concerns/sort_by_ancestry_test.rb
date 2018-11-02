@@ -1,46 +1,65 @@
 require_relative '../environment'
 
 class SortByAncestryTest < ActiveSupport::TestCase
+  # tree is of the form:
+  #   - n1
+  #     - n2
+  #       - n3
+  #       - n4
+  #     - n5
+  # @returns [Array<model>] list of nodes
+  def build_tree(model)
+    # inflate the node id to test id wrap around edge cases
+    ENV["NODES"].to_i.times { model.create!.destroy } if ENV["NODES"]
+
+    n1 = model.create!
+    n2 = model.create!(:parent => n1)
+    n3 = model.create!(:parent => n2)
+    n4 = model.create!(:parent => n2)
+    n5 = model.create!(:parent => n1)
+
+    puts "create: #{n1.id}..#{n5.id}" if ENV["NODES"]
+    [n1, n2, n3, n4, n5]
+  end
+
   def test_sort_by_ancestry
     AncestryTestDatabase.with_model do |model|
-      # - n1
-      #   - n2
-      #     - n3
-      #     - n4
-      #   - n5
-      n1 = model.create!
-      n2 = model.create!(:parent => n1)
-      n3 = model.create!(:parent => n2)
-      n4 = model.create!(:parent => n2)
-      n5 = model.create!(:parent => n1)
+      n1, n2, n3, n4, n5 = build_tree(model)
 
-      records = model.sort_by_ancestry(model.all.sort_by(&:id).reverse)
-      if records[1] == n2
-        if records[2] == n3
-          assert_equal [n1, n2, n3, n4, n5].map(&:id), records.map(&:id)
-        else
-          assert_equal [n1, n2, n4, n3, n5].map(&:id), records.map(&:id)
-        end
-      else
-        if records[3] == n3
-          assert_equal [n1, n5, n2, n3, n4].map(&:id), records.map(&:id)
-        else
-          assert_equal [n1, n5, n2, n4, n3].map(&:id), records.map(&:id)
-        end
-      end
+      records = model.sort_by_ancestry(model.all.order(:id).reverse)
+      assert_equal [n1, n5, n2, n4, n3].map(&:id), records.map(&:id)
     end
+  end
+
+  # tree is of the form
+  #   - n1 (0)
+  #     - n3 (0)
+  #     - n5 (1)
+  #   - n2 (1)
+  #     - n4 (0)
+  #     - n6 (1)
+  # @returns [Array<model>] list of ranked nodes
+  def build_ranked_tree(model)
+    # inflate the node id to test id wrap around edge cases
+    ENV["NODES"].to_i.times { model.create!.destroy } if ENV["NODES"]
+
+    n1 = model.create!(:rank => 0)
+    n2 = model.create!(:rank => 1)
+    n3 = model.create!(:rank => 0, :parent => n1)
+    n4 = model.create!(:rank => 0, :parent => n2)
+    n5 = model.create!(:rank => 1, :parent => n1)
+    n6 = model.create!(:rank => 1, :parent => n2)
+
+    puts "create: #{n1.id}..#{n6.id}" if ENV["NODES"]
+    [n1, n2, n3, n4, n5, n6]
   end
 
   def test_sort_by_ancestry_with_block
     AncestryTestDatabase.with_model :extra_columns => {:rank => :integer} do |model|
-      n1 = model.create!(:rank => 0)
-      n2 = model.create!(:rank => 1)
-      n3 = model.create!(:rank => 0, :parent => n1)
-      n4 = model.create!(:rank => 0, :parent => n2)
-      n5 = model.create!(:rank => 1, :parent => n1)
-      n6 = model.create!(:rank => 1, :parent => n2)
+      n1, n2, n3, n4, n5, n6 = build_ranked_tree(model)
+      sort = -> (a, b) { a.rank <=> b.rank }
 
-      records = model.sort_by_ancestry(model.all.sort_by(&:rank).reverse) {|a, b| a.rank <=> b.rank}
+      records = model.sort_by_ancestry(model.all.order(:rank).reverse, &sort)
       assert_equal [n1, n3, n5, n2, n4, n6].map(&:id), records.map(&:id)
     end
   end
