@@ -38,24 +38,16 @@ module Ancestry
 
     # Arrange array of nodes into a nested hash of the form
     # {node => children}, where children = {} if the node has no children
+    # If a node's parent is not included, the node will be included as if it is a top level node
     def arrange_nodes(nodes)
-      arranged = ActiveSupport::OrderedHash.new
-      min_depth = Float::INFINITY
-      index = Hash.new { |h, k| h[k] = ActiveSupport::OrderedHash.new }
+      node_ids = Set.new(nodes.map(&:id))
+      index = Hash.new { |h, k| h[k] = {} }
 
-      nodes.each do |node|
+      nodes.each_with_object({}) do |node, arranged|
         children = index[node.id]
         index[node.parent_id][node] = children
-
-        depth = node.depth
-        if depth < min_depth
-          min_depth = depth
-          arranged.clear
-        end
-        arranged[node] = children if depth == min_depth
+        arranged[node] = children unless node_ids.include?(node.parent_id)
       end
-
-      arranged
     end
 
      # Arrangement to nested array
