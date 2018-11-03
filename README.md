@@ -118,6 +118,8 @@ To navigate an Ancestry model, use the following instance methods:
 |`is_only_child?` <br/> `only_child?` |true if the record is the only child of its parent|
 |`descendants`      |direct and indirect children of the record|
 |`descendant_ids`   |direct and indirect children's ids of the record|
+|`indirects`        |indirect children of the record|
+|`indirect_ids`     |indirect children's ids of the record|
 |`subtree`          |the model on descendants and itself|
 |`subtree_ids`      |a list of all ids in the record's subtree|
 |`depth`            |the depth of the node, root nodes are at depth 0|
@@ -133,6 +135,8 @@ There are also instance methods to determine the relationship between 2 nodes:
 |`root_of?(node)`    | node's root is this record|
 |`ancestor_of?(node)`| node's ancestors include this record|
 |`child_of?(node)`   | node is record's parent|
+|`descendant_of?(node)` | node is one of this record's ancestors|
+|`indirect_of?(node)` | node is one of this record's ancestors but not a parent|
 
 # Options for `has_ancestry`
 
@@ -174,6 +178,7 @@ For convenience, a couple of named scopes are included at the class level:
     ancestors_of(node)      Ancestors of node, node can be either a record or an id
     children_of(node)       Children of node, node can be either a record or an id
     descendants_of(node)    Descendants of node, node can be either a record or an id
+    indirects_of(node)      Indirect children of node, node can be either a record or an id
     subtree_of(node)        Subtree of node, node can be either a record or an id
     siblings_of(node)       Siblings of node, node can be either a record or an id
 

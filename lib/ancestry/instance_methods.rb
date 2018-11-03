@@ -275,6 +275,24 @@ module Ancestry
       ancestor_ids.include?(node.id)
     end
 
+    # Indirects
+
+    def indirect_conditions
+      self.ancestry_base_class.indirect_conditions(self)
+    end
+
+    def indirects depth_options = {}
+      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).where indirect_conditions
+    end
+
+    def indirect_ids depth_options = {}
+      indirects(depth_options).pluck(self.ancestry_base_class.primary_key)
+    end
+
+    def indirect_of?(node)
+      ancestor_ids[0..-2].include?(node.id)
+    end
+
     # Subtree
 
     def subtree_conditions

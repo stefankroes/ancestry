@@ -16,6 +16,9 @@ class ScopesTest < ActiveSupport::TestCase
         # Assertions for descendants_of named scope
         assert_equal test_node.descendants.to_a, model.descendants_of(test_node).to_a
         assert_equal test_node.descendants.to_a, model.descendants_of(test_node.id).to_a
+        # Assertions for indirects_of named scope
+        assert_equal test_node.indirects.to_a, model.indirects_of(test_node).to_a
+        assert_equal test_node.indirects.to_a, model.indirects_of(test_node.id).to_a
         # Assertions for subtree_of named scope
         assert_equal test_node.subtree.to_a, model.subtree_of(test_node).to_a
         assert_equal test_node.subtree.to_a, model.subtree_of(test_node.id).to_a
@@ -89,6 +92,10 @@ class ScopesTest < ActiveSupport::TestCase
       other_grandchild = model.siblings_of(grandchild).new
       other_grandchild.save!
       assert_equal child, other_grandchild.parent
+
+      another_grandchild = model.indirects_of(node).new
+      another_grandchild.save
+      assert_equal child, grandchild.parent
     end
   end
 
