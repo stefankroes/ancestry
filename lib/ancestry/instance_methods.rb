@@ -320,11 +320,12 @@ module Ancestry
     end
 
   private
+    ANCESTRY_DELIMITER = '/'.freeze
 
     def parse_ancestry_column obj
-      obj_ids = obj.to_s.split('/')
-      obj_ids.map!(&:to_i) if self.class.primary_key_is_an_integer?
-      obj_ids
+      return [] unless obj
+      obj_ids = obj.split(ANCESTRY_DELIMITER)
+      self.class.primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
     end
 
     def unscoped_descendants
