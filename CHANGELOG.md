@@ -11,6 +11,16 @@ a nice looking [Changelog](http://keepachangelog.com).
 * Dropping `*_conditions` methods. (will use Active Record `or` syntax)
 * Do not automatically call custom `ancestry` order clauses for scopes.
 
+## Version [3.0.5] <small>2018-11-06</small>
+
+## Changed
+
+* Added indirect children support (thx @tilo)
+
+## Fixes
+
+* Reduced memory footprint of parsing ancestry column (thx @NickLaMuro)
+
 ## Version [3.0.4] <small>2018-10-27</small>
 
 ## Fixes
@@ -210,8 +220,9 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[Unreleased]: https://github.com/stefankroes/ancestry/compare/v3.0.4...HEAD
-[4.0.0]: https://github.com/stefankroes/ancestry/compare/v3.0.4...HEAD
+[Unreleased]: https://github.com/stefankroes/ancestry/compare/v3.0.5...HEAD
+[4.0.0]: https://github.com/stefankroes/ancestry/compare/v3.0.5...HEAD
+[3.0.5]: https://github.com/stefankroes/ancestry/compare/v3.0.4...v3.0.5
 [3.0.4]: https://github.com/stefankroes/ancestry/compare/v3.0.3...v3.0.4
 [3.0.3]: https://github.com/stefankroes/ancestry/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/stefankroes/ancestry/compare/v3.0.1...v3.0.2
