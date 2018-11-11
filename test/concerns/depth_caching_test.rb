@@ -62,7 +62,7 @@ class DepthCachingTest < ActiveSupport::TestCase
 
       # Assert cache was emptied correctly
       model.all.each do |test_node|
-        assert_equal nil, test_node.depth_cache
+        assert_nil test_node.depth_cache
       end
 
       # Rebuild cache

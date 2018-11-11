@@ -14,12 +14,17 @@ Gem::Specification.new do |s|
   arrangement of (sub)tree into hashes and different strategies for dealing with
   orphaned records.
 EOF
-
+  s.metadata = {
+    "homepage_uri" => "https://github.com/stefankroes/ancestry",
+    "changelog_uri" => "https://github.com/stefankroes/ancestry/blob/master/CHANGELOG.md",
+    "source_code_uri" => "https://github.com/stefankroes/ancestry/",
+    "bug_tracker_uri" => "https://github.com/stefankroes/ancestry/issues",
+  }
   s.version = Ancestry::VERSION
 
-  s.author   = 'Stefan Kroes'
-  s.email    = 's.a.kroes@gmail.com'
-  s.homepage = 'http://github.com/stefankroes/ancestry'
+  s.authors  = ['Stefan Kroes', 'Keenan Brock']
+  s.email    = 'keenan@thebrocks.net'
+  s.homepage = 'https://github.com/stefankroes/ancestry'
   s.license  = 'MIT'
 
   s.files = [
@@ -31,12 +36,15 @@ EOF
     'lib/ancestry/exceptions.rb',
     'lib/ancestry/class_methods.rb',
     'lib/ancestry/instance_methods.rb',
+    'lib/ancestry/materialized_path.rb',
+    'lib/ancestry/version.rb',
     'MIT-LICENSE',
-    'README.rdoc'
+    'README.md'
   ]
   
   s.required_ruby_version     = '>= 1.8.7'
-  s.add_runtime_dependency 'activerecord', '>= 3.0.0'
+  s.add_runtime_dependency 'activerecord', '>= 3.2.0'
+  s.add_development_dependency 'rdoc'
   s.add_development_dependency 'yard'
   s.add_development_dependency 'rake',      '~> 10.0'
   s.add_development_dependency 'test-unit'

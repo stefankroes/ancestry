@@ -1,9 +1,85 @@
 # Ancestry Changelog
 
 Doing our best at supporting [SemVer](http://semver.org/) with
-a nice looking [Changelog](keepachangelog.com).
+a nice looking [Changelog](http://keepachangelog.com).
 
-## Version [Unreleased] <small>...</small>
+## Version [4.0.0] <small>TBD</small>
+
+## Changed (proposed)
+
+* Dropping Rails 3.x and 4.x support (will use Active Record `or` syntax)
+* Dropping `*_conditions` methods. (will use Active Record `or` syntax)
+* Do not automatically call custom `ancestry` order clauses for scopes.
+
+## Version [3.0.5] <small>2018-11-06</small>
+
+## Changed
+
+* Added indirect children support (thx @tilo)
+
+## Fixes
+
+* Reduced memory footprint of parsing ancestry column (thx @NickLaMuro)
+
+## Version [3.0.4] <small>2018-10-27</small>
+
+## Fixes
+
+* Properly detects non-integer columns (thx @adam101)
+* Arrange no longer drops nodes due to missing parents (thx @trafium)
+
+## Version [3.0.3] <small>2018-10-23</small>
+
+This branch (3.x) should still be compatible with rails 3 and 4.
+Rails 5.1 and 5.2 support were introduced in this version, but ongoing support
+has been moved to ancestry 4.0
+
+## Fixes
+
+* Reduce object allocation (thx @NickLaMuro)
+* Rails 5.1 fixes (thx @ctrombley)
+* Avoid redundant query to DB in subtree_of scope (thx @Slike9)
+* Syntax tweaks (thx @ekohl, @richardonrails)
+* Fixed reverse ordering
+* Dropped builds for ruby 1.9.3, 2.0, 2.1, and 2.2
+* Dropped builds for Rails 3.x and 4.x (will use Active Record `or` syntax)
+
+## Version [3.0.2] <small>2018-04-24</small>
+
+## Fixes
+
+* fixed `order_by_ancestry` bug
+* fixed order tests for postgres on mac (it uses a different collation)
+* fixed documentation (thx @besquared, @danfrenette, @eiwi1101, @isimluk, @mabusaad, @tilsammans)
+* added missing `Ancestry::version`
+* added Rails 5.2 support (thx @jjuliano)
+
+## Version [3.0.1] <small>2017-07-05</small>
+
+## Fixes
+
+* added gem metadata
+* fixed keep a changelog link (thx @mattbrictson)
+* added alias has_parent?
+* fixed bug where unscoping too much (thx @brendon)
+* fixed tests on mysql 5.7 and rails 3.2
+* Dropped 3.1 scope changes
+
+## Version [3.0.0] <small>2017-05-18</small>
+
+## Changed
+
+* Dropping Rails 3.0, and 3.1. Added Rails 5.1 support (thx @ledermann)
+* Dropping Rails 4.0, 4.1 for build reasons. Since 4.2 is supported, all 4.x should still work.
+
+## Fixes
+
+* Performance: Use `pluck` vs `map` for ids (thx @njakobsen and @culturecode)
+* Fixed acts_as_tree compatibility (thx @crazymykl)
+* Fixed loading ActiveRails prematurely (thx @vovimayhem)
+* Fixes exist (thx @ledermann)
+* Properly touches parents when different class for STI (thx @samtgarson)
+* Fixed issues with parent_id (only present on master) (thx @domcleal)
 
 ## Version [2.2.2] <small>2016-11-01</small>
 
@@ -144,7 +220,14 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[Unreleased]: https://github.com/stefankroes/ancestry/compare/v2.2.2...HEAD
+[Unreleased]: https://github.com/stefankroes/ancestry/compare/v3.0.5...HEAD
+[4.0.0]: https://github.com/stefankroes/ancestry/compare/v3.0.5...HEAD
+[3.0.5]: https://github.com/stefankroes/ancestry/compare/v3.0.4...v3.0.5
+[3.0.4]: https://github.com/stefankroes/ancestry/compare/v3.0.3...v3.0.4
+[3.0.3]: https://github.com/stefankroes/ancestry/compare/v3.0.2...v3.0.3
+[3.0.2]: https://github.com/stefankroes/ancestry/compare/v3.0.1...v3.0.2
+[3.0.1]: https://github.com/stefankroes/ancestry/compare/v3.0.0...v3.0.1
+[3.0.0]: https://github.com/stefankroes/ancestry/compare/v2.2.2...v3.0.0
 [2.2.2]: https://github.com/stefankroes/ancestry/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/stefankroes/ancestry/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/stefankroes/ancestry/compare/v2.1.0...v2.2.0

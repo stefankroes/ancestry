@@ -4,7 +4,7 @@ source "https://rubygems.org"
 
 gem "appraisal"
 gem "coveralls", require: false
-gem "activerecord", "5.0.7"
-gem "mysql2"
+gem "activerecord", "4.2.10"
+gem "mysql2", "~> 0.4.0"
 
 gemspec path: "../"

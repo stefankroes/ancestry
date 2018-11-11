@@ -57,12 +57,45 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
+  def test_modified_parents_set_ancestry_properly
+    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
+      root1, root2, root3 = roots.map(&:first) # r1, r2, r3
+      root2.update_attributes(:parent => root1) # r1 <= r2, r3
+      root3.update_attributes(:parent => root2) # r1 <= r2 <= r3
+      assert_equal [root1.id, root2.id], root3.ancestor_ids
+    end
+  end
+
   def test_set_parent_with_non_default_ancestry_column
     AncestryTestDatabase.with_model :depth => 3, :width => 3, :ancestry_column => :alternative_ancestry do |model, roots|
       root1, root2, _root3 = roots.map(&:first)
       assert_no_difference 'root1.descendants.size' do
         assert_difference 'root2.descendants.size', root1.subtree.size do
           root1.parent = root2
+          root1.save!
+        end
+      end
+    end
+  end
+
+  def test_set_parent_id
+    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
+      root1, root2, _root3 = roots.map(&:first)
+      assert_no_difference 'root1.descendants.size' do
+        assert_difference 'root2.descendants.size', root1.subtree.size do
+          root1.parent_id = root2.id
+          root1.save!
+        end
+      end
+    end
+  end
+
+  def test_set_parent_id_with_non_default_ancestry_column
+    AncestryTestDatabase.with_model :depth => 3, :width => 3, :ancestry_column => :alternative_ancestry do |model, roots|
+      root1, root2, _root3 = roots.map(&:first)
+      assert_no_difference 'root1.descendants.size' do
+        assert_difference 'root2.descendants.size', root1.subtree.size do
+          root1.parent_id = root2.id
           root1.save!
         end
       end
@@ -88,6 +121,18 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
           end
         end
       end
+    end
+  end
+
+  def test_primary_key_is_an_integer
+    AncestryTestDatabase.with_model(extra_columns: { string_id: :string }) do |model|
+      model.primary_key = :string_id
+
+      assert !model.primary_key_is_an_integer?
+    end
+
+    AncestryTestDatabase.with_model do |model|
+      assert model.primary_key_is_an_integer?
     end
   end
 end

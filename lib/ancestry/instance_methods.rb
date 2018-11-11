@@ -1,96 +1,95 @@
 module Ancestry
   module InstanceMethods
+    BEFORE_LAST_SAVE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_before_last_save' : '_was'
+    IN_DATABASE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_in_database' : '_was'
+
     # Validate that the ancestors don't include itself
     def ancestry_exclude_self
       errors.add(:base, "#{self.class.name.humanize} cannot be a descendant of itself.") if ancestor_ids.include? self.id
     end
 
-    # Update descendants with new ancestry
+    # Update descendants with new ancestry (before save)
     def update_descendants_with_new_ancestry
-      # Skip this if callbacks are disabled
-      unless ancestry_callbacks_disabled?
-        # If node is not a new record and ancestry was updated and the new ancestry is sane ...
-        if ancestry_changed? && !new_record? && sane_ancestry?
-          # ... for each descendant ...
-          unscoped_descendants.each do |descendant|
-            # ... replace old ancestry with new ancestry
-            descendant.without_ancestry_callbacks do
-              descendant.update_attribute(
-                self.ancestry_base_class.ancestry_column,
-                descendant.read_attribute(descendant.class.ancestry_column).gsub(
-                  /^#{self.child_ancestry}/,
-                  if read_attribute(self.class.ancestry_column).blank? then id.to_s else "#{read_attribute self.class.ancestry_column }/#{id}" end
-                )
+      # If enabled and node is existing and ancestry was updated and the new ancestry is sane ...
+      if !ancestry_callbacks_disabled? && !new_record? && ancestry_changed? && sane_ancestry?
+        # ... for each descendant ...
+        unscoped_descendants.each do |descendant|
+          # ... replace old ancestry with new ancestry
+          descendant.without_ancestry_callbacks do
+            descendant.update_attribute(
+              self.ancestry_base_class.ancestry_column,
+              descendant.read_attribute(descendant.class.ancestry_column).gsub(
+                # child_ancestry_was
+                /^#{self.child_ancestry}/,
+                # future child_ancestry
+                if ancestors? then "#{read_attribute self.class.ancestry_column }/#{id}" else id.to_s end
               )
-            end
+            )
           end
         end
       end
     end
 
-    # Apply orphan strategy
+    # Apply orphan strategy (before destroy - no changes)
     def apply_orphan_strategy
-      # Skip this if callbacks are disabled
-      unless ancestry_callbacks_disabled?
-        # If this isn't a new record ...
-        unless new_record?
-          # ... make all children root if orphan strategy is rootify
-          if self.ancestry_base_class.orphan_strategy == :rootify
-            unscoped_descendants.each do |descendant|
-              descendant.without_ancestry_callbacks do
-                descendant.update_attribute descendant.class.ancestry_column, (if descendant.ancestry == child_ancestry then nil else descendant.ancestry.gsub(/^#{child_ancestry}\//, '') end)
+      if !ancestry_callbacks_disabled? && !new_record?
+        case self.ancestry_base_class.orphan_strategy
+        when :rootify # make all children root if orphan strategy is rootify
+          unscoped_descendants.each do |descendant|
+            descendant.without_ancestry_callbacks do
+              new_ancestry = if descendant.ancestry == child_ancestry
+                nil
+              else
+                # child_ancestry did not change so child_ancestry_was will work here
+                descendant.ancestry.gsub(/^#{child_ancestry}\//, '')
               end
+              descendant.update_attribute descendant.class.ancestry_column, new_ancestry
             end
-          # ... destroy all descendants if orphan strategy is destroy
-          elsif self.ancestry_base_class.orphan_strategy == :destroy
-            unscoped_descendants.each do |descendant|
-              descendant.without_ancestry_callbacks do
-                descendant.destroy
-              end
-            end
-          # ... make child elements of this node, child of its parent if orphan strategy is adopt
-          elsif self.ancestry_base_class.orphan_strategy == :adopt
-            descendants.each do |descendant|
-              descendant.without_ancestry_callbacks do
-                new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")
-                # check for empty string if it's then set to nil
-                new_ancestry = nil if new_ancestry.empty?
-                descendant.update_attribute descendant.class.ancestry_column, new_ancestry || nil
-              end
-            end
-          # ... throw an exception if it has children and orphan strategy is restrict
-          elsif self.ancestry_base_class.orphan_strategy == :restrict
-            raise Ancestry::AncestryException.new('Cannot delete record because it has descendants.') unless is_childless?
           end
+        when :destroy # destroy all descendants if orphan strategy is destroy
+          unscoped_descendants.each do |descendant|
+            descendant.without_ancestry_callbacks do
+              descendant.destroy
+            end
+          end
+        when :adopt # make child elements of this node, child of its parent
+          descendants.each do |descendant|
+            descendant.without_ancestry_callbacks do
+              new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")
+              # check for empty string if it's then set to nil
+              new_ancestry = nil if new_ancestry.empty?
+              descendant.update_attribute descendant.class.ancestry_column, new_ancestry || nil
+            end
+          end
+        when :restrict # throw an exception if it has children
+          raise Ancestry::AncestryException.new('Cannot delete record because it has descendants.') unless is_childless?
         end
       end
     end
 
-    # Touch each of this record's ancestors
+    # Touch each of this record's ancestors (after save)
     def touch_ancestors_callback
-
-      # Skip this if callbacks are disabled
-      unless ancestry_callbacks_disabled?
-
-        # Only touch if the option is enabled
-        if self.ancestry_base_class.touch_ancestors
-
-          # Touch each of the old *and* new ancestors
-          self.class.where(id: (ancestor_ids + ancestor_ids_was).uniq).each do |ancestor|
-            ancestor.without_ancestry_callbacks do
-              ancestor.touch
-            end
+      if !ancestry_callbacks_disabled? && self.ancestry_base_class.touch_ancestors
+        # Touch each of the old *and* new ancestors
+        unscoped_current_and_previous_ancestors.each do |ancestor|
+          ancestor.without_ancestry_callbacks do
+            ancestor.touch
           end
         end
       end
     end
 
-    # The ancestry value for this record's children
+    # The ancestry value for this record's children (before save)
+    # This is technically child_ancestry_was
     def child_ancestry
       # New records cannot have children
       raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
 
-      if self.send("#{self.ancestry_base_class.ancestry_column}_was").blank? then id.to_s else "#{self.send "#{self.ancestry_base_class.ancestry_column}_was"}/#{id}" end
+      if self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}").blank?
+        id.to_s
+      else
+        "#{self.send "#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}"}/#{id}"
+      end
     end
 
     # Counter Cache
@@ -121,12 +120,14 @@ module Ancestry
 
     # Ancestors
 
+    def ancestors?
+      # ancestor_ids.present?
+      read_attribute(self.ancestry_base_class.ancestry_column).present?
+    end
+    alias :has_parent? :ancestors?
+
     def ancestry_changed?
       changed.include?(self.ancestry_base_class.ancestry_column.to_s)
-    end
-
-    def parse_ancestry_column obj
-      obj.to_s.split('/').map { |id| cast_primary_key(id) }
     end
 
     def ancestor_ids
@@ -134,20 +135,25 @@ module Ancestry
     end
 
     def ancestor_conditions
-      t = get_arel_table
-      t[get_primary_key_column].in(ancestor_ids)
+      self.ancestry_base_class.ancestor_conditions(self)
     end
 
     def ancestors depth_options = {}
       self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where ancestor_conditions
     end
 
+    # deprecate
     def ancestor_was_conditions
-      {primary_key_with_table => ancestor_ids_was}
+      {primary_key_with_table => ancestor_ids_before_last_save}
     end
 
+    # deprecated - probably don't want to use anymore
     def ancestor_ids_was
-      parse_ancestry_column(changed_attributes[self.ancestry_base_class.ancestry_column.to_s])
+      parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}_was"))
+    end
+
+    def ancestor_ids_before_last_save
+      parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}"))
     end
 
     def path_ids
@@ -155,8 +161,7 @@ module Ancestry
     end
 
     def path_conditions
-      t = get_arel_table
-      t[get_primary_key_column].in(path_ids)
+      self.ancestry_base_class.path_conditions(self)
     end
 
     def path depth_options = {}
@@ -177,24 +182,26 @@ module Ancestry
 
     # Parent
 
+    # currently parent= does not work in after save callbacks
+    # assuming that parent hasn't changed
     def parent= parent
       write_attribute(self.ancestry_base_class.ancestry_column, if parent.nil? then nil else parent.child_ancestry end)
     end
 
-    def parent_id= parent_id
-      self.parent = if parent_id.blank? then nil else unscoped_find(parent_id) end
+    def parent_id= new_parent_id
+      self.parent = new_parent_id.present? ? unscoped_find(new_parent_id) : nil
     end
 
     def parent_id
-      if ancestor_ids.empty? then nil else ancestor_ids.last end
+      ancestor_ids.last if ancestors?
     end
 
     def parent
-      if parent_id.blank? then nil else unscoped_find(parent_id) end
+      unscoped_find(parent_id) if ancestors?
     end
 
     def parent_id?
-      parent_id.present?
+      ancestors?
     end
 
     def parent_of?(node)
@@ -204,11 +211,11 @@ module Ancestry
     # Root
 
     def root_id
-      if ancestor_ids.empty? then id else ancestor_ids.first end
+      ancestors? ? ancestor_ids.first : id
     end
 
     def root
-      if root_id == id then self else unscoped_find(root_id) end
+      ancestors? ? unscoped_find(root_id) : self
     end
 
     def is_root?
@@ -223,8 +230,7 @@ module Ancestry
     # Children
 
     def child_conditions
-      t = get_arel_table
-      t[get_ancestry_column].eq(child_ancestry)
+      self.ancestry_base_class.child_conditions(self)
     end
 
     def children
@@ -232,11 +238,11 @@ module Ancestry
     end
 
     def child_ids
-      children.select(self.ancestry_base_class.primary_key).map(&self.ancestry_base_class.primary_key.to_sym)
+      children.pluck(self.ancestry_base_class.primary_key)
     end
 
     def has_children?
-      self.children.exists?({})
+      self.children.exists?
     end
     alias_method :children?, :has_children?
 
@@ -252,8 +258,7 @@ module Ancestry
     # Siblings
 
     def sibling_conditions
-      t = get_arel_table
-      t[get_ancestry_column].eq(read_attribute(self.ancestry_base_class.ancestry_column))
+      self.ancestry_base_class.sibling_conditions(self)
     end
 
     def siblings
@@ -261,7 +266,7 @@ module Ancestry
     end
 
     def sibling_ids
-      siblings.select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
+      siblings.pluck(self.ancestry_base_class.primary_key)
     end
 
     def has_siblings?
@@ -281,13 +286,7 @@ module Ancestry
     # Descendants
 
     def descendant_conditions
-      t = get_arel_table
-      # rails has case sensitive matching.
-      if defined?(ActiveRecord.version) && ActiveRecord.version.to_s >= "5"
-        t[get_ancestry_column].matches("#{child_ancestry}/%", nil, true).or(t[get_ancestry_column].eq(child_ancestry))
-      else
-        t[get_ancestry_column].matches("#{child_ancestry}/%").or(t[get_ancestry_column].eq(child_ancestry))
-      end
+      self.ancestry_base_class.descendant_conditions(self)
     end
 
     def descendants depth_options = {}
@@ -295,18 +294,35 @@ module Ancestry
     end
 
     def descendant_ids depth_options = {}
-      descendants(depth_options).select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
+      descendants(depth_options).pluck(self.ancestry_base_class.primary_key)
     end
 
     def descendant_of?(node)
       ancestor_ids.include?(node.id)
     end
 
+    # Indirects
+
+    def indirect_conditions
+      self.ancestry_base_class.indirect_conditions(self)
+    end
+
+    def indirects depth_options = {}
+      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).where indirect_conditions
+    end
+
+    def indirect_ids depth_options = {}
+      indirects(depth_options).pluck(self.ancestry_base_class.primary_key)
+    end
+
+    def indirect_of?(node)
+      ancestor_ids[0..-2].include?(node.id)
+    end
+
     # Subtree
 
     def subtree_conditions
-      t = get_arel_table
-      descendant_conditions.or(t[get_primary_key_column].eq(self.id))
+      self.ancestry_base_class.subtree_conditions(self)
     end
 
     def subtree depth_options = {}
@@ -314,7 +330,7 @@ module Ancestry
     end
 
     def subtree_ids depth_options = {}
-      subtree(depth_options).select(self.ancestry_base_class.primary_key).collect(&self.ancestry_base_class.primary_key.to_sym)
+      subtree(depth_options).pluck(self.ancestry_base_class.primary_key)
     end
 
     # Callback disabling
@@ -330,45 +346,37 @@ module Ancestry
     end
 
   private
+    ANCESTRY_DELIMITER = '/'.freeze
 
-    def cast_primary_key(key)
-      if [:string, :uuid, :text].include? primary_key_type
-        key
-      else
-        key.to_i
-      end
-    end
-
-    def primary_key_type
-      @primary_key_type ||= column_for_attribute(self.class.primary_key).type
+    def parse_ancestry_column obj
+      return [] unless obj
+      obj_ids = obj.split(ANCESTRY_DELIMITER)
+      self.class.primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
     end
 
     def unscoped_descendants
-      self.ancestry_base_class.unscoped do
-        self.ancestry_base_class.where descendant_conditions
+      unscoped_where do |scope|
+        scope.where descendant_conditions
       end
     end
 
-    # Validates the ancestry, but can also be applied if validation is bypassed to determine if children should be affected
-    def sane_ancestry?
-      ancestry_value = read_attribute(self.ancestry_base_class.ancestry_column)
-      ancestry_value.nil? || (ancestry_value.to_s =~ Ancestry::ANCESTRY_PATTERN && !ancestor_ids.include?(self.id))
+    # works with after save context (hence before_last_save)
+    def unscoped_current_and_previous_ancestors
+      unscoped_where do |scope|
+        scope.where id: (ancestor_ids + ancestor_ids_before_last_save).uniq
+      end
     end
 
     def unscoped_find id
-      self.ancestry_base_class.unscoped { self.ancestry_base_class.find(id) }
+      unscoped_where do |scope|
+        scope.find id
+      end
     end
 
-    def get_arel_table
-      self.ancestry_base_class.arel_table
-    end
-
-    def get_primary_key_column
-      self.ancestry_base_class.primary_key.to_sym
-    end
-
-    def get_ancestry_column
-      self.ancestry_base_class.ancestry_column.to_sym
+    def unscoped_where
+      self.ancestry_base_class.unscoped_where do |scope|
+        yield scope
+      end
     end
   end
 end
