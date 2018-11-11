@@ -114,10 +114,6 @@ module Ancestry
       self.ancestry_base_class.counter_cache_column.to_s
     end
 
-    def ancestry_present?
-      send("#{self.ancestry_base_class.ancestry_column.to_s}?")
-    end
-
     # Ancestors
 
     def ancestors?

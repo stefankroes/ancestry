@@ -87,8 +87,8 @@ module Ancestry
           self.counter_cache_column = options[:counter_cache]
         end
 
-        after_create :increame_parent_counter_cache, if: :ancestry_present?
-        after_destroy :decreame_parent_counter_cache, if: :ancestry_present?
+        after_create :increame_parent_counter_cache, if: :has_parent?
+        after_destroy :decreame_parent_counter_cache, if: :has_parent?
         after_update :update_parent_counter_cache, if: :ancestry_changed?
       end
 
