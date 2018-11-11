@@ -98,6 +98,14 @@ module Ancestry
     end
 
     def decreame_parent_counter_cache
+      # @_trigger_destroy_callback comes from activerecord, which makes sure only once decrement when concurrent deletion.
+      # but @_trigger_destroy_callback began after rails@5.1.0.alpha.
+      # https://github.com/rails/rails/blob/v5.2.0/activerecord/lib/active_record/persistence.rb#L340
+      # https://github.com/rails/rails/pull/14735
+      # https://github.com/rails/rails/pull/27248
+      return if defined?(@_trigger_destroy_callback) && !@_trigger_destroy_callback
+      return if ancestry_callbacks_disabled?
+
       self.class.decrement_counter _counter_cache_column, parent_id
     end
 

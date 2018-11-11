@@ -19,6 +19,21 @@ class CounterCacheTest < ActiveSupport::TestCase
     end
   end
 
+  def test_counter_cache_when_reduplicate_destroying
+    return unless ActiveRecord::VERSION::STRING >= '5.1.0'
+
+    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |model, roots|
+      parent = roots.first.first
+      child = parent.children.first
+      _child = child.class.find(child.id)
+
+      assert_difference 'parent.reload.children_count', -1 do
+        child.destroy
+        _child.destroy
+      end
+    end
+  end
+
   def test_counter_cache_when_updating_parent
     AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |model, roots|
       parent1 = roots.first.first
