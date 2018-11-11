@@ -110,7 +110,16 @@ module Ancestry
     end
 
     def update_parent_counter_cache
-      if ancestry_was = send("#{self.ancestry_base_class.ancestry_column.to_s}_was")
+      changed =
+        if ActiveRecord::VERSION::STRING >= '5.1.0'
+          saved_change_to_attribute?(self.ancestry_base_class.ancestry_column)
+        else
+          ancestry_changed?
+        end
+
+      return unless changed
+
+      if ancestry_was = ancestry_column_before_last_save
         parent_id_was = ancestry_was.to_s.split('/').map(&:to_i).last
         self.class.decrement_counter _counter_cache_column, parent_id_was
       end
@@ -157,7 +166,11 @@ module Ancestry
     end
 
     def ancestor_ids_before_last_save
-      parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}"))
+      parse_ancestry_column(ancestry_column_before_last_save)
+    end
+
+    def ancestry_column_before_last_save
+      send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}")
     end
 
     def path_ids

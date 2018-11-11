@@ -89,7 +89,7 @@ module Ancestry
 
         after_create :increase_parent_counter_cache, if: :has_parent?
         after_destroy :decrease_parent_counter_cache, if: :has_parent?
-        after_update :update_parent_counter_cache, if: :ancestry_changed?
+        after_update :update_parent_counter_cache
       end
 
       # Create named scopes for depth
