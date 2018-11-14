@@ -92,6 +92,44 @@ module Ancestry
       end
     end
 
+    # Counter Cache
+    def increase_parent_counter_cache
+      self.class.increment_counter _counter_cache_column, parent_id
+    end
+
+    def decrease_parent_counter_cache
+      # @_trigger_destroy_callback comes from activerecord, which makes sure only once decrement when concurrent deletion.
+      # but @_trigger_destroy_callback began after rails@5.1.0.alpha.
+      # https://github.com/rails/rails/blob/v5.2.0/activerecord/lib/active_record/persistence.rb#L340
+      # https://github.com/rails/rails/pull/14735
+      # https://github.com/rails/rails/pull/27248
+      return if defined?(@_trigger_destroy_callback) && !@_trigger_destroy_callback
+      return if ancestry_callbacks_disabled?
+
+      self.class.decrement_counter _counter_cache_column, parent_id
+    end
+
+    def update_parent_counter_cache
+      changed =
+        if ActiveRecord::VERSION::STRING >= '5.1.0'
+          saved_change_to_attribute?(self.ancestry_base_class.ancestry_column)
+        else
+          ancestry_changed?
+        end
+
+      return unless changed
+
+      if parent_id_was = parent_id_before_last_save
+        self.class.decrement_counter _counter_cache_column, parent_id_was
+      end
+
+      parent_id && self.class.increment_counter(_counter_cache_column, parent_id)
+    end
+
+    def _counter_cache_column
+      self.ancestry_base_class.counter_cache_column.to_s
+    end
+
     # Ancestors
 
     def ancestors?
@@ -128,6 +166,13 @@ module Ancestry
 
     def ancestor_ids_before_last_save
       parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}"))
+    end
+
+    def parent_id_before_last_save
+      ancestry_was = send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}")
+      return unless ancestry_was.present?
+
+      ancestry_was.split(ANCESTRY_DELIMITER).last.to_i
     end
 
     def path_ids

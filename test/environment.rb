@@ -78,6 +78,11 @@ class AncestryTestDatabase
     ActiveRecord::Base.connection.create_table 'test_nodes' do |table|
       table.string options[:ancestry_column] || :ancestry
       table.integer options[:depth_cache_column] || :ancestry_depth if options[:cache_depth]
+      if options[:counter_cache]
+        counter_cache_column = options[:counter_cache] == true ? :children_count : options[:counter_cache]
+        table.integer counter_cache_column
+      end
+
       extra_columns.each do |name, type|
         table.send type, name
       end unless extra_columns.nil?
