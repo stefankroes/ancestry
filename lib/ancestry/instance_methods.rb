@@ -119,8 +119,7 @@ module Ancestry
 
       return unless changed
 
-      if ancestry_was = ancestry_column_before_last_save
-        parent_id_was = ancestry_was.to_s.split('/').map(&:to_i).last
+      if parent_id_was = parent_id_before_last_save
         self.class.decrement_counter _counter_cache_column, parent_id_was
       end
 
@@ -166,11 +165,14 @@ module Ancestry
     end
 
     def ancestor_ids_before_last_save
-      parse_ancestry_column(ancestry_column_before_last_save)
+      parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}"))
     end
 
-    def ancestry_column_before_last_save
-      send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}")
+    def parent_id_before_last_save
+      ancestry_was = send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}")
+      return unless ancestry_was.present?
+
+      ancestry_was.split(ANCESTRY_DELIMITER).last.to_i
     end
 
     def path_ids
