@@ -14,7 +14,8 @@ records.
 
 NOTE:
 
-- Ancestry 3.x supports Rails 5.0 and earlier.
+- Ancestry 2.x supports Rails 4.1, and earlier
+- Ancestry 3.x supports Rails 5.0, and 4.2
 - Ancestry 4.0 only supports rails 5.0 and higher
 
 # Installation
