@@ -139,7 +139,11 @@ module Ancestry
     alias :has_parent? :ancestors?
 
     def ancestry_changed?
-      changed.include?(self.ancestry_base_class.ancestry_column.to_s)
+      if ActiveRecord::VERSION::STRING >= '5.1.0'
+        will_save_change_to_attribute?(self.ancestry_base_class.ancestry_column.to_s)
+      else
+        changed.include?(self.ancestry_base_class.ancestry_column.to_s)
+      end
     end
 
     def ancestor_ids
