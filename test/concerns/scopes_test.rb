@@ -56,7 +56,7 @@ class ScopesTest < ActiveSupport::TestCase
   def test_order_by
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       # not thrilled with this. mac postgres has odd sorting requirements
-      if ENV["BUNDLE_GEMFILE"].to_s =~ /pg/ && RUBY_PLATFORM != "x86_64-darwin16"
+      if ENV["BUNDLE_GEMFILE"].to_s =~ /pg/ && RUBY_PLATFORM !~ /x86_64-darwin/
         expected = model.all.sort_by { |m| [m.ancestry.to_s.gsub('/',''), m.id.to_i] }
       else
         expected = model.all.sort_by { |m| [m.ancestry.to_s, m.id.to_i] }
