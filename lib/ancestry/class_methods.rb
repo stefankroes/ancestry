@@ -203,7 +203,7 @@ module Ancestry
     end
 
     ANCESTRY_UNCAST_TYPES = [:string, :uuid, :text].freeze
-    if ActiveSupport::VERSION::STRING < "4.0"
+    if ActiveSupport::VERSION::STRING < "4.2"
       def primary_key_is_an_integer?
         if defined?(@primary_key_is_an_integer)
           @primary_key_is_an_integer
