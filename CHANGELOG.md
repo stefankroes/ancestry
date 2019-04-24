@@ -3,19 +3,16 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
-## Version [4.0.0] <small>TBD</small>
+## Version [3.0.6] <small>2018-11-06</small>
 
-## Changed (proposed)
-
-* Dropping Rails 3.x and 4.x support (will use Active Record `or` syntax)
-* Dropping `*_conditions` methods. (will use Active Record `or` syntax)
-* Do not automatically call custom `ancestry` order clauses for scopes.
+* Fixed rails 4.1 version check (thx @myxoh)
 
 ## Version [3.0.5] <small>2018-11-06</small>
 
 ## Changed
 
 * Added indirect children support (thx @tilo)
+* Fixed test sorting for pg on mac osx
 
 ## Fixes
 
@@ -220,8 +217,7 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[Unreleased]: https://github.com/stefankroes/ancestry/compare/v3.0.5...HEAD
-[4.0.0]: https://github.com/stefankroes/ancestry/compare/v3.0.5...HEAD
+[3.0.6]: https://github.com/stefankroes/ancestry/compare/v3.0.5...v3.0.6
 [3.0.5]: https://github.com/stefankroes/ancestry/compare/v3.0.4...v3.0.5
 [3.0.4]: https://github.com/stefankroes/ancestry/compare/v3.0.3...v3.0.4
 [3.0.3]: https://github.com/stefankroes/ancestry/compare/v3.0.2...v3.0.3
