@@ -139,7 +139,14 @@ module Ancestry
     alias :has_parent? :ancestors?
 
     def ancestry_changed?
-      changed.include?(self.ancestry_base_class.ancestry_column.to_s)
+      column = self.ancestry_base_class.ancestry_column.to_s
+      if ActiveRecord::VERSION::STRING >= '5.1.0'
+        # These methods return nil if there are no changes.
+        # This was fixed in a refactoring in rails 6.0: https://github.com/rails/rails/pull/35933
+        !!(will_save_change_to_attribute?(column) || saved_change_to_attribute?(column))
+      else
+        changed.include?(column)
+      end
     end
 
     def ancestor_ids
