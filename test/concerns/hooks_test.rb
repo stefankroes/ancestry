@@ -30,4 +30,44 @@ class ArrangementTest < ActiveSupport::TestCase
       assert_equal("parent/grandchild", m3.name_path)
     end
   end
+
+  def test_has_ancestry_detects_changes_in_after_save
+    AncestryTestDatabase.with_model(:extra_columns => {:name => :string, :name_path => :string}) do |model|
+      model.class_eval do
+        after_save :after_hook
+        attr_reader :modified
+
+        def after_hook
+          @modified = ancestry_changed?
+        end
+      end
+
+      m1 = model.create!(:name => "parent")
+      m2 = model.create!(:parent => m1, :name => "child")
+      m2.parent = nil
+      m2.save!
+      assert_equal(false, m1.modified)
+      assert_equal(true, m2.modified)
+    end
+  end
+
+  def test_has_ancestry_detects_changes_in_before_save
+    AncestryTestDatabase.with_model(:extra_columns => {:name => :string, :name_path => :string}) do |model|
+      model.class_eval do
+        before_save :before_hook
+        attr_reader :modified
+
+        def before_hook
+          @modified = ancestry_changed?
+        end
+      end
+
+      m1 = model.create!(:name => "parent")
+      m2 = model.create!(:parent => m1, :name => "child")
+      m2.parent = nil
+      m2.save!
+      assert_equal(false, m1.modified)
+      assert_equal(true, m2.modified)
+    end
+  end
 end
