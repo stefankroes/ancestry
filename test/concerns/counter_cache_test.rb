@@ -42,7 +42,7 @@ class CounterCacheTest < ActiveSupport::TestCase
 
       assert_difference 'parent1.reload.children_count', -1 do
         assert_difference 'parent2.reload.children_count', 1 do
-          child.update_attributes parent: parent2
+          child.update parent: parent2
         end
       end
     end
@@ -54,7 +54,7 @@ class CounterCacheTest < ActiveSupport::TestCase
       parent = roots.last.first
 
       assert_difference 'parent.reload.children_count', 1 do
-        child.update_attributes parent: parent
+        child.update parent: parent
       end
     end
   end
@@ -65,7 +65,7 @@ class CounterCacheTest < ActiveSupport::TestCase
       child = parent.children.first
 
       assert_difference 'parent.reload.children_count', -1 do
-        child.update_attributes parent: nil
+        child.update parent: nil
       end
     end
   end

@@ -18,7 +18,7 @@ class DepthCachingTest < ActiveSupport::TestCase
   def test_depth_caching_after_subtree_movement
     AncestryTestDatabase.with_model :depth => 6, :width => 1, :cache_depth => true, :depth_cache_column => :depth_cache do |model, roots|
       node = model.at_depth(3).first
-      node.update_attributes(:parent => model.roots.first)
+      node.update(:parent => model.roots.first)
       assert_equal(1, node.depth_cache)
       node.descendants.each do |descendant|
         assert_equal(descendant.depth, descendant.depth_cache)

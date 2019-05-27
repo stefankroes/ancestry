@@ -20,7 +20,7 @@ class ValidationsTest < ActiveSupport::TestCase
       parent = model.create!
       child = parent.children.create!
       assert_raise ActiveRecord::RecordInvalid do
-        parent.update_attributes! :parent => child
+        parent.update! :parent => child
       end
     end
   end

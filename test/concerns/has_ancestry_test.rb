@@ -60,8 +60,8 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
   def test_modified_parents_set_ancestry_properly
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       root1, root2, root3 = roots.map(&:first) # r1, r2, r3
-      root2.update_attributes(:parent => root1) # r1 <= r2, r3
-      root3.update_attributes(:parent => root2) # r1 <= r2 <= r3
+      root2.update(:parent => root1) # r1 <= r2, r3
+      root3.update(:parent => root2) # r1 <= r2 <= r3
       assert_equal [root1.id, root2.id], root3.ancestor_ids
     end
   end

@@ -11,7 +11,7 @@ class TouchingTest < ActiveSupport::TestCase
       parent = model.create!(:updated_at => yesterday)
       child  = model.create!(:updated_at => yesterday, :parent => parent)
 
-      child.update_attributes(:name => "Changed")
+      child.update(:name => "Changed")
       assert_equal yesterday.utc.change(:usec => 0), parent.updated_at.utc.change(:usec => 0)
     end
   end

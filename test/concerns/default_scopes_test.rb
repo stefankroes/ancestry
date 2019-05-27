@@ -12,9 +12,9 @@ class DefaultScopesTest < ActiveSupport::TestCase
       parent = grandparent.children.first
       child = parent.children.first
 
-      child.update_attributes :deleted_at => Time.now
-      parent.update_attributes :parent => new_grandparent
-      child.update_attributes :deleted_at => nil
+      child.update :deleted_at => Time.now
+      parent.update :parent => new_grandparent
+      child.update :deleted_at => nil
 
       assert child.reload.ancestors.include? new_grandparent
       assert_equal new_grandparent, child.reload.ancestors.first
@@ -31,9 +31,9 @@ class DefaultScopesTest < ActiveSupport::TestCase
       parent = model.roots.first
       child = parent.children.first
 
-      child.update_attributes :deleted_at => Time.now
+      child.update :deleted_at => Time.now
       parent.destroy
-      child.update_attributes :deleted_at => nil
+      child.update :deleted_at => nil
 
       assert model.count.zero?
     end
@@ -48,9 +48,9 @@ class DefaultScopesTest < ActiveSupport::TestCase
       parent = model.roots.first
       child = parent.children.first
 
-      child.update_attributes :deleted_at => Time.now
+      child.update :deleted_at => Time.now
       parent.destroy
-      child.update_attributes :deleted_at => nil
+      child.update :deleted_at => nil
 
       assert child.reload.is_root?
     end
