@@ -202,7 +202,7 @@ module Ancestry
           yield self.ancestry_base_class
         end
       else
-        yield self.ancestry_base_class.unscope(:where)
+        yield self.ancestry_base_class.unscoped
       end
     end
 
