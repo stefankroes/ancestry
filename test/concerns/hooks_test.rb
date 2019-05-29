@@ -14,6 +14,7 @@ class ArrangementTest < ActiveSupport::TestCase
         def before_save_hook
           old_ch = changed?
           self.name_path = parent ? "#{parent.name_path}/#{name}" : name
+          nil
         end
       end
 
@@ -28,6 +29,48 @@ class ArrangementTest < ActiveSupport::TestCase
       m3.reload
       assert_equal([m1.id, m3.id], m3.path_ids)
       assert_equal("parent/grandchild", m3.name_path)
+    end
+  end
+
+  def test_has_ancestry_detects_changes_in_after_save
+    AncestryTestDatabase.with_model(:extra_columns => {:name => :string, :name_path => :string}) do |model|
+      model.class_eval do
+        after_save :after_hook
+        attr_reader :modified
+
+        def after_hook
+          @modified = ancestry_changed?
+          nil
+        end
+      end
+
+      m1 = model.create!(:name => "parent")
+      m2 = model.create!(:parent => m1, :name => "child")
+      m2.parent = nil
+      m2.save!
+      assert_equal(false, m1.modified)
+      assert_equal(true, m2.modified)
+    end
+  end
+
+  def test_has_ancestry_detects_changes_in_before_save
+    AncestryTestDatabase.with_model(:extra_columns => {:name => :string, :name_path => :string}) do |model|
+      model.class_eval do
+        before_save :before_hook
+        attr_reader :modified
+
+        def before_hook
+          @modified = ancestry_changed?
+          nil
+        end
+      end
+
+      m1 = model.create!(:name => "parent")
+      m2 = model.create!(:parent => m1, :name => "child")
+      m2.parent = nil
+      m2.save!
+      assert_equal(false, m1.modified)
+      assert_equal(true, m2.modified)
     end
   end
 end
