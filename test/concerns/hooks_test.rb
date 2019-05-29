@@ -14,6 +14,7 @@ class ArrangementTest < ActiveSupport::TestCase
         def before_save_hook
           old_ch = changed?
           self.name_path = parent ? "#{parent.name_path}/#{name}" : name
+          nil
         end
       end
 
@@ -39,6 +40,7 @@ class ArrangementTest < ActiveSupport::TestCase
 
         def after_hook
           @modified = ancestry_changed?
+          nil
         end
       end
 
@@ -59,6 +61,7 @@ class ArrangementTest < ActiveSupport::TestCase
 
         def before_hook
           @modified = ancestry_changed?
+          nil
         end
       end
 
