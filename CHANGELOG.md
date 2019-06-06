@@ -3,6 +3,10 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
+## Version [3.0.7] <small>2018-11-06</small>
+
+* Fixed rails 5.1 change detection (thx @jrafanie)
+
 ## Version [3.0.6] <small>2018-11-06</small>
 
 * Fixed rails 4.1 version check (thx @myxoh)
