@@ -15,6 +15,10 @@
     else
       gem "mysql2"
     end
-    #gem "sqlite3"
+    if ar_version < "5.2"
+      gem "sqlite3", "~> 1.3.13"
+    else
+      gem "sqlite3"
+    end
   end
 end
