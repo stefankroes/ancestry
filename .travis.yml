@@ -2,7 +2,8 @@ sudo: false
 
 rvm:
   - 2.4
-#  - 2.5
+  - 2.5
+  - 2.6
 
 gemfile:
   - gemfiles/mysql2_ar_42.gemfile
