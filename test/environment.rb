@@ -48,12 +48,7 @@ class AncestryTestDatabase
     end
 
     # Setup database connection
-    db_type =
-      if ENV["BUNDLE_GEMFILE"] && ENV["BUNDLE_GEMFILE"] != File.expand_path("../../Gemfile", __FILE__)
-        File.basename(ENV["BUNDLE_GEMFILE"]).split("_").first
-      else
-        "sqlite3"
-      end
+    db_type = ENV["DB"].presence || "sqlite3"
     config = YAML.load_file(filename)[db_type]
     ActiveRecord::Base.establish_connection config
     begin
