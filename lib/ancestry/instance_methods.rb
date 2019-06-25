@@ -377,7 +377,7 @@ module Ancestry
 
     def parse_ancestry_column obj
       return [] unless obj
-      obj_ids = obj.split(ANCESTRY_DELIMITER)
+      obj_ids = obj.to_s.split(ANCESTRY_DELIMITER)
       self.class.primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
     end
 
