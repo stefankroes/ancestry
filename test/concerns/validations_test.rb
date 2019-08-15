@@ -4,11 +4,11 @@ class ValidationsTest < ActiveSupport::TestCase
   def test_ancestry_column_validation
     AncestryTestDatabase.with_model do |model|
       node = model.create
-      ['3', '10/2', '1/4/30', nil].each do |value|
+      ['3', 'A', '10/2', '1/4/30', 'a/b', 'ID_1/ID_2/ID_3', nil].each do |value|
         node.send :write_attribute, model.ancestry_column, value
         node.valid?; assert node.errors[model.ancestry_column].blank?
       end
-      ['1/3/', '/2/3', 'a', 'a/b', '-34', '/54'].each do |value|
+      ['1/3/', '/2/3', '-34', '/54'].each do |value|
         node.send :write_attribute, model.ancestry_column, value
         node.valid?; assert !node.errors[model.ancestry_column].blank?
       end
