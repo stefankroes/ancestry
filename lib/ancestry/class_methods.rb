@@ -2,7 +2,11 @@ module Ancestry
   module ClassMethods
     # Fetch tree node if necessary
     def to_node object
-      if object.is_a?(self.ancestry_base_class) then object else unscoped_where{|scope| scope.find object} end
+      if object.is_a?(self.ancestry_base_class)
+        object
+      else
+        unscoped_where { |scope| scope.find(object.try(primary_key) || object) }
+      end
     end
 
     # Scope on relative depth options
