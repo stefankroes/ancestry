@@ -110,7 +110,7 @@ module Ancestry
         ancestry_was = send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}")
         return unless ancestry_was.present?
 
-        ancestry_was.split(ANCESTRY_DELIMITER).last.to_i
+        parse_ancestry_column(ancestry_was).last
       end
 
       # optimization - better to go directly to column and avoid parsing
@@ -129,7 +129,7 @@ module Ancestry
         # else
         #   "#{self.send "#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}"}/#{id}"
         # end
-        path_ids_was.join("/")
+        path_ids_was.join(ANCESTRY_DELIMITER)
       end
 
       private
