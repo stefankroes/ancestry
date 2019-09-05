@@ -17,13 +17,7 @@ module Ancestry
           # ... replace old ancestry with new ancestry
           descendant.without_ancestry_callbacks do
             descendant.update_attribute(
-              self.ancestry_base_class.ancestry_column,
-              descendant.read_attribute(descendant.class.ancestry_column).gsub(
-                # child_ancestry_was
-                /^#{self.child_ancestry}/,
-                # future child_ancestry
-                if ancestors? then "#{read_attribute self.class.ancestry_column }/#{id}" else id.to_s end
-              )
+              :ancestor_ids, path_ids + (descendant.ancestor_ids - path_ids_was)
             )
           end
         end
@@ -37,13 +31,7 @@ module Ancestry
         when :rootify # make all children root if orphan strategy is rootify
           unscoped_descendants.each do |descendant|
             descendant.without_ancestry_callbacks do
-              new_ancestry = if descendant.ancestry == child_ancestry
-                nil
-              else
-                # child_ancestry did not change so child_ancestry_was will work here
-                descendant.ancestry.gsub(/^#{child_ancestry}\//, '')
-              end
-              descendant.update_attribute descendant.class.ancestry_column, new_ancestry
+              descendant.update_attribute :ancestor_ids, descendant.ancestor_ids - path_ids
             end
           end
         when :destroy # destroy all descendants if orphan strategy is destroy
@@ -55,10 +43,7 @@ module Ancestry
         when :adopt # make child elements of this node, child of its parent
           descendants.each do |descendant|
             descendant.without_ancestry_callbacks do
-              new_ancestry = descendant.ancestor_ids.delete_if { |x| x == self.id }.join("/")
-              # check for empty string if it's then set to nil
-              new_ancestry = nil if new_ancestry.empty?
-              descendant.update_attribute descendant.class.ancestry_column, new_ancestry || nil
+              descendant.update_attribute :ancestor_ids, descendant.ancestor_ids.delete_if { |x| x == self.id }
             end
           end
         when :restrict # throw an exception if it has children
@@ -76,19 +61,6 @@ module Ancestry
             ancestor.touch
           end
         end
-      end
-    end
-
-    # The ancestry value for this record's children (before save)
-    # This is technically child_ancestry_was
-    def child_ancestry
-      # New records cannot have children
-      raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
-
-      if self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}").blank?
-        id.to_s
-      else
-        "#{self.send "#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}"}/#{id}"
       end
     end
 
@@ -133,8 +105,7 @@ module Ancestry
     # Ancestors
 
     def ancestors?
-      # ancestor_ids.present?
-      read_attribute(self.ancestry_base_class.ancestry_column).present?
+      ancestor_ids.present?
     end
     alias :has_parent? :ancestors?
 
@@ -149,10 +120,6 @@ module Ancestry
       end
     end
 
-    def ancestor_ids
-      parse_ancestry_column(read_attribute(self.ancestry_base_class.ancestry_column))
-    end
-
     def ancestor_conditions
       self.ancestry_base_class.ancestor_conditions(self)
     end
@@ -162,29 +129,12 @@ module Ancestry
       self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where ancestor_conditions
     end
 
-    # deprecate
-    def ancestor_was_conditions
-      {primary_key_with_table => ancestor_ids_before_last_save}
-    end
-
-    # deprecated - probably don't want to use anymore
-    def ancestor_ids_was
-      parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}_was"))
-    end
-
-    def ancestor_ids_before_last_save
-      parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}"))
-    end
-
-    def parent_id_before_last_save
-      ancestry_was = send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}")
-      return unless ancestry_was.present?
-
-      ancestry_was.split(ANCESTRY_DELIMITER).last.to_i
-    end
-
     def path_ids
       ancestor_ids + [id]
+    end
+
+    def path_ids_was
+      ancestor_ids_was + [id]
     end
 
     def path_conditions
@@ -212,7 +162,7 @@ module Ancestry
     # currently parent= does not work in after save callbacks
     # assuming that parent hasn't changed
     def parent= parent
-      write_attribute(self.ancestry_base_class.ancestry_column, if parent.nil? then nil else parent.child_ancestry end)
+      self.ancestor_ids = parent ? parent.path_ids : []
     end
 
     def parent_id= new_parent_id
@@ -222,13 +172,10 @@ module Ancestry
     def parent_id
       ancestor_ids.last if ancestors?
     end
+    alias :parent_id? :ancestors?
 
     def parent
       unscoped_find(parent_id) if ancestors?
-    end
-
-    def parent_id?
-      ancestors?
     end
 
     def parent_of?(node)
@@ -246,7 +193,7 @@ module Ancestry
     end
 
     def is_root?
-      read_attribute(self.ancestry_base_class.ancestry_column).blank?
+      !ancestors?
     end
     alias :root? :is_root?
 
@@ -292,6 +239,7 @@ module Ancestry
       self.ancestry_base_class.where sibling_conditions
     end
 
+    # NOTE: includes self
     def sibling_ids
       siblings.pluck(self.ancestry_base_class.primary_key)
     end
@@ -307,7 +255,7 @@ module Ancestry
     alias_method :only_child?, :is_only_child?
 
     def sibling_of?(node)
-      self.ancestry == node.ancestry
+      self.ancestor_ids == node.ancestor_ids
     end
 
     # Descendants
@@ -373,14 +321,6 @@ module Ancestry
     end
 
   private
-    ANCESTRY_DELIMITER = '/'.freeze
-
-    def parse_ancestry_column obj
-      return [] unless obj
-      obj_ids = obj.to_s.split(ANCESTRY_DELIMITER)
-      self.class.primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
-    end
-
     def unscoped_descendants
       unscoped_where do |scope|
         scope.where descendant_conditions

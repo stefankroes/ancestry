@@ -155,12 +155,12 @@ module Ancestry
           # For each node ...
           scope.find_each do |node|
             # ... rebuild ancestry from parents array
-            ancestry, parent = nil, parents[node.id]
+            ancestor_ids, parent = [], parents[node.id]
             until parent.nil?
-              ancestry, parent = if ancestry.nil? then parent else "#{parent}/#{ancestry}" end, parents[parent]
+              ancestor_ids, parent = [parent] + ancestor_ids, parents[parent]
             end
             node.without_ancestry_callbacks do
-              node.update_attribute node.ancestry_column, ancestry
+              node.update_attribute :ancestor_ids, ancestor_ids
             end
           end
         end
@@ -168,13 +168,13 @@ module Ancestry
     end
 
     # Build ancestry from parent id's for migration purposes
-    def build_ancestry_from_parent_ids! parent_id = nil, ancestry = nil
+    def build_ancestry_from_parent_ids! parent_id = nil, ancestor_ids = []
       unscoped_where do |scope|
         scope.where(:parent_id => parent_id).find_each do |node|
           node.without_ancestry_callbacks do
-            node.update_attribute ancestry_column, ancestry
+            node.update_attribute :ancestor_ids, ancestor_ids
           end
-          build_ancestry_from_parent_ids! node.id, if ancestry.nil? then "#{node.id}" else "#{ancestry}/#{node.id}" end
+          build_ancestry_from_parent_ids! node.id, ancestor_ids + [node.id]
         end
       end
     end
