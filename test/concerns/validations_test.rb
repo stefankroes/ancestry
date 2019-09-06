@@ -15,6 +15,34 @@ class ValidationsTest < ActiveSupport::TestCase
     end
   end
 
+  def test_ancestry_column_validation_alt
+    AncestryTestDatabase.with_model(:primary_key_format => /[a-z]+/) do |model|
+      node = model.create
+      ['a', 'a/b', 'a/b/c', nil].each do |value|
+        node.send :write_attribute, model.ancestry_column, value
+        node.valid?; assert node.errors[model.ancestry_column].blank?
+      end
+      ['1', '1/2', 'a/b/', '/a/b'].each do |value|
+        node.send :write_attribute, model.ancestry_column, value
+        node.valid?; assert !node.errors[model.ancestry_column].blank?
+      end
+    end
+  end
+
+  def test_ancestry_column_validation_full_key
+    AncestryTestDatabase.with_model(:primary_key_format => /\A[a-z]+(\/[a-z]+)*\Z/) do |model|
+      node = model.create
+      ['a', 'a/b', 'a/b/c', nil].each do |value|
+        node.send :write_attribute, model.ancestry_column, value
+        node.valid?; assert node.errors[model.ancestry_column].blank?
+      end
+      ['1', '1/2', 'a/b/', '/a/b'].each do |value|
+        node.send :write_attribute, model.ancestry_column, value
+        node.valid?; assert !node.errors[model.ancestry_column].blank?
+      end
+    end
+  end
+
   def test_validate_ancestry_exclude_self
     AncestryTestDatabase.with_model do |model|
       parent = model.create!
