@@ -71,7 +71,7 @@ module Ancestry
       # Validates the ancestry, but can also be applied if validation is bypassed to determine if children should be affected
       def sane_ancestry?
         ancestry_value = read_attribute(self.ancestry_base_class.ancestry_column)
-        ancestry_value.nil? || (ancestry_value.to_s =~ Ancestry::ANCESTRY_PATTERN && !ancestor_ids.include?(self.id))
+        (ancestry_value.nil? || !ancestor_ids.include?(self.id)) && valid?
       end
 
       # optimization - better to go directly to column and avoid parsing
