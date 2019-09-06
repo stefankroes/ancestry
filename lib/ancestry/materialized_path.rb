@@ -4,7 +4,6 @@ module Ancestry
     IN_DATABASE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_in_database' : '_was'
 
     def self.extended(base)
-      base.validates_format_of base.ancestry_column, :with => Ancestry::ANCESTRY_PATTERN, :allow_nil => true
       base.send(:include, InstanceMethods)
     end
 

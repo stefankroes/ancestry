@@ -4,7 +4,7 @@ module Ancestry
       # Check options
       raise Ancestry::AncestryException.new("Options for has_ancestry must be in a hash.") unless options.is_a? Hash
       options.each do |key, value|
-        unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache].include? key
+        unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format].include? key
           raise Ancestry::AncestryException.new("Unknown option for has_ancestry: #{key.inspect} => #{value.inspect}.")
         end
       end
@@ -27,6 +27,7 @@ module Ancestry
       # Include dynamic class methods
       extend Ancestry::ClassMethods
 
+      validates_format_of self.ancestry_column, :with => derive_ancestry_pattern(options[:primary_key_format]), :allow_nil => true
       extend Ancestry::MaterializedPath
 
       # Create orphan strategy accessor and set to option or default (writer comes from DynamicClassMethods)
@@ -113,6 +114,18 @@ module Ancestry
     def acts_as_tree(*args)
       return super if defined?(super)
       has_ancestry(*args)
+    end
+
+    private
+
+    def derive_ancestry_pattern(primary_key_format, delimiter = '/')
+      primary_key_format ||= '[0-9]+'
+
+      if primary_key_format.to_s.include?('\A')
+        primary_key_format
+      else
+        /\A#{primary_key_format}(#{delimiter}#{primary_key_format})*\Z/
+      end
     end
   end
 end
