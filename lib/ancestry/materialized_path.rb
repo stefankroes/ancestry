@@ -11,6 +11,10 @@ module Ancestry
       arel_table[ancestry_column].eq(nil)
     end
 
+    def path_ids
+      "#{read_attribute(self.ancestry_base_class.ancestry_column)}/#{id}"
+    end
+
     def ancestor_conditions(object)
       t = arel_table
       node = to_node(object)
@@ -80,11 +84,8 @@ module Ancestry
       alias :has_parent? :ancestors?
 
       def ancestor_ids=(value)
-        if value.present?
-          write_attribute(self.ancestry_base_class.ancestry_column, value.join("/"))
-        else
-          write_attribute(self.ancestry_base_class.ancestry_column, nil)
-        end
+        col = self.ancestry_base_class.ancestry_column
+        value.present? ? write_attribute(col, value.join("/")) : write_attribute(col, nil)
       end
 
       def ancestor_ids
@@ -123,12 +124,8 @@ module Ancestry
       def child_ancestry
         # New records cannot have children
         raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
-        # if self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}").blank?
-        #   id.to_s
-        # else
-        #   "#{self.send "#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}"}/#{id}"
-        # end
-        path_ids_was.join(ANCESTRY_DELIMITER)
+        path_was = self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}")
+        path_was.blank? ? id.to_s : "#{path_was}/#{id}"
       end
 
       private
