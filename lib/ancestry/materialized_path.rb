@@ -7,44 +7,53 @@ module Ancestry
       base.send(:include, InstanceMethods)
     end
 
-    def root_conditions
-      arel_table[ancestry_column].eq(nil)
+    def path_of(object)
+      to_node(object).path
+    end
+
+    def roots
+      where(arel_table[ancestry_column].eq(nil))
     end
 
     def path_ids
       "#{read_attribute(self.ancestry_base_class.ancestry_column)}/#{id}"
     end
 
-    def ancestor_conditions(object)
+    def ancestors_of(object)
       t = arel_table
       node = to_node(object)
-      t[primary_key].in(node.ancestor_ids)
+      where(t[primary_key].in(node.ancestor_ids))
     end
 
-    def path_conditions(object)
+    def inpath_of(object)
       t = arel_table
       node = to_node(object)
-      t[primary_key].in(node.path_ids)
+      where(t[primary_key].in(node.path_ids))
     end
 
-    def child_conditions(object)
+    def children_of(object)
       t = arel_table
       node = to_node(object)
-      t[ancestry_column].eq(node.child_ancestry)
+      where(t[ancestry_column].eq(node.child_ancestry))
     end
 
     # indirect = anyone who is a descendant, but not a child
-    def indirect_conditions(object)
+    def indirects_of(object)
       t = arel_table
       node = to_node(object)
       # rails has case sensitive matching.
       if ActiveRecord::VERSION::MAJOR >= 5
-        t[ancestry_column].matches("#{node.child_ancestry}/%", nil, true)
+        where(t[ancestry_column].matches("#{node.child_ancestry}/%", nil, true))
       else
-        t[ancestry_column].matches("#{node.child_ancestry}/%")
+        where(t[ancestry_column].matches("#{node.child_ancestry}/%"))
       end
     end
 
+    def descendants_of(object)
+      where(descendant_conditions(object))
+    end
+
+    # deprecated
     def descendant_conditions(object)
       t = arel_table
       node = to_node(object)
@@ -56,16 +65,31 @@ module Ancestry
       end
     end
 
-    def subtree_conditions(object)
+    def subtree_of(object)
       t = arel_table
       node = to_node(object)
-      descendant_conditions(node).or(t[primary_key].eq(node.id))
+      where(descendant_conditions(node).or(t[primary_key].eq(node.id)))
     end
 
-    def sibling_conditions(object)
+    def siblings_of(object)
       t = arel_table
       node = to_node(object)
-      t[ancestry_column].eq(node[ancestry_column])
+      where(t[ancestry_column].eq(node[ancestry_column]))
+    end
+
+    def ordered_by_ancestry(order = nil)
+      if %w(mysql mysql2 sqlite sqlite3 postgresql).include?(connection.adapter_name.downcase) && ActiveRecord::VERSION::MAJOR >= 5
+        reorder(
+          Arel::Nodes::Ascending.new(Arel::Nodes::NamedFunction.new('COALESCE', [arel_table[ancestry_column], Arel.sql("''")])),
+          order
+        )
+      else
+        reorder(Arel.sql("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}"), order)
+      end
+    end
+
+    def ordered_by_ancestry_and(order)
+      ordered_by_ancestry(order)
     end
 
     module InstanceMethods
@@ -98,11 +122,6 @@ module Ancestry
 
       def ancestor_ids_before_last_save
         parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}"))
-      end
-
-      # deprecate
-      def ancestor_was_conditions
-        {primary_key_with_table => ancestor_ids_before_last_save}
       end
 
       def parent_id_before_last_save
