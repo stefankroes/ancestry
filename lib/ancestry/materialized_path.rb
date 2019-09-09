@@ -92,9 +92,8 @@ module Ancestry
         parse_ancestry_column(read_attribute(self.ancestry_base_class.ancestry_column))
       end
 
-      # deprecated - probably don't want to use anymore
-      def ancestor_ids_was
-        parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}_was"))
+      def ancestor_ids_in_database
+        parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}"))
       end
 
       def ancestor_ids_before_last_save

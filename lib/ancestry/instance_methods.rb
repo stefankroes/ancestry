@@ -16,7 +16,7 @@ module Ancestry
         unscoped_descendants.each do |descendant|
           # ... replace old ancestry with new ancestry
           descendant.without_ancestry_callbacks do
-            new_ancestor_ids = path_ids + (descendant.ancestor_ids - path_ids_was)
+            new_ancestor_ids = path_ids + (descendant.ancestor_ids - path_ids_in_database)
             descendant.update_attribute(:ancestor_ids, new_ancestor_ids)
           end
         end
@@ -132,8 +132,8 @@ module Ancestry
       ancestor_ids + [id]
     end
 
-    def path_ids_was
-      ancestor_ids_was + [id]
+    def path_ids_in_database
+      ancestor_ids_in_database + [id]
     end
 
     def path_conditions
