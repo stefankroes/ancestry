@@ -133,7 +133,7 @@ module Ancestry
 
     # Integrity restoration
     def restore_ancestry_integrity!
-      parents = {}
+      parent_ids = {}
       # Wrap the whole thing in a transaction ...
       self.ancestry_base_class.transaction do
         unscoped_where do |scope|
@@ -145,23 +145,23 @@ module Ancestry
                 node.update_attribute node.ancestry_column, nil
               end
             end
-            # ... save parent of this node in parents array if it exists
-            parents[node.id] = node.parent_id if exists? node.parent_id
+            # ... save parent id of this node in parent_ids array if it exists
+            parent_ids[node.id] = node.parent_id if exists? node.parent_id
 
             # Reset parent id in array to nil if it introduces a cycle
-            parent = parents[node.id]
-            until parent.nil? || parent == node.id
-              parent = parents[parent]
+            parent_id = parent_ids[node.id]
+            until parent_id.nil? || parent_id == node.id
+              parent_id = parent_ids[parent_id]
             end
-            parents[node.id] = nil if parent == node.id
+            parent_ids[node.id] = nil if parent_id == node.id
           end
 
           # For each node ...
           scope.find_each do |node|
-            # ... rebuild ancestry from parents array
-            ancestor_ids, parent = [], parents[node.id]
-            until parent.nil?
-              ancestor_ids, parent = [parent] + ancestor_ids, parents[parent]
+            # ... rebuild ancestry from parent_ids array
+            ancestor_ids, parent_id = [], parent_ids[node.id]
+            until parent_id.nil?
+              ancestor_ids, parent_id = [parent_id] + ancestor_ids, parent_ids[parent_id]
             end
             node.without_ancestry_callbacks do
               node.update_attribute :ancestor_ids, ancestor_ids
