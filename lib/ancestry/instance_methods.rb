@@ -119,13 +119,9 @@ module Ancestry
       end
     end
 
-    def ancestor_conditions
-      self.ancestry_base_class.ancestor_conditions(self)
-    end
-
     def ancestors depth_options = {}
       return self.ancestry_base_class.none unless ancestors?
-      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where ancestor_conditions
+      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.ancestors_of(self)
     end
 
     def path_ids
@@ -136,12 +132,8 @@ module Ancestry
       ancestor_ids_in_database + [id]
     end
 
-    def path_conditions
-      self.ancestry_base_class.path_conditions(self)
-    end
-
     def path depth_options = {}
-      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.where path_conditions
+      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.inpath_of(self)
     end
 
     def depth
@@ -202,12 +194,8 @@ module Ancestry
 
     # Children
 
-    def child_conditions
-      self.ancestry_base_class.child_conditions(self)
-    end
-
     def children
-      self.ancestry_base_class.where child_conditions
+      self.ancestry_base_class.children_of(self)
     end
 
     def child_ids
@@ -230,12 +218,8 @@ module Ancestry
 
     # Siblings
 
-    def sibling_conditions
-      self.ancestry_base_class.sibling_conditions(self)
-    end
-
     def siblings
-      self.ancestry_base_class.where sibling_conditions
+      self.ancestry_base_class.siblings_of(self)
     end
 
     # NOTE: includes self
@@ -259,12 +243,8 @@ module Ancestry
 
     # Descendants
 
-    def descendant_conditions
-      self.ancestry_base_class.descendant_conditions(self)
-    end
-
     def descendants depth_options = {}
-      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).where descendant_conditions
+      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).descendants_of(self)
     end
 
     def descendant_ids depth_options = {}
@@ -277,12 +257,8 @@ module Ancestry
 
     # Indirects
 
-    def indirect_conditions
-      self.ancestry_base_class.indirect_conditions(self)
-    end
-
     def indirects depth_options = {}
-      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).where indirect_conditions
+      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).indirects_of(self)
     end
 
     def indirect_ids depth_options = {}
@@ -295,12 +271,8 @@ module Ancestry
 
     # Subtree
 
-    def subtree_conditions
-      self.ancestry_base_class.subtree_conditions(self)
-    end
-
     def subtree depth_options = {}
-      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).where subtree_conditions
+      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).subtree_of(self)
     end
 
     def subtree_ids depth_options = {}
@@ -322,7 +294,7 @@ module Ancestry
   private
     def unscoped_descendants
       unscoped_where do |scope|
-        scope.where descendant_conditions
+        scope.where self.ancestry_base_class.descendant_conditions(self)
       end
     end
 
