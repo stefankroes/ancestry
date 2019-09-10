@@ -142,7 +142,7 @@ module Ancestry
             # ... set its ancestry to nil if invalid
             if !node.valid? and !node.errors[node.class.ancestry_column].blank?
               node.without_ancestry_callbacks do
-                node.update_attribute node.ancestry_column, nil
+                node.update_attribute :ancestor_ids, []
               end
             end
             # ... save parent id of this node in parent_ids array if it exists
