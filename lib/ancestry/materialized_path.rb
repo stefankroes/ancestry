@@ -16,10 +16,6 @@ module Ancestry
       where(arel_table[ancestry_column].eq(nil))
     end
 
-    def path_ids
-      "#{read_attribute(self.ancestry_base_class.ancestry_column)}/#{id}"
-    end
-
     def ancestors_of(object)
       t = arel_table
       node = to_node(object)
