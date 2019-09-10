@@ -37,27 +37,6 @@ module Ancestry
       # Validate that the ancestor ids don't include own id
       validate :ancestry_exclude_self
 
-      # Named scopes
-      scope :roots, lambda { where(root_conditions) }
-      scope :ancestors_of, lambda { |object| where(ancestor_conditions(object)) }
-      scope :children_of, lambda { |object| where(child_conditions(object)) }
-      scope :indirects_of, lambda { |object| where(indirect_conditions(object)) }
-      scope :descendants_of, lambda { |object| where(descendant_conditions(object)) }
-      scope :subtree_of, lambda { |object| where(subtree_conditions(object)) }
-      scope :siblings_of, lambda { |object| where(sibling_conditions(object)) }
-      scope :ordered_by_ancestry, Proc.new { |order|
-        if %w(mysql mysql2 sqlite sqlite3 postgresql).include?(connection.adapter_name.downcase) && ActiveRecord::VERSION::MAJOR >= 5
-          reorder(
-            Arel::Nodes::Ascending.new(Arel::Nodes::NamedFunction.new('COALESCE', [arel_table[ancestry_column], Arel.sql("''")])),
-            order
-          )
-        else
-          reorder(Arel.sql("(CASE WHEN #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} IS NULL THEN 0 ELSE 1 END), #{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)}"), order)
-        end
-      }
-      scope :ordered_by_ancestry_and, Proc.new { |order| ordered_by_ancestry(order) }
-      scope :path_of, lambda { |object| to_node(object).path }
-
       # Update descendants with new ancestry before save
       before_save :update_descendants_with_new_ancestry
 
