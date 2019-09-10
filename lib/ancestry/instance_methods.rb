@@ -1,8 +1,5 @@
 module Ancestry
   module InstanceMethods
-    BEFORE_LAST_SAVE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_before_last_save' : '_was'
-    IN_DATABASE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_in_database' : '_was'
-
     # Validate that the ancestors don't include itself
     def ancestry_exclude_self
       errors.add(:base, "#{self.class.name.humanize} cannot be a descendant of itself.") if ancestor_ids.include? self.id

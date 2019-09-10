@@ -1,7 +1,7 @@
 module Ancestry
   module MaterializedPath
-    BEFORE_LAST_SAVE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_before_last_save' : '_was'
-    IN_DATABASE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_in_database' : '_was'
+    BEFORE_LAST_SAVE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_before_last_save'.freeze : '_was'.freeze
+    IN_DATABASE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_in_database'.freeze : '_was'.freeze
     ANCESTRY_DELIMITER='/'.freeze
 
     def self.extended(base)
