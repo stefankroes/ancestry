@@ -1,7 +1,8 @@
 module Ancestry
   module MaterializedPath
-    BEFORE_LAST_SAVE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_before_last_save' : '_was'
-    IN_DATABASE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_in_database' : '_was'
+    BEFORE_LAST_SAVE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_before_last_save'.freeze : '_was'.freeze
+    IN_DATABASE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_in_database'.freeze : '_was'.freeze
+    ANCESTRY_DELIMITER='/'.freeze
 
     def self.extended(base)
       base.send(:include, InstanceMethods)
@@ -13,10 +14,6 @@ module Ancestry
 
     def roots
       where(arel_table[ancestry_column].eq(nil))
-    end
-
-    def path_ids
-      "#{read_attribute(self.ancestry_base_class.ancestry_column)}/#{id}"
     end
 
     def ancestors_of(object)
@@ -93,7 +90,6 @@ module Ancestry
     end
 
     module InstanceMethods
-      ANCESTRY_DELIMITER='/'.freeze
 
       # Validates the ancestry, but can also be applied if validation is bypassed to determine if children should be affected
       def sane_ancestry?
@@ -109,7 +105,7 @@ module Ancestry
 
       def ancestor_ids=(value)
         col = self.ancestry_base_class.ancestry_column
-        value.present? ? write_attribute(col, value.join("/")) : write_attribute(col, nil)
+        value.present? ? write_attribute(col, value.join(ANCESTRY_DELIMITER)) : write_attribute(col, nil)
       end
 
       def ancestor_ids
