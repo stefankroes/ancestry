@@ -77,4 +77,15 @@ class CounterCacheTest < ActiveSupport::TestCase
       end
     end
   end
+
+  def test_counter_cache_when_updating_record
+    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true, :extra_columns => {:name => :string} do |model, roots|
+      parent = roots.first.first
+      child = parent.children.first
+
+      assert_difference 'parent.reload.children_count', 0 do
+        child.update :name => "name2"
+      end
+    end
+  end
 end
