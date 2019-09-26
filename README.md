@@ -139,6 +139,57 @@ There are also instance methods to determine the relationship between 2 nodes:
 |`descendant_of?(node)` | node is one of this record's ancestors|
 |`indirect_of?(node)` | node is one of this record's ancestors but not a parent|
 
+## Visual guide for navigation
+
+In all examples the node with the large border is the reference node, the node
+from witch the navigation method is invoked. The yellow nodes are the nodes
+returned by the method.
+
+<table>
+  <tr>
+    <td>
+      <p align="center">parent</p>
+      <img src="img/parent.png" alt="parent"/>
+    </td>
+    <td>
+      <p align="center">root</p>
+      <img src="img/root.png" alt="root"/>
+    </td>
+    <td>
+      <p align="center">ancestors</p>
+      <img src="img/ancestors.png" alt="ancestors"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <p align="center">path</p>
+      <img src="img/path.png" alt="path"/>
+    </td>
+    <td>
+      <p align="center">children</p>
+      <img src="img/children.png" alt="children"/>
+    </td>
+    <td>
+      <p align="center">siblings</p>
+      <img src="img/siblings.png" alt="siblings"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <p align="center">descendants</p>
+      <img src="img/descendants.png" alt="descendants"/>
+    </td>
+    <td>
+      <p align="center">indirects</p>
+      <img src="img/indirects.png" alt="indirects"/>
+    </td>
+    <td>
+      <p align="center">subtree</p>
+      <img src="img/subtree.png" alt="subtree"/>
+    </td>
+  </tr>
+</table>
+
 # Options for `has_ancestry`
 
 The has_ancestry method supports the following options:
