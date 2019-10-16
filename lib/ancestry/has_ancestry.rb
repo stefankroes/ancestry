@@ -24,6 +24,10 @@ module Ancestry
       # Include instance methods
       include Ancestry::InstanceMethods
 
+      if Ancestry.optimizer
+        include Ancestry.optimizer
+      end
+
       # Include dynamic class methods
       extend Ancestry::ClassMethods
 
