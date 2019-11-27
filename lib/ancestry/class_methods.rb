@@ -72,7 +72,7 @@ module Ancestry
       arranged = nodes if nodes.is_a?(Hash)
 
       unless arranged
-        presorted_nodes = nodes.sort do |a, b|
+        presorted_nodes = nodes.sort_by do |a, b|
           a_cestry, b_cestry = a.ancestry || '0', b.ancestry || '0'
 
           if block_given? && a_cestry == b_cestry
