@@ -403,7 +403,7 @@ provide a more detailed explanation:
 
 
 4.  Generate ancestry columns
-    *   In './script.console': **[model].build_ancestry_from_parent_ids!**
+    *   In 'rails console': **[model].build_ancestry_from_parent_ids!**
     *   Make sure it worked ok: **[model].check_ancestry_integrity!**
 
 
