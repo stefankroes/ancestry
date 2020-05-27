@@ -172,13 +172,13 @@ module Ancestry
     end
 
     # Build ancestry from parent id's for migration purposes
-    def build_ancestry_from_parent_ids! parent_id = nil, ancestor_ids = []
+    def build_ancestry_from_parent_ids! column=:parent_id, parent_id = nil, ancestor_ids = []
       unscoped_where do |scope|
-        scope.where(:parent_id => parent_id).find_each do |node|
+        scope.where(column => parent_id).find_each do |node|
           node.without_ancestry_callbacks do
             node.update_attribute :ancestor_ids, ancestor_ids
           end
-          build_ancestry_from_parent_ids! node.id, ancestor_ids + [node.id]
+          build_ancestry_from_parent_ids! column, node.id, ancestor_ids + [node.id]
         end
       end
     end
