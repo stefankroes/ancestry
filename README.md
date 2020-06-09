@@ -142,7 +142,7 @@ There are also instance methods to determine the relationship between 2 nodes:
 ## Visual guide for navigation
 
 In all examples the node with the large border is the reference node, the node
-from witch the navigation method is invoked. The yellow nodes are the nodes
+from which the navigation method is invoked. The yellow nodes are the nodes
 returned by the method.
 
 <table>
