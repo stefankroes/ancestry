@@ -4,12 +4,12 @@
 
 Ancestry is a gem that allows the records of a Ruby on Rails
 ActiveRecord model to be organised as a tree structure (or hierarchy). It uses
-a single database column, using the materialised path pattern. It exposes all the standard tree structure
-relations (ancestors, parent, root, children, siblings, descendants) and all
-of them can be fetched in a single SQL query. Additional features are STI
+a single database column, employing the materialised path pattern. It exposes all the standard tree structure
+relations (ancestors, parent, root, children, siblings, descendants) and allows all
+of them to be fetched in a single SQL query. Additional features are STI
 support, scopes, depth caching, depth constraints, easy migration from older
 gems, integrity checking, integrity restoration, arrangement of
-(sub)tree into hashes and different strategies for dealing with orphaned
+(sub)trees into hashes, and various strategies for dealing with orphaned
 records.
 
 NOTE:
@@ -69,9 +69,9 @@ Your model is now a tree!
 
 # Using acts_as_tree instead of has_ancestry
 
-In version 1.2.0 the **acts_as_tree** method was **renamed to has_ancestry**
+In version 1.2.0, the **acts_as_tree** method was **renamed to has_ancestry**
 in order to allow usage of both the acts_as_tree gem and the ancestry gem in a
-single application. method `acts_as_tree` will continue to be supported in the future.
+single application. The `acts_as_tree` method will continue to be supported in the future.
 
 # Organising records into a tree
 
@@ -107,13 +107,13 @@ To navigate an Ancestry model, use the following instance methods:
 |`ancestors?`       |true if the record has ancestors (aka not a root node)|
 |`ancestor_ids`     |ancestor ids of the record|
 |`path`             |path of the record, starting with the root and ending with self|
-|`path_ids`         |a list the path ids, starting with the root id and ending with the node's own id|
+|`path_ids`         |a list of the path ids, starting with the root id and ending with the node's own id|
 |`children`         |direct children of the record|
 |`child_ids`        |direct children's ids|
 |`has_parent?`    <br/> `ancestors?` |true if the record has a parent, false otherwise|
 |`has_children?`  <br/> `children?`  |true if the record has any children, false otherwise|
 |`is_childless?`  <br/> `childless?` |true is the record has no children, false otherwise|
-|`siblings`         |siblings of the record, the record itself is included*|
+|`siblings`         |siblings of the record, including the record itself*|
 |`sibling_ids`      |sibling ids|
 |`has_siblings?`  <br/> `siblings?`   |true if the record's parent has more than one child|
 |`is_only_child?` <br/> `only_child?` |true if the record is the only child of its parent|
@@ -123,7 +123,7 @@ To navigate an Ancestry model, use the following instance methods:
 |`indirect_ids`     |indirect children's ids of the record|
 |`subtree`          |the model on descendants and itself|
 |`subtree_ids`      |a list of all ids in the record's subtree|
-|`depth`            |the depth of the node, root nodes are at depth 0|
+|`depth`            |the depth of the node (root nodes are at depth 0)|
 
 \*   If the record is a root, other root records are considered siblings
 \*   Siblings returns the record itself
@@ -199,23 +199,23 @@ The has_ancestry method supports the following options:
                            :destroy   All children are destroyed as well (default)
                            :rootify   The children of the destroyed node become root nodes
                            :restrict  An AncestryException is raised if any children exist
-                           :adopt     The orphan subtree is added to the parent of the deleted node.
-                                      If the deleted node is Root, then rootify the orphan subtree.
+                           :adopt     The orphan subtree is added to the parent of the deleted node
+                                      If the deleted node is Root, then rootify the orphan subtree
     :cache_depth           Cache the depth of each node in the 'ancestry_depth' column (default: false)
                            If you turn depth_caching on for an existing model:
                            - Migrate: add_column [table], :ancestry_depth, :integer, :default => 0
                            - Build cache: TreeNode.rebuild_depth_cache!
     :depth_cache_column    Pass in a symbol to store depth cache in a different column
-    :primary_key_format    Supply a regular expression that matches the format of your primary key.
-                           By default, primary keys only match integers ([0-9]+).
+    :primary_key_format    Supply a regular expression that matches the format of your primary key
+                           By default, primary keys only match integers ([0-9]+)
     :touch                 Instruct Ancestry to touch the ancestors of a node when it changes, to
                            invalidate nested key-based caches. (default: false)
 
 # (Named) Scopes
 
-Where possible, the navigation methods return scopes instead of records, this
+Where possible, the navigation methods return scopes instead of records. This
 means additional ordering, conditions, limits, etc. can be applied and that
-the result can be either retrieved, counted or checked for existence. For
+the result can be either retrieved, counted, or checked for existence. For
 example:
 
 ```ruby
@@ -288,7 +288,7 @@ on type for that.
 # Arrangement
 
 Ancestry can arrange an entire subtree into nested hashes for easy navigation
-after retrieval from the database.  TreeNode.arrange could for example return:
+after retrieval from the database.  `TreeNode.arrange` could for example return:
 
 ```ruby
 {
@@ -301,14 +301,14 @@ after retrieval from the database.  TreeNode.arrange could for example return:
 }
 ```
 
-The arrange method also works on a scoped class, for example:
+The `arrange` method also works on a scoped class, for example:
 
 ```ruby
 TreeNode.find_by_name('Crunchy').subtree.arrange
 ```
 
-The arrange method takes `ActiveRecord` find options. If you want your hashes to
-be ordered, you should pass the order to the arrange method instead of to the
+The `arrange` method takes `ActiveRecord` find options. If you want your hashes to
+be ordered, you should pass the order to the `arrange` method instead of to the
 scope. example:
 
 ```ruby
@@ -317,7 +317,7 @@ TreeNode.find_by_name('Crunchy').subtree.arrange(:order => :name)
 
 To get the arranged nodes as a nested array of hashes for serialization:
 
-TreeNode.arrange_serializable
+`TreeNode.arrange_serializable`
 
 ```ruby
 [
@@ -350,15 +350,15 @@ TreeNode.arrange_serializable do |parent, children|
 end
 ```
 
-The result of arrange_serializable can easily be serialized to json with
+The result of `arrange_serializable` can easily be serialized to json with
 `to_json`, or some other format:
 
 ```
 TreeNode.arrange_serializable.to_json
 ```
 
-You can also pass the order to the arrange_serializable method just as you can
-pass it to the arrange method:
+You can also pass the order to the `arrange_serializable` method just as you can
+pass it to the `arrange` method:
 
 ```
 TreeNode.arrange_serializable(:order => :name)
@@ -380,8 +380,8 @@ the order of siblings depends on their order in the original array.
 
 Most current tree plugins use a parent_id column (has_ancestry,
 awesome_nested_set, better_nested_set, acts_as_nested_set). With ancestry it is
-easy to migrate from any of these plugins, to do so, use the
-build_ancestry_from_parent_ids! method on your ancestry model. These steps
+easy to migrate from any of these plugins. To do so, use the
+`build_ancestry_from_parent_ids!` method on your ancestry model. These steps
 provide a more detailed explanation:
 
 1.  Add ancestry column to your table
@@ -422,14 +422,14 @@ provide a more detailed explanation:
 
 I don't see any way Ancestry tree integrity could get compromised without
 explicitly setting cyclic parents or invalid ancestry and circumventing
-validation with update_attribute, if you do, please let me know.
+validation with update_attribute. If you do, please let me know.
 
 Ancestry includes some methods for detecting integrity problems and restoring
-integrity just to be sure. To check integrity use:
-[Model].check_ancestry_integrity!. An AncestryIntegrityException will be
+integrity just to be sure. To check integrity, use:
+`[Model].check_ancestry_integrity!`. An AncestryIntegrityException will be
 raised if there are any problems. You can also specify :report => :list to
 return an array of exceptions or :report => :echo to echo any error messages.
-To restore integrity use: [Model].restore_ancestry_integrity!.
+To restore integrity use: `[Model].restore_ancestry_integrity!`.
 
 For example, from IRB:
 
