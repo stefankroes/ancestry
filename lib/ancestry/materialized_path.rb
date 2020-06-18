@@ -104,12 +104,17 @@ module Ancestry
       alias :has_parent? :ancestors?
 
       def ancestor_ids=(value)
+        @_ancestor_ids = nil
+        @_depth        = nil
+
+        # can't assign to `nil` since `nil` could be a valid result
+        remove_instance_variable(:@_parent_id) if defined?(@_parent_id)
         col = self.ancestry_base_class.ancestry_column
         value.present? ? write_attribute(col, value.join(ANCESTRY_DELIMITER)) : write_attribute(col, nil)
       end
 
       def ancestor_ids
-        parse_ancestry_column(read_attribute(self.ancestry_base_class.ancestry_column))
+        @_ancestor_ids ||= parse_ancestry_column(read_attribute(self.ancestry_base_class.ancestry_column))
       end
 
       def ancestor_ids_in_database

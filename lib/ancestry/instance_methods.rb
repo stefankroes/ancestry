@@ -7,14 +7,19 @@ module Ancestry
 
     # Update descendants with new ancestry (before save)
     def update_descendants_with_new_ancestry
-      # If enabled and node is existing and ancestry was updated and the new ancestry is sane ...
-      if !ancestry_callbacks_disabled? && !new_record? && ancestry_changed? && sane_ancestry?
-        # ... for each descendant ...
-        unscoped_descendants.each do |descendant|
-          # ... replace old ancestry with new ancestry
-          descendant.without_ancestry_callbacks do
-            new_ancestor_ids = path_ids + (descendant.ancestor_ids - path_ids_in_database)
-            descendant.update_attribute(:ancestor_ids, new_ancestor_ids)
+      # If callbacks enabled
+      if !ancestry_callbacks_disabled?
+        clear_memoized_instance_variables
+        # if node is existing and ancestry was updated and the new ancestry is sane ...
+        if !new_record? && ancestry_changed? && sane_ancestry?
+          # ... for each descendant ...
+          unscoped_descendants.each do |descendant|
+            # ... replace old ancestry with new ancestry
+            descendant.without_ancestry_callbacks do
+              new_ancestor_ids = path_ids + (descendant.ancestor_ids - path_ids_in_database)
+              descendant.update_attribute(:ancestor_ids, new_ancestor_ids)
+            end
+            descendant.clear_memoized_instance_variables
           end
         end
       end
@@ -158,9 +163,35 @@ module Ancestry
     end
 
     def parent_id
-      ancestor_ids.last if ancestors?
+      return @_parent_id if defined?(@_parent_id)
+      @_parent_id = if @_ancestor_ids
+                      @_ancestor_ids.empty? ? nil : @_ancestor_ids.last
+                    else
+                      col = read_attribute(ancestry_base_class.ancestry_column)
+                      # Specifically not using `.blank?` here because it is
+                      # slower than doing the below.
+                      if col.nil? || col.empty? # rubocop:disable Rails/Blank
+                        nil
+                      else
+                        rindex = col.rindex(Ancestry::MaterializedPath::ANCESTRY_DELIMITER)
+                        cast_primary_key(rindex ? col[rindex + 1, col.length] : col)
+                      end
+                    end
     end
     alias :parent_id? :ancestors?
+
+    def depth
+      @_depth ||= if @_ancestor_ids
+                    @_ancestor_ids.size
+                  else
+                    col = read_attribute(ancestry_base_class.ancestry_column)
+                    col ? col.count(Ancestry::MaterializedPath::ANCESTRY_DELIMITER) + 1 : 0
+                  end
+    end
+
+    def cast_primary_key(key)
+      self.class.primary_key_is_an_integer? ? key.to_i : key
+    end
 
     def parent
       unscoped_find(parent_id) if ancestors?
@@ -288,7 +319,15 @@ module Ancestry
       defined?(@disable_ancestry_callbacks) && @disable_ancestry_callbacks
     end
 
-  private
+    def clear_memoized_instance_variables
+      @_ancestor_ids = nil
+      @_depth        = nil
+
+      # can't assign to `nil` since `nil` could be a valid result
+      remove_instance_variable(:@_parent_id) if defined?(@_parent_id)
+    end
+
+    private
     def unscoped_descendants
       unscoped_where do |scope|
         scope.where self.ancestry_base_class.descendant_conditions(self)
