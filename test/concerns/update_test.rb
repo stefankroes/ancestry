@@ -11,9 +11,7 @@ class UpdateTest < ActiveSupport::TestCase
         end
       end
       model.create!(:idx => 3)
-      # In the error case, the ancestry on each item will only contain the parent's id,
-      # and not the entire ancestry tree.
-      assert_equal '1/2/3', children.first.ancestry
+      assert_equal [1,2,3], children.first.ancestor_ids
     end
   end
 end
