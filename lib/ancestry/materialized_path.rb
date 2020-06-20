@@ -38,12 +38,7 @@ module Ancestry
     def indirects_of(object)
       t = arel_table
       node = to_node(object)
-      # rails has case sensitive matching.
-      if ActiveRecord::VERSION::MAJOR >= 5
-        where(t[ancestry_column].matches("#{node.child_ancestry}/%", nil, true))
-      else
-        where(t[ancestry_column].matches("#{node.child_ancestry}/%"))
-      end
+      where(t[ancestry_column].matches("#{node.child_ancestry}/%", nil, true))
     end
 
     def descendants_of(object)
@@ -54,12 +49,7 @@ module Ancestry
     def descendant_conditions(object)
       t = arel_table
       node = to_node(object)
-      # rails has case sensitive matching.
-      if ActiveRecord::VERSION::MAJOR >= 5
-        t[ancestry_column].matches("#{node.child_ancestry}/%", nil, true).or(t[ancestry_column].eq(node.child_ancestry))
-      else
-        t[ancestry_column].matches("#{node.child_ancestry}/%").or(t[ancestry_column].eq(node.child_ancestry))
-      end
+      t[ancestry_column].matches("#{node.child_ancestry}/%", nil, true).or(t[ancestry_column].eq(node.child_ancestry))
     end
 
     def subtree_of(object)
