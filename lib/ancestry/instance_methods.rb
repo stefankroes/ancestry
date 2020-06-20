@@ -1,10 +1,5 @@
 module Ancestry
   module InstanceMethods
-    # Validate that the ancestors don't include itself
-    def ancestry_exclude_self
-      errors.add(:base, I18n.t("ancestry.exclude_self", {:class_name => self.class.name.humanize})) if ancestor_ids.include? self.id
-    end
-
     # Update descendants with new ancestry (before save)
     def update_descendants_with_new_ancestry
       # If enabled and node is existing and ancestry was updated and the new ancestry is sane ...

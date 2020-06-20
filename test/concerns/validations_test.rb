@@ -4,7 +4,7 @@ class ValidationsTest < ActiveSupport::TestCase
   def test_ancestry_column_validation
     AncestryTestDatabase.with_model do |model|
       node = model.create
-      ['3', '10/2', '1/4/30', nil].each do |value|
+      ['9', '10/9', '9/4/30', nil].each do |value|
         node.send :write_attribute, model.ancestry_column, value
         node.valid?; assert node.errors[model.ancestry_column].blank?
       end

@@ -27,7 +27,15 @@ module Ancestry
       # Include dynamic class methods
       extend Ancestry::ClassMethods
 
-      validates_format_of self.ancestry_column, :with => derive_ancestry_pattern(options[:primary_key_format]), :allow_nil => true
+      pattern = options[:primary_key_format] || /\A[0-9]+\Z/ #(pi ? /\A[0-9]+\Z/ : /\A[^\/]\Z/) # ANCESTRY_DELIMITER
+
+      pi = "a" !~ pattern # want to know primary_key_is_an_integer? without accessing the database
+
+
+      attribute ancestry_column, :materialized_path_string, :casting => pi ? :to_i : :to_s, :delimiter => '/'
+      validates ancestry_column, :array_pattern => {:id => true, :pattern => pattern, :integer => pi}
+      alias_attribute :ancestor_ids, ancestry_column
+
       extend Ancestry::MaterializedPath
 
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
@@ -36,9 +44,6 @@ module Ancestry
       # Create orphan strategy accessor and set to option or default (writer comes from DynamicClassMethods)
       cattr_reader :orphan_strategy
       self.orphan_strategy = options[:orphan_strategy] || :destroy
-
-      # Validate that the ancestor ids don't include own id
-      validate :ancestry_exclude_self
 
       # Update descendants with new ancestry before save
       before_save :update_descendants_with_new_ancestry
@@ -98,18 +103,6 @@ module Ancestry
     def acts_as_tree(*args)
       return super if defined?(super)
       has_ancestry(*args)
-    end
-
-    private
-
-    def derive_ancestry_pattern(primary_key_format, delimiter = '/')
-      primary_key_format ||= '[0-9]+'
-
-      if primary_key_format.to_s.include?('\A')
-        primary_key_format
-      else
-        /\A#{primary_key_format}(#{delimiter}#{primary_key_format})*\Z/
-      end
     end
   end
 end

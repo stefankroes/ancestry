@@ -89,34 +89,13 @@ module Ancestry
         (ancestry_value.nil? || !ancestor_ids.include?(self.id)) && valid?
       end
 
-      # optimization - better to go directly to column and avoid parsing
-      def ancestors?
-        read_attribute(self.ancestry_base_class.ancestry_column).present?
-      end
-      alias :has_parent? :ancestors?
-
       def ancestor_ids=(value)
         col = self.ancestry_base_class.ancestry_column
         value.present? ? write_attribute(col, value.join(ANCESTRY_DELIMITER)) : write_attribute(col, nil)
       end
 
-      def ancestor_ids
-        parse_ancestry_column(read_attribute(self.ancestry_base_class.ancestry_column))
-      end
-
-      def ancestor_ids_in_database
-        parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}"))
-      end
-
-      def ancestor_ids_before_last_save
-        parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}"))
-      end
-
       def parent_id_before_last_save
-        ancestry_was = send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}")
-        return unless ancestry_was.present?
-
-        parse_ancestry_column(ancestry_was).last
+        ancestor_ids_before_last_save.last
       end
 
       # optimization - better to go directly to column and avoid parsing
@@ -131,19 +110,11 @@ module Ancestry
         # New records cannot have children
         raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
         path_was = self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}")
-        path_was.blank? ? id.to_s : "#{path_was}/#{id}"
+        path_was + [id]
       end
 
       def child_ancestry_str
-        "#{child_ancestry}/%"
-      end
-
-      private
-
-      def parse_ancestry_column obj
-        return [] unless obj
-        obj_ids = obj.split(ANCESTRY_DELIMITER)
-        self.class.primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
+        child_ancestry.join("/")+"/%"
       end
     end
   end
