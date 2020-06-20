@@ -75,12 +75,14 @@ module Ancestry
     end
 
     # Pseudo-preordered array of nodes.  Children will always follow parents,
+    # for ordering nodes within a rank provide block, eg. Node.sort_by_ancestry(Node.all) {|a, b| a.rank <=> b.rank}.
+    EMPTY_ANCESTRY=[0].freeze
     def sort_by_ancestry(nodes, &block)
       arranged = nodes if nodes.is_a?(Hash)
 
       unless arranged
         presorted_nodes = nodes.sort do |a, b|
-          a_cestry, b_cestry = a.ancestry || '0', b.ancestry || '0'
+          a_cestry, b_cestry = a.ancestor_ids || EMPTY_ANCESTRY, b.ancestor_ids || EMPTY_ANCESTRY
 
           if block_given? && a_cestry == b_cestry
             yield a, b
@@ -130,7 +132,7 @@ module Ancestry
             end
             # ... check that all node parents are consistent with values observed earlier
             node.path_ids.zip([nil] + node.path_ids).each do |node_id, parent_id|
-              parents[node_id] = parent_id unless parents.has_key? node_id
+              parents[node_id] = parent_id unless parents.key? node_id
               unless parents[node_id] == parent_id
                 raise Ancestry::AncestryIntegrityException.new(I18n.t("ancestry.conflicting_parent_id",
                                                                       :node_id => node_id,

@@ -29,14 +29,14 @@ module Ancestry
     def children_of(object)
       t = arel_table
       node = to_node(object)
-      where(t[ancestry_column].eq(node.child_ancestry))
+      where(t[ancestry_column].eq(node.child_ancestor_ids))
     end
 
     # indirect = anyone who is a descendant, but not a child
     def indirects_of(object)
       t = arel_table
       node = to_node(object)
-      where(t[ancestry_column].matches(node.child_ancestry_str, nil, true))
+      where(t[ancestry_column].matches(node.child_ancestor_id_widcard, nil, true))
     end
 
     def descendants_of(object)
@@ -47,7 +47,7 @@ module Ancestry
     def descendant_conditions(object)
       t = arel_table
       node = to_node(object)
-      t[ancestry_column].matches(node.child_ancestry_str, nil, true).or(t[ancestry_column].eq(node.child_ancestry))
+      t[ancestry_column].matches(node.child_ancestor_id_widcard, nil, true).or(t[ancestry_column].eq(node.child_ancestor_ids))
     end
 
     def subtree_of(object)
@@ -80,32 +80,17 @@ module Ancestry
     end
 
     module InstanceMethods
-      def ancestor_ids=(value)
-        col = self.ancestry_base_class.ancestry_column
-        value.present? ? write_attribute(col, value.join(ANCESTRY_DELIMITER)) : write_attribute(col, nil)
-      end
-
-      def parent_id_before_last_save
-        ancestor_ids_before_last_save.last
-      end
-
-      # optimization - better to go directly to column and avoid parsing
-      def sibling_of?(node)
-        self.read_attribute(self.ancestry_base_class.ancestry_column) == node.read_attribute(self.ancestry_base_class.ancestry_column)
-      end
-
       # private (public so class methods can find it)
       # The ancestry value for this record's children (before save)
-      # This is technically child_ancestry_was
-      def child_ancestry
+      # This is technically child_ancestor_ids_was
+      def child_ancestor_ids
         # New records cannot have children
         raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
-        path_was = ancestor_ids_in_database
-        path_was + [id]
+        ancestor_ids_in_database + [id]
       end
 
-      def child_ancestry_str
-        child_ancestry.join("/")+"/%"
+      def child_ancestor_id_widcard
+        (child_ancestor_ids + ['%']).join(ANCESTRY_DELIMITER)
       end
     end
   end

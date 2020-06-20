@@ -96,6 +96,7 @@ module Ancestry
       ancestor_ids.present?
     end
     alias :has_parent? :ancestors?
+    alias :parent_id? :ancestors?
 
     def will_save_change_to_ancestor_ids?
       column = self.ancestry_base_class.ancestry_column.to_s
@@ -158,7 +159,6 @@ module Ancestry
     def parent_id
       ancestor_ids.last if ancestors?
     end
-    alias :parent_id? :ancestors?
 
     def parent
       unscoped_find(parent_id) if ancestors?
