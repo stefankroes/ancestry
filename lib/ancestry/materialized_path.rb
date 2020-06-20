@@ -38,7 +38,7 @@ module Ancestry
     def indirects_of(object)
       t = arel_table
       node = to_node(object)
-      where(t[ancestry_column].matches("#{node.child_ancestry}/%", nil, true))
+      where(t[ancestry_column].matches(node.child_ancestry_str, nil, true))
     end
 
     def descendants_of(object)
@@ -49,7 +49,7 @@ module Ancestry
     def descendant_conditions(object)
       t = arel_table
       node = to_node(object)
-      t[ancestry_column].matches("#{node.child_ancestry}/%", nil, true).or(t[ancestry_column].eq(node.child_ancestry))
+      t[ancestry_column].matches(node.child_ancestry_str, nil, true).or(t[ancestry_column].eq(node.child_ancestry))
     end
 
     def subtree_of(object)
@@ -132,6 +132,10 @@ module Ancestry
         raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
         path_was = self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}")
         path_was.blank? ? id.to_s : "#{path_was}/#{id}"
+      end
+
+      def child_ancestry_str
+        "#{child_ancestry}/%"
       end
 
       private
