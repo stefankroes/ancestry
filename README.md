@@ -55,7 +55,7 @@ $ rake db:migrate
 
 
 ## Add ancestry to your model
-* Add to [app/models/](model).rb:
+* Add to app/models/[model.rb]:
 
 ```ruby
 # app/models/[model.rb]
