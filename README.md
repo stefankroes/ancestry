@@ -3,10 +3,10 @@
 # Ancestry
 
 Ancestry is a gem that allows the records of a Ruby on Rails
-ActiveRecord model to be organised as a tree structure (or hierarchy). It uses
-a single database column, employing the materialised path pattern. It exposes all the standard tree structure
-relations (ancestors, parent, root, children, siblings, descendants) and allows all
-of them to be fetched in a single SQL query. Additional features are STI
+ActiveRecord model to be organised as a tree structure (or hierarchy). It employs
+the materialised path pattern and exposes all the standard tree structure
+relations (ancestors, parent, root, children, siblings, descendants), allowing all
+of them to be fetched in a single SQL query. Additional features include STI
 support, scopes, depth caching, depth constraints, easy migration from older
 gems, integrity checking, integrity restoration, arrangement of
 (sub)trees into hashes, and various strategies for dealing with orphaned
@@ -14,14 +14,13 @@ records.
 
 NOTE:
 
-- Ancestry 2.x supports Rails 4.1, and earlier
-- Ancestry 3.x supports Rails 5.0, and 4.2
+- Ancestry 2.x supports Rails 4.1 and earlier
+- Ancestry 3.x supports Rails 5.0 and 4.2
 - Ancestry 4.0 only supports rails 5.0 and higher
 
 # Installation
 
-To apply Ancestry to any `ActiveRecord` model, follow these simple steps:
-
+Follow these simple steps to apply Ancestry to any ActiveRecord model:
 
 ## Install
 
@@ -82,115 +81,38 @@ parent_id can be set using parent= and parent_id= on a record or by including
 them in the hash passed to new, create, create!, update_attributes and
 update_attributes!. For example:
 
-```ruby
-TreeNode.create! :name => 'Stinky', :parent => TreeNode.create!(:name => 'Squeeky')
-```
+`TreeNode.create! :name => 'Stinky', :parent => TreeNode.create!(:name => 'Squeeky')`.
 
-You can also create children through the children relation on a node:
+Children can be created through the children relation on a node: `node.children.create :name => 'Stinky'`.
 
-```ruby
-node.children.create :name => 'Stinky'
-```
+# Tree Navigation
 
-# Navigating your tree
+The node with the large border is the reference node (the node from which the navigation method is invoked.)
+The yellow nodes are those returned by the method.
 
-To navigate an Ancestry model, use the following instance methods:
+|                               |                                                     |                                 |
+|:-:                            |:-:                                                  |:-:                              |
+|**parent**                     |**root**<sup><a href="#fn1" id="ref1">1</a></sup>    |**ancestors**                    |
+|![parent](/img/parent.png)     |![root](/img/root.png)                               |![ancestors](/img/ancestors.png) |
+| nil for a root node           |self for a root node                                 |root..parent                     |
+| `parent_id`                   |`root_id`                                            |`ancestor_ids`                   |
+| `has_parent?`                 |`is_root?`                                           |`ancestors?`                     |
+|`parent_of?`                   |`root_of?`                                           |`ancestor_of?`                   |
+|**children**                   |**descendants**                                      |**indirects**                    |
+|![children](/img/children.png) |![descendants](/img/descendants.png)                 |![indirects](/img/indirects.png) |
+| `child_ids`                   |`descendant_ids`                                     |`indirect_ids`                   |
+| `has_children?`               |                                                     |                                 |
+| `child_of?`                   |`descendant_of?`                                     |`indirect_of?`                   |
+|**siblings**                   |**subtree**                                          |**path**                         |
+|![siblings](/img/siblings.png) |![subtree](/img/subtree.png)                         |![path](/img/path.png)           |
+| includes self                 |self..indirects                                      |root..self                       |
+|`sibling_ids`                  |`subtree_ids`                                        |`path_ids`                       |
+|`has_siblings?`                |                                                     |                                 |
+|`sibling_of?(node)`            |                                                     |                                 |
 
-|  method           |return value|
-|-------------------|------------|
-|`parent`           |parent of the record, nil for a root node|
-|`parent_id`        |parent id of the record, nil for a root node|
-|`root`             |root of the record's tree, self for a root node|
-|`root_id`          |root id of the record's tree, self for a root node|
-|`root?` <br/> `is_root?` |  true if the record is a root node, false otherwise|
-|`ancestors`        |ancestors of the record, starting with the root and ending with the parent|
-|`ancestors?`       |true if the record has ancestors (aka not a root node)|
-|`ancestor_ids`     |ancestor ids of the record|
-|`path`             |path of the record, starting with the root and ending with self|
-|`path_ids`         |a list of the path ids, starting with the root id and ending with the node's own id|
-|`children`         |direct children of the record|
-|`child_ids`        |direct children's ids|
-|`has_parent?`    <br/> `ancestors?` |true if the record has a parent, false otherwise|
-|`has_children?`  <br/> `children?`  |true if the record has any children, false otherwise|
-|`is_childless?`  <br/> `childless?` |true is the record has no children, false otherwise|
-|`siblings`         |siblings of the record, including the record itself*|
-|`sibling_ids`      |sibling ids|
-|`has_siblings?`  <br/> `siblings?`   |true if the record's parent has more than one child|
-|`is_only_child?` <br/> `only_child?` |true if the record is the only child of its parent|
-|`descendants`      |direct and indirect children of the record|
-|`descendant_ids`   |direct and indirect children's ids of the record|
-|`indirects`        |indirect children of the record|
-|`indirect_ids`     |indirect children's ids of the record|
-|`subtree`          |the model on descendants and itself|
-|`subtree_ids`      |a list of all ids in the record's subtree|
-|`depth`            |the depth of the node (root nodes are at depth 0)|
+<sup id="fn1">1. [other root records are considered siblings]<a href="#ref1" title="Jump back to footnote 1.">↩</a></sup>
 
-\*   If the record is a root, other root records are considered siblings
-\*   Siblings returns the record itself
-
-There are also instance methods to determine the relationship between 2 nodes:
-
-|method             |return value|
-|-------------------|---------------|
-|`parent_of?(node)`  | node's parent is this record|
-|`root_of?(node)`    | node's root is this record|
-|`ancestor_of?(node)`| node's ancestors include this record|
-|`child_of?(node)`   | node is record's parent|
-|`descendant_of?(node)` | node is one of this record's ancestors|
-|`indirect_of?(node)` | node is one of this record's ancestors but not a parent|
-
-## Visual guide for navigation
-
-In all examples the node with the large border is the reference node, the node
-from which the navigation method is invoked. The yellow nodes are the nodes
-returned by the method.
-
-<table>
-  <tr>
-    <td>
-      <p align="center">parent</p>
-      <img src="img/parent.png" alt="parent"/>
-    </td>
-    <td>
-      <p align="center">root</p>
-      <img src="img/root.png" alt="root"/>
-    </td>
-    <td>
-      <p align="center">ancestors</p>
-      <img src="img/ancestors.png" alt="ancestors"/>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <p align="center">path</p>
-      <img src="img/path.png" alt="path"/>
-    </td>
-    <td>
-      <p align="center">children</p>
-      <img src="img/children.png" alt="children"/>
-    </td>
-    <td>
-      <p align="center">siblings</p>
-      <img src="img/siblings.png" alt="siblings"/>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <p align="center">descendants</p>
-      <img src="img/descendants.png" alt="descendants"/>
-    </td>
-    <td>
-      <p align="center">indirects</p>
-      <img src="img/indirects.png" alt="indirects"/>
-    </td>
-    <td>
-      <p align="center">subtree</p>
-      <img src="img/subtree.png" alt="subtree"/>
-    </td>
-  </tr>
-</table>
-
-# Options for `has_ancestry`
+# `has_ancestry` options
 
 The has_ancestry method supports the following options:
 
@@ -213,10 +135,8 @@ The has_ancestry method supports the following options:
 
 # (Named) Scopes
 
-Where possible, the navigation methods return scopes instead of records. This
-means additional ordering, conditions, limits, etc. can be applied and that
-the result can be either retrieved, counted, or checked for existence. For
-example:
+The navigation methods return scopes instead of records, where possible. Additional ordering,
+conditions, limits, etc. can be applied and the results can be retrieved, counted, or checked for existence:
 
 ```ruby
 node.children.where(:name => 'Mary').exists?
@@ -224,7 +144,7 @@ node.subtree.order(:name).limit(10).each { ... }
 node.descendants.count
 ```
 
-For convenience, a couple of named scopes are included at the class level:
+A couple of class-level named scopes are included:
 
     roots                   Root nodes
     ancestors_of(node)      Ancestors of node, node can be either a record or an id
@@ -234,8 +154,7 @@ For convenience, a couple of named scopes are included at the class level:
     subtree_of(node)        Subtree of node, node can be either a record or an id
     siblings_of(node)       Siblings of node, node can be either a record or an id
 
-Thanks to some convenient rails magic, it is even possible to create nodes
-through the children and siblings scopes:
+It is possible thanks to some convenient rails magic to create nodes through the children and siblings scopes:
 
     node.children.create
     node.siblings.create!
@@ -244,8 +163,8 @@ through the children and siblings scopes:
 
 # Selecting nodes by depth
 
-When depth caching is enabled (see has_ancestry options), five more named
-scopes can be used to select nodes on their depth:
+With depth caching enabled (see has_ancestry options), an additional five named
+scopes can be used to select nodes by depth:
 
     before_depth(depth)     Return nodes that are less deep than depth (node.depth < depth)
     to_depth(depth)         Return nodes up to a certain depth (node.depth <= depth)
@@ -253,42 +172,27 @@ scopes can be used to select nodes on their depth:
     from_depth(depth)       Return nodes starting from a certain depth (node.depth >= depth)
     after_depth(depth)      Return nodes that are deeper than depth (node.depth > depth)
 
-The depth scopes are also available through calls to descendants,
-descendant_ids, subtree, subtree_ids, path and ancestors. In this case, depth
-values are interpreted relatively. Some examples:
-
-    node.subtree(:to_depth => 2)      Subtree of node, to a depth of node.depth + 2 (self, children and grandchildren)
-    node.subtree.to_depth(5)          Subtree of node to an absolute depth of 5
-    node.descendants(:at_depth => 2)  Descendant of node, at depth node.depth + 2 (grandchildren)
-    node.descendants.at_depth(10)     Descendants of node at an absolute depth of 10
-    node.ancestors.to_depth(3)        The oldest 4 ancestors of node (its root and 3 more)
-    node.path(:from_depth => -2)      The node's grandparent, parent and the node itself
+Depth scopes are also available through calls to `descendants`,
+`descendant_ids`, `subtree`, `subtree_ids`, `path` and `ancestors` (with relative depth).
+Note that depth constraints cannot be passed to `ancestor_ids` or `path_ids` as both relations
+can be fetched directly from the ancestry column without needing a query. Use
+`ancestors(depth_options).map(&:id)` or `ancestor_ids.slice(min_depth..max_depth)` instead.
 
     node.ancestors(:from_depth => -6, :to_depth => -4)
     node.path.from_depth(3).to_depth(4)
     node.descendants(:from_depth => 2, :to_depth => 4)
     node.subtree.from_depth(10).to_depth(12)
 
-Please note that depth constraints cannot be passed to ancestor_ids and
-path_ids. The reason for this is that both these relations can be fetched
-directly from the ancestry column without performing a database query. It
-would require an entirely different method of applying the depth constraints
-which isn't worth the effort of implementing. You can use
-ancestors(depth_options).map(&:id) or ancestor_ids.slice(min_depth..max_depth)
-instead.
-
 # STI support
 
-Ancestry works fine with STI. Just create a STI inheritance hierarchy and
-build an Ancestry tree from the different classes/models. All Ancestry
-relations that were described above will return nodes of any model type. If
-you do only want nodes of a specific subclass you'll have to add a condition
-on type for that.
+To use with STI: create a STI inheritance hierarchy and build a tree from the different
+classes/models. All Ancestry relations that were described above will return nodes of any model type. If
+you do only want nodes of a specific subclass, a type condition is required.
 
 # Arrangement
 
-Ancestry can arrange an entire subtree into nested hashes for easy navigation
-after retrieval from the database.  `TreeNode.arrange` could for example return:
+A subtree can be arranged into nested hashes for easy navigation after database retrieval.
+`TreeNode.arrange` could, for instance, return:
 
 ```ruby
 {
@@ -301,43 +205,20 @@ after retrieval from the database.  `TreeNode.arrange` could for example return:
 }
 ```
 
-The `arrange` method also works on a scoped class, for example:
+The `arrange` method can work on a scoped class (`TreeNode.find_by(:name => 'Crunchy').subtree.arrange`),
+and can take ActiveRecord find options. If you want ordered hashes, pass the order to the method instead of
+the scope as follows:
 
-```ruby
-TreeNode.find_by_name('Crunchy').subtree.arrange
-```
+`TreeNode.find_by(:name => 'Crunchy').subtree.arrange(:order => :name)`.
 
-The `arrange` method takes `ActiveRecord` find options. If you want your hashes to
-be ordered, you should pass the order to the `arrange` method instead of to the
-scope. example:
+The `arrange_serializable` method returns the arranged nodes as a nested array of hashes. Order
+can be passed in the same fashion as to the `arrange` method:
+`TreeNode.arrange_serializable(:order => :name)` The result can easily be serialized to json with `to_json`
+or other formats. You can also supply your own serialization logic with blocks.
 
-```ruby
-TreeNode.find_by_name('Crunchy').subtree.arrange(:order => :name)
-```
+Using `ActiveModel` serializers:
 
-To get the arranged nodes as a nested array of hashes for serialization:
-
-`TreeNode.arrange_serializable`
-
-```ruby
-[
-  {
-    "ancestry" => nil, "id" => 1, "children" => [
-      { "ancestry" => "1", "id" => 2, "children" => [] }
-    ]
-  }
-]
-```
-
-You can also supply your own serialization logic using blocks:
-
-For example, using `ActiveModel` Serializers:
-
-```ruby
-TreeNode.arrange_serializable do |parent, children|
-  MySerializer.new(parent, children: children)
-end
-```
+`TreeNode.arrange_serializable { |parent, children| MySerializer.new(parent, children: children) }`.
 
 Or plain hashes:
 
@@ -350,39 +231,22 @@ TreeNode.arrange_serializable do |parent, children|
 end
 ```
 
-The result of `arrange_serializable` can easily be serialized to json with
-`to_json`, or some other format:
-
-```
-TreeNode.arrange_serializable.to_json
-```
-
-You can also pass the order to the `arrange_serializable` method just as you can
-pass it to the `arrange` method:
-
-```
-TreeNode.arrange_serializable(:order => :name)
-```
-
 # Sorting
 
-If you just want to sort an array of nodes as if you were traversing them in
-preorder, you can use the sort_by_ancestry class method:
-
-```
-TreeNode.sort_by_ancestry(array_of_nodes)
-```
-
-Note that since materialised path trees don't support ordering within a rank,
-the order of siblings depends on their order in the original array.
+The `sort_by_ancestry` class method: `TreeNode.sort_by_ancestry(array_of_nodes)` can be used
+to sort an array of nodes as if traversing in preorder. (Note that since materialised path
+trees do not support ordering within a rank, the order of siblings is
+dependant upon their original array order.)
 
 # Migrating from plugin that uses parent_id column
 
 Most current tree plugins use a parent_id column (has_ancestry,
-awesome_nested_set, better_nested_set, acts_as_nested_set). With ancestry it is
+awesome_nested_set, better_nested_set, acts_as_nested_set). With Ancestry it is
 easy to migrate from any of these plugins. To do so, use the
-`build_ancestry_from_parent_ids!` method on your ancestry model. These steps
-provide a more detailed explanation:
+`build_ancestry_from_parent_ids!` method on your ancestry model.
+
+<details>
+<summary>Details</summary>
 
 1.  Add ancestry column to your table
     *   Create migration: **rails g migration [add_ancestry_to_](table)
@@ -392,7 +256,7 @@ provide a more detailed explanation:
     *   Migrate your database: **rake db:migrate**
 
 
-2.  Remove old tree gem and add in Ancestry to `Gemfile`
+2.  Remove old tree gem and add in Ancestry to Gemfile
     *   See 'Installation' for more info on installing and configuring gems
 
 
@@ -403,7 +267,7 @@ provide a more detailed explanation:
 
 
 4.  Generate ancestry columns
-    *   In 'rails console': **[model].build_ancestry_from_parent_ids!**
+    *   In rails console: **[model].build_ancestry_from_parent_ids!**
     *   Make sure it worked ok: **[model].check_ancestry_integrity!**
 
 
@@ -417,42 +281,7 @@ provide a more detailed explanation:
     *   Create migration: `rails g migration [remove_parent_id_from_](table)`
     *   Add to migration: `remove_column [table], :parent_id`
     *   Migrate your database: `rake db:migrate`
-
-# Integrity checking and restoration
-
-I don't see any way Ancestry tree integrity could get compromised without
-explicitly setting cyclic parents or invalid ancestry and circumventing
-validation with update_attribute. If you do, please let me know.
-
-Ancestry includes some methods for detecting integrity problems and restoring
-integrity just to be sure. To check integrity, use:
-`[Model].check_ancestry_integrity!`. An AncestryIntegrityException will be
-raised if there are any problems. You can also specify :report => :list to
-return an array of exceptions or :report => :echo to echo any error messages.
-To restore integrity use: `[Model].restore_ancestry_integrity!`.
-
-For example, from IRB:
-
-```
->> stinky = TreeNode.create :name => 'Stinky'
-$  #<TreeNode id: 1, name: "Stinky", ancestry: nil>
->> squeeky = TreeNode.create :name => 'Squeeky', :parent => stinky
-$  #<TreeNode id: 2, name: "Squeeky", ancestry: "1">
->> stinky.update_attribute :parent, squeeky
-$  true
->> TreeNode.all
-$  [#<TreeNode id: 1, name: "Stinky", ancestry: "1/2">, #<TreeNode id: 2, name: "Squeeky", ancestry: "1/2/1">]
->> TreeNode.check_ancestry_integrity!
-!! Ancestry::AncestryIntegrityException: Conflicting parent id in node 1: 2 for node 1, expecting nil
->> TreeNode.restore_ancestry_integrity!
-$  [#<TreeNode id: 1, name: "Stinky", ancestry: 2>, #<TreeNode id: 2, name: "Squeeky", ancestry: nil>]
-```
-
-Additionally, if you think something is wrong with your depth cache:
-
-```
->> TreeNode.rebuild_depth_cache!
-```
+</details>
 
 # Running Tests
 
