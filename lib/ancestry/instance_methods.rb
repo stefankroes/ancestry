@@ -183,7 +183,6 @@ module Ancestry
     def is_root?
       !ancestors?
     end
-    alias :root? :is_root?
 
     def root_of?(node)
       self.id == node.root_id
@@ -202,12 +201,10 @@ module Ancestry
     def has_children?
       self.children.exists?
     end
-    alias_method :children?, :has_children?
 
     def is_childless?
       !has_children?
     end
-    alias_method :childless?, :is_childless?
 
     def child_of?(node)
       self.parent_id == node.id
@@ -227,12 +224,10 @@ module Ancestry
     def has_siblings?
       self.siblings.count > 1
     end
-    alias_method :siblings?, :has_siblings?
 
     def is_only_child?
       !has_siblings?
     end
-    alias_method :only_child?, :is_only_child?
 
     def sibling_of?(node)
       self.ancestor_ids == node.ancestor_ids
