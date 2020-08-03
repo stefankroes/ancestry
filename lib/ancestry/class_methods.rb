@@ -31,7 +31,13 @@ module Ancestry
       end
     end
 
-    # Get all nodes and sorting them into an empty hash
+
+    # these methods arrange an entire subtree into nested hashes for easy navigation after database retrieval
+    # the arrange method also works on a scoped class
+    # the arrange method takes ActiveRecord find options
+    # To order your hashes pass the order to the arrange method instead of to the scope
+
+    # Get all nodes and sort them into an empty hash
     def arrange options = {}
       if (order = options.delete(:order))
         arrange_nodes self.ancestry_base_class.order(order).where(options)
@@ -54,7 +60,9 @@ module Ancestry
       end
     end
 
-     # Arrangement to nested array
+     # Arrangement to nested array for serialization
+     # You can also supply your own serialization logic using blocks
+     # also allows you to pass the order just as you can pass it to the arrange method
     def arrange_serializable options={}, nodes=nil, &block
       nodes = arrange(options) if nodes.nil?
       nodes.map do |parent, children|
@@ -67,7 +75,6 @@ module Ancestry
     end
 
     # Pseudo-preordered array of nodes.  Children will always follow parents,
-    # for ordering nodes within a rank provide block, eg. Node.sort_by_ancestry(Node.all) {|a, b| a.rank <=> b.rank}.
     def sort_by_ancestry(nodes, &block)
       arranged = nodes if nodes.is_a?(Hash)
 
@@ -94,6 +101,9 @@ module Ancestry
     end
 
     # Integrity checking
+    # compromised tree integrity is unlikely without explicitly setting cyclic parents or invalid ancestry and circumventing validation
+    # just in case, raise an AncestryIntegrityException if issues are detected
+    # specify :report => :list to return an array of exceptions or :report => :echo to echo any error messages
     def check_ancestry_integrity! options = {}
       parents = {}
       exceptions = [] if options[:report] == :list
@@ -171,7 +181,7 @@ module Ancestry
       end
     end
 
-    # Build ancestry from parent id's for migration purposes
+    # Build ancestry from parent ids for migration purposes
     def build_ancestry_from_parent_ids! column=:parent_id, parent_id = nil, ancestor_ids = []
       unscoped_where do |scope|
         scope.where(column => parent_id).find_each do |node|

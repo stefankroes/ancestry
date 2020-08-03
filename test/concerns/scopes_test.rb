@@ -34,7 +34,7 @@ class ScopesTest < ActiveSupport::TestCase
 
   def test_chained_scopes
     AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, roots|
-      # before Rails 4.0, the last scope in chained scopes used to ignore earler ones
+      # before Rails 4.0, the last scope in chained scopes used to ignore earlier ones
       # which resulted in: `Post.active.inactive.to_a` == `Post.inactive.to_a`
       # https://github.com/rails/rails/commit/cd26b6ae
       # therefore testing against later AR versions only
