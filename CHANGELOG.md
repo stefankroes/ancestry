@@ -3,9 +3,19 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
+## Versions [3.1.0] <small>2018-11-06</small>
+
+* `:primary_key_format` method lets you change syntax. good for uuids.
+* changed code from being `ancestry` string to `ancestry_ids` focused. May break monkey patches.
+* Moved many methods from `has_ancestry` and `InstanceMethods` to `MaterializedPath`. May break monkey patches.
+* Removed tests for `mysql` driver. Starting with rails 4.1, it supports `mysql2` driver.
+* Better documentation for relationships (thnx @dtamai and @d-m-u)
+* Fix creating children in `after_*` callbacks ( thx @jstirk)
+
 ## Version [3.0.7] <small>2018-11-06</small>
 
 * Fixed rails 5.1 change detection (thx @jrafanie)
+* Introduce counter cache (thx @hw676018683)
 
 ## Version [3.0.6] <small>2018-11-06</small>
 
@@ -221,6 +231,8 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
+[3.1.0]: https://github.com/stefankroes/ancestry/compare/v3.0.7...v3.1.0
+[3.0.7]: https://github.com/stefankroes/ancestry/compare/v3.0.6...v3.0.7
 [3.0.6]: https://github.com/stefankroes/ancestry/compare/v3.0.5...v3.0.6
 [3.0.5]: https://github.com/stefankroes/ancestry/compare/v3.0.4...v3.0.5
 [3.0.4]: https://github.com/stefankroes/ancestry/compare/v3.0.3...v3.0.4
