@@ -12,7 +12,6 @@ class ArrangementTest < ActiveSupport::TestCase
         before_save :before_save_hook
 
         def before_save_hook
-          old_ch = changed?
           self.name_path = parent ? "#{parent.name_path}/#{name}" : name
           nil
         end

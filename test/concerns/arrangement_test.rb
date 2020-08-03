@@ -212,7 +212,7 @@ class ArrangementTest < ActiveSupport::TestCase
       n1 = model.create!
       n2 = model.create!(parent: n1)
       n3 = model.create!(parent: n2)
-      n4 = model.create!(parent: n2)
+      _  = model.create!(parent: n2)
       n5 = model.create!(parent: n1)
       assert_equal({n5 => {}, n3 => {}}, model.arrange_nodes([n5, n3]))
       assert_equal([n5.id, n3.id], model.arrange_nodes([n5, n3]).keys.map(&:id))
