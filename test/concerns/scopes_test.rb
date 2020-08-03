@@ -40,8 +40,6 @@ class ScopesTest < ActiveSupport::TestCase
       # therefore testing against later AR versions only
       if ActiveRecord::VERSION::MAJOR >=4
         roots.each do |root, children|
-          child = children.first
-
           # the first scope limits the second scope
           assert_empty model.children_of(root).roots
           assert_empty model.children_of(root.id).roots

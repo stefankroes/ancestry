@@ -42,7 +42,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
 
   def test_sort_by_ancestry_no_parents_siblings
     AncestryTestDatabase.with_model do |model|
-      n1, n2, n3, n4, n5, n6 = build_tree(model)
+      _, _, n3, n4, _, _ = build_tree(model)
 
       assert_equal [n4, n3].map(&:id), model.sort_by_ancestry([n4, n3]).map(&:id)
     end
@@ -50,7 +50,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
 
   def test_sort_by_ancestry_no_parents_same_level
     AncestryTestDatabase.with_model do |model|
-      n1, n2, n3, n4, n5, n6 = build_tree(model)
+      _, _, n3, n4, n5, _ = build_tree(model)
 
       assert_equal [n5, n4, n3].map(&:id), model.sort_by_ancestry([n5, n4, n3]).map(&:id)
     end
@@ -58,7 +58,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
 
   def test_sort_by_ancestry_partial_tree
     AncestryTestDatabase.with_model do |model|
-      n1, n2, n3, n4, n5, n6 = build_tree(model)
+      n1, n2, _, _, n5, _ = build_tree(model)
 
       assert_equal [n1, n5, n2].map(&:id), model.sort_by_ancestry([n5, n2, n1]).map(&:id)
     end
@@ -66,7 +66,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
 
   def test_sort_by_ancestry_missing_parent_middle_of_tree
     AncestryTestDatabase.with_model do |model|
-      n1, n2, n3, n4, n5, n6 = build_tree(model)
+      n1, _, _, n4, n5, _ = build_tree(model)
 
       records = model.sort_by_ancestry([n5, n4, n1])
       if (!CORRECT) && (STRICT || records[1] == n5)
@@ -122,7 +122,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
 
   def test_sort_by_ancestry_with_block_all_parents_some_children
     AncestryTestDatabase.with_model :extra_columns => {:rank => :integer} do |model|
-      n1, n2, n3, n4, n5, n6 = build_ranked_tree(model)
+      n1, n2, _, _, n5, _ = build_ranked_tree(model)
       sort = -> (a, b) { a.rank <=> b.rank }
 
       assert_equal [n1, n5, n2].map(&:id), model.sort_by_ancestry([n1, n2, n5], &sort).map(&:id)
@@ -135,7 +135,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
   # TODO: find a way to rank missing nodes
   def test_sort_by_ancestry_with_block_no_parents_all_children
     AncestryTestDatabase.with_model :extra_columns => {:rank => :integer} do |model|
-      n1, n2, n3, n4, n5, n6 = build_ranked_tree(model)
+      _, _, n3, n4, n5, n6 = build_ranked_tree(model)
       sort = -> (a, b) { a.rank <=> b.rank }
 
       records = model.sort_by_ancestry([n3, n4, n5, n6], &sort)
@@ -151,7 +151,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
   # NOTE: even for partial trees, if the input records are ranked, the output works
   def test_sort_by_ancestry_with_sql_sort_paginated_missing_parents_and_children
     AncestryTestDatabase.with_model :extra_columns => {:rank => :integer} do |model|
-      n1, n2, n3, n4, n5, n6 = build_ranked_tree(model)
+      _, n2, n3, n4, _, _ = build_ranked_tree(model)
 
       records = model.sort_by_ancestry([n2, n4, n3])
       if (!CORRECT) && (STRICT || records[0] == n2)
@@ -167,7 +167,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
   # TODO: find a way to rank missing nodes
   def test_sort_by_ancestry_with_block_paginated_missing_parents_and_children
     AncestryTestDatabase.with_model :extra_columns => {:rank => :integer} do |model|
-      n1, n2, n3, n4, n5, n6 = build_ranked_tree(model)
+      _, n2, n3, n4, _, _ = build_ranked_tree(model)
       sort = -> (a, b) { a.rank <=> b.rank }
 
       records = model.sort_by_ancestry([n2, n4, n3], &sort)
