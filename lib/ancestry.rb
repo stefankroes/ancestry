@@ -1,10 +1,10 @@
 require_relative 'ancestry/version'
 require_relative 'ancestry/class_methods'
 require_relative 'ancestry/instance_methods'
-require_relative 'ancestry/optimizer'
 require_relative 'ancestry/exceptions'
 require_relative 'ancestry/has_ancestry'
 require_relative 'ancestry/materialized_path'
+require_relative 'ancestry/materialized_path_pg'
 
 module Ancestry
 end

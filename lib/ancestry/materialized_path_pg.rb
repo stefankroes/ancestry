@@ -1,13 +1,12 @@
 module Ancestry
-  module Optimizers
-    module Pg
+  module MaterializedPathPg
       # Update descendants with new ancestry (before save)
       def update_descendants_with_new_ancestry
         # If enabled and node is existing and ancestry was updated and the new ancestry is sane ...
         if !ancestry_callbacks_disabled? && !new_record? && ancestry_changed? && sane_ancestry?
           ancestry_column = ancestry_base_class.ancestry_column
-          old_ancestry = child_ancestry
-          new_ancestry = ancestors? ? "#{read_attribute ancestry_column}/#{id}" : id.to_s
+          old_ancestry = path_ids_in_database.join(Ancestry::MaterializedPath::ANCESTRY_DELIMITER)
+          new_ancestry = path_ids.join(Ancestry::MaterializedPath::ANCESTRY_DELIMITER)
           update_clause = [
             "#{ancestry_column} = regexp_replace(#{ancestry_column}, '^#{old_ancestry}', '#{new_ancestry}')"
           ]
@@ -18,10 +17,7 @@ module Ancestry
           end
 
           unscoped_descendants.update_all update_clause.join(', ')
-        end
       end
     end
   end
 end
-
-Ancestry.optimizer = Ancestry::Optimizers::Pg

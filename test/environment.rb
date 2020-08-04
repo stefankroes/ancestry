@@ -47,8 +47,6 @@ class AncestryTestDatabase
       File.expand_path('../database.ci.yml', __FILE__)
     end
 
-    use_optimizer
-
     # Setup database connection
     config = YAML.load_file(filename)[db_type]
     ActiveRecord::Base.establish_connection config
@@ -121,17 +119,6 @@ class AncestryTestDatabase
   end
 
   private
-
-  def self.use_optimizer
-    use_optimizer = ENV['OPTIMIZER'] == 'true'
-    return unless use_optimizer
-
-    if db_type == 'pg'
-      require File.expand_path('../../lib/ancestry/optimizers/pg', __FILE__)
-    else
-      raise "Database Type #{db_type} does not implement optimizer"
-    end
-  end
 
   def self.db_type
     ENV["DB"].presence || "sqlite3"
