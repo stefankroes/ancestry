@@ -3,7 +3,7 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
-## Versions [3.1.0] <small>2018-11-06</small>
+## Versions [3.1.0] <small>2020-08-03</small>
 
 * `:primary_key_format` method lets you change syntax. good for uuids.
 * changed code from being `ancestry` string to `ancestry_ids` focused. May break monkey patches.
