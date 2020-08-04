@@ -4,7 +4,11 @@ class ScopesTest < ActiveSupport::TestCase
   def test_scopes
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       # Roots assertion
-      assert_equal roots.map(&:first), model.roots.to_a
+      assert_equal roots.map(&:first).sort, model.roots.to_a.sort
+
+      # All roots are root's siblings (want to change this)
+      a_root = roots.first.first
+      assert_equal model.siblings_of(a_root).sort, roots.map(&:first).sort
 
       model.all.each do |test_node|
         # Assertions for ancestors_of named scope
