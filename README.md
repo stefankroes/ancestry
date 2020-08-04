@@ -468,11 +468,6 @@ appraisal rake test
 appraisal sqlite3-ar-50 rake test
 ```
 
-# Optimization
-
-Ancestry provides a way to optimize for specific database. Currently, there is a optimizer for Postgres.
-To enable it, you need to include: `require 'ancestry/optimizers/pg'` after `require 'ancestry'`.
-
 # Internals
 
 Ancestry stores a path from the root to the parent for every node.

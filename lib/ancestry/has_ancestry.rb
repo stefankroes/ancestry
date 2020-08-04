@@ -4,7 +4,7 @@ module Ancestry
       # Check options
       raise Ancestry::AncestryException.new("Options for has_ancestry must be in a hash.") unless options.is_a? Hash
       options.each do |key, value|
-        unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format].include? key
+        unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy].include? key
           raise Ancestry::AncestryException.new("Unknown option for has_ancestry: #{key.inspect} => #{value.inspect}.")
         end
       end
@@ -24,13 +24,14 @@ module Ancestry
       # Include instance methods
       include Ancestry::InstanceMethods
 
-      include Ancestry.optimizer if Ancestry.optimizer
-
       # Include dynamic class methods
       extend Ancestry::ClassMethods
 
       validates_format_of self.ancestry_column, :with => derive_ancestry_pattern(options[:primary_key_format]), :allow_nil => true
       extend Ancestry::MaterializedPath
+
+      update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
+      include Ancestry::MaterializedPathPg if options[:update_strategy] == :sql && ActiveRecord::Base.connection.adapter_name.downcase == "postgresql"
 
       # Create orphan strategy accessor and set to option or default (writer comes from DynamicClassMethods)
       cattr_reader :orphan_strategy
