@@ -7,12 +7,12 @@ Gem::Specification.new do |s|
   s.summary     = 'Organize ActiveRecord model into a tree structure'
   s.description = <<-EOF
   Ancestry allows the records of a ActiveRecord model to be organized in a tree
-  structure, using a single, intuitively formatted database column. It exposes
-  all the standard tree structure relations (ancestors, parent, root, children,
-  siblings, descendants) and all of them can be fetched in a single sql query.
-  Additional features are named_scopes, integrity checking, integrity restoration,
-  arrangement of (sub)tree into hashes and different strategies for dealing with
-  orphaned records.
+  structure, using the materialized path pattern. It exposes the standard
+  relations (ancestors, parent, root, children, siblings, descendants)
+  and allows them to be fetched in a single query. Additional features include
+  named scopes, integrity checking, integrity restoration, arrangement
+  of (sub)tree into hashes and different strategies for dealing with orphaned
+  records.
 EOF
   s.metadata = {
     "homepage_uri" => "https://github.com/stefankroes/ancestry",
