@@ -19,6 +19,11 @@ gemfile:
   - gemfiles/gemfile_52.gemfile
   - gemfiles/gemfile_60.gemfile
 
+jobs:
+  exclude:
+    - rvm: 2.7
+      gemfile: gemfiles/gemfile_42.gemfile
+
 services:
   - mysql
   - postgresql
