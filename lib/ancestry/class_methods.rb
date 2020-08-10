@@ -113,7 +113,7 @@ module Ancestry
         scope.find_each do |node|
           begin
             # ... check validity of ancestry column
-            if !node.valid? and !node.errors[node.class.ancestry_column].blank?
+            if !node.sane_ancestor_ids?
               raise Ancestry::AncestryIntegrityException.new("Invalid format for ancestry column of node #{node.id}: #{node.read_attribute node.ancestry_column}.")
             end
             # ... check that all ancestors exist
@@ -150,7 +150,7 @@ module Ancestry
           # For each node ...
           scope.find_each do |node|
             # ... set its ancestry to nil if invalid
-            if !node.valid? and !node.errors[node.class.ancestry_column].blank?
+            if !node.sane_ancestor_ids?
               node.without_ancestry_callbacks do
                 node.update_attribute :ancestor_ids, []
               end

@@ -70,7 +70,10 @@ class AncestryTestDatabase
     extra_columns        = options.delete(:extra_columns)
     default_scope_params = options.delete(:default_scope_params)
 
-    ActiveRecord::Base.connection.create_table 'test_nodes' do |table|
+    table_options={}
+    table_options[:id] = options.delete(:id) if options.key?(:id)
+
+    ActiveRecord::Base.connection.create_table 'test_nodes', table_options do |table|
       table.string options[:ancestry_column] || :ancestry
       table.integer options[:depth_cache_column] || :ancestry_depth if options[:cache_depth]
       if options[:counter_cache]

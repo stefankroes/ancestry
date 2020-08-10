@@ -4,7 +4,11 @@ class ScopesTest < ActiveSupport::TestCase
   def test_scopes
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       # Roots assertion
-      assert_equal roots.map(&:first), model.roots.to_a
+      assert_equal roots.map(&:first).sort, model.roots.to_a.sort
+
+      # All roots are root's siblings (want to change this)
+      a_root = roots.first.first
+      assert_equal model.siblings_of(a_root).sort, roots.map(&:first).sort
 
       model.all.each do |test_node|
         # Assertions for ancestors_of named scope
@@ -55,12 +59,12 @@ class ScopesTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
       # not thrilled with this. mac postgres has odd sorting requirements
       if ENV["DB"].to_s =~ /pg/ && RUBY_PLATFORM !~ /x86_64-darwin/
-        expected = model.all.sort_by { |m| [m.ancestry.to_s.gsub('/',''), m.id.to_i] }
+        expected = model.all.sort_by { |m| [m.ancestor_ids.map(&:to_s).join, m.id.to_i] }
       else
-        expected = model.all.sort_by { |m| [m.ancestry.to_s, m.id.to_i] }
+        expected = model.all.sort_by { |m| [m.ancestor_ids.map(&:to_s), m.id.to_i] }
       end
       actual = model.ordered_by_ancestry_and(:id)
-      assert_equal expected.map { |r| [r.ancestry, r.id.to_s] }, actual.map { |r| [r.ancestry, r.id.to_s] }
+      assert_equal expected.map { |r| [r.ancestor_ids, r.id.to_s] }, actual.map { |r| [r.ancestor_ids, r.id.to_s] }
     end
   end
 

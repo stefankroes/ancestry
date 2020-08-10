@@ -71,7 +71,7 @@ module Ancestry
     def siblings_of(object)
       t = arel_table
       node = to_node(object)
-      where(t[ancestry_column].eq(node[ancestry_column]))
+      where(t[ancestry_column].eq(node[ancestry_column].presence))
     end
 
     def ordered_by_ancestry(order = nil)
