@@ -116,4 +116,4 @@ puts "  Ruby: #{RUBY_VERSION}"
 puts "  ActiveRecord: #{ActiveRecord::VERSION::STRING}"
 puts "  Database: #{ActiveRecord::Base.connection.adapter_name}\n\n"
 
-require 'minitest/autorun' if ActiveSupport::VERSION::STRING > "4"
+require 'minitest/autorun'
