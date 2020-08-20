@@ -47,6 +47,10 @@ class AncestryTestDatabase
       File.expand_path('../database.ci.yml', __FILE__)
     end
 
+    # This only affects postgres
+    # the :ruby code path will get tested in mysql and sqlite3
+    Ancestry.default_update_strategy = :sql
+
     # Setup database connection
     config = YAML.load_file(filename)[db_type]
     ActiveRecord::Base.establish_connection config

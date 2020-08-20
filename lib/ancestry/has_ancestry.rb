@@ -30,12 +30,8 @@ module Ancestry
       validates_format_of self.ancestry_column, :with => derive_ancestry_pattern(options[:primary_key_format]), :allow_nil => true
       extend Ancestry::MaterializedPath
 
-      @@default_update_strategy = :sql
-      def self.default_update_strategy
-        @@default_update_strategy
-      end
-
-      include Ancestry::MaterializedPathPg if options[:update_strategy] == :sql && ActiveRecord::Base.connection.adapter_name.downcase == "postgresql"
+      update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
+      include Ancestry::MaterializedPathPg if update_strategy == :sql && ActiveRecord::Base.connection.adapter_name.downcase == "postgresql"
 
       # Create orphan strategy accessor and set to option or default (writer comes from DynamicClassMethods)
       cattr_reader :orphan_strategy
