@@ -2,7 +2,7 @@ module Ancestry
   module InstanceMethods
     # Validate that the ancestors don't include itself
     def ancestry_exclude_self
-      errors.add(:base, "#{self.class.model_name.human} cannot be a descendant of itself.") if ancestor_ids.include? self.id
+      errors.add(:base, I18n.t("ancestry.exclude_self", {:class_name => self.class.name.humanize})) if ancestor_ids.include? self.id
     end
 
     # Update descendants with new ancestry (before save)
@@ -43,7 +43,7 @@ module Ancestry
             end
           end
         when :restrict # throw an exception if it has children
-          raise Ancestry::AncestryException.new('Cannot delete record because it has descendants.') unless is_childless?
+          raise Ancestry::AncestryException.new(I18n.t("ancestry.cannot_delete_descendants")) unless is_childless?
         end
       end
     end

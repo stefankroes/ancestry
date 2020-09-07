@@ -139,7 +139,7 @@ module Ancestry
       # This is technically child_ancestry_was
       def child_ancestry
         # New records cannot have children
-        raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
+        raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
         path_was = self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}")
         path_was.blank? ? id.to_s : "#{path_was}/#{id}"
       end
