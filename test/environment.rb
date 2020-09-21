@@ -55,7 +55,7 @@ class AncestryTestDatabase
 
       # This only affects postgres
       # the :ruby code path will get tested in mysql and sqlite3
-      Ancestry.default_update_strategy = :sql if ActiveRecord::Base.connection.adapter_name.downcase == "postgresql"
+      Ancestry.default_update_strategy = :sql if db_type == "pg"
 
     rescue => err
       if ENV["CI"]
