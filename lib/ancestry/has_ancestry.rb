@@ -31,7 +31,7 @@ module Ancestry
       extend Ancestry::MaterializedPath
 
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
-      include Ancestry::MaterializedPathPg if update_strategy == :sql && ActiveRecord::Base.connection.adapter_name.downcase == "postgresql"
+      include Ancestry::MaterializedPathPg if update_strategy == :sql
 
       # Create orphan strategy accessor and set to option or default (writer comes from DynamicClassMethods)
       cattr_reader :orphan_strategy
