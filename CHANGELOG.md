@@ -7,10 +7,14 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 * dropped support for rails 4.2 and 5.0
 
+## Versions [3.2.1] <small>2020-09-23</small>
+
+* fixed gemspec to include locales and pg (thx @HectorMF)
+
 ## Versions [3.2.0] <small>2020-09-23</small>
 
 * introduce i18n
-* pg sql optimization for ancestry changes(thx @suonlight and @geis)
+* pg sql optimization for ancestry changes (thx @suonlight and @geis)
 * pg sql optimization for sorting (thx @brendon and @d-m-u)
 * fix to humanise model name (thx @mkllnk)
 * able to convert to ancestry from a parent_id column with a different name
