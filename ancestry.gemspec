@@ -31,7 +31,7 @@ EOF
   s.license  = 'MIT'
 
   s.files = Dir[ 
-    "{lib}/**/*"
+    "{lib}/**/*",
     'CHANGELOG.md',
     'MIT-LICENSE',
     'README.md'
