@@ -14,6 +14,9 @@ Gem::Specification.new do |s|
   of (sub)tree into hashes and different strategies for dealing with orphaned
   records.
 EOF
+
+  s.post_install_message = "Thank you for installing Ancestry. You can visit http://github.com/stefankroes/ancestry to read the documentation."
+
   s.metadata = {
     "homepage_uri" => "https://github.com/stefankroes/ancestry",
     "changelog_uri" => "https://github.com/stefankroes/ancestry/blob/master/CHANGELOG.md",
@@ -27,20 +30,13 @@ EOF
   s.homepage = 'https://github.com/stefankroes/ancestry'
   s.license  = 'MIT'
 
-  s.files = [
-    'ancestry.gemspec',
-    'init.rb',
-    'install.rb',
-    'lib/ancestry.rb',
-    'lib/ancestry/has_ancestry.rb',
-    'lib/ancestry/exceptions.rb',
-    'lib/ancestry/class_methods.rb',
-    'lib/ancestry/instance_methods.rb',
-    'lib/ancestry/materialized_path.rb',
-    'lib/ancestry/version.rb',
+  s.files = Dir[ 
+    "{lib}/**/*",
+    'CHANGELOG.md',
     'MIT-LICENSE',
     'README.md'
   ]
+  s.require_paths = ["lib"]
   
   s.required_ruby_version     = '>= 2.0.0'
   s.add_runtime_dependency 'activerecord', '>= 4.2.0'
