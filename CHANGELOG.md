@@ -3,6 +3,19 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
+## Version [HEAD] <small>now</small>
+
+* dropped support for rails 4.2 and 5.0
+
+## Versions [3.2.0] <small>2020-09-23</small>
+
+* introduce i18n
+* pg sql optimization for ancestry changes(thx @suonlight and @geis)
+* pg sql optimization for sorting (thx @brendon and @d-m-u)
+* fix to humanise model name (thx @mkllnk)
+* able to convert to ancestry from a parent_id column with a different name
+* documentation fixes for better diagrams and grammar (thx @dtamais, @d-m-u, and @CamilleDrapier)
+
 ## Versions [3.1.0] <small>2020-08-03</small>
 
 * `:primary_key_format` method lets you change syntax. good for uuids.
@@ -231,6 +244,8 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
+[HEAD]: https://github.com/stefankroes/ancestry/compare/v3.2.0...HEAD
+[3.1.0]: https://github.com/stefankroes/ancestry/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/stefankroes/ancestry/compare/v3.0.7...v3.1.0
 [3.0.7]: https://github.com/stefankroes/ancestry/compare/v3.0.6...v3.0.7
 [3.0.6]: https://github.com/stefankroes/ancestry/compare/v3.0.5...v3.0.6
