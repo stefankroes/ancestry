@@ -217,31 +217,15 @@ module Ancestry
     end
 
     def unscoped_where
-      if ActiveRecord::VERSION::MAJOR < 4
-        self.ancestry_base_class.unscoped do
-          yield self.ancestry_base_class
-        end
-      else
-        yield self.ancestry_base_class.unscope(:where)
-      end
+      yield self.ancestry_base_class.unscope(:where)
     end
 
     ANCESTRY_UNCAST_TYPES = [:string, :uuid, :text].freeze
-    if ActiveSupport::VERSION::STRING < "4.2"
-      def primary_key_is_an_integer?
-        if defined?(@primary_key_is_an_integer)
-          @primary_key_is_an_integer
-        else
-          @primary_key_is_an_integer = !ANCESTRY_UNCAST_TYPES.include?(columns_hash[primary_key.to_s].type)
-        end
-      end
-    else
-      def primary_key_is_an_integer?
-        if defined?(@primary_key_is_an_integer)
-          @primary_key_is_an_integer
-        else
-          @primary_key_is_an_integer = !ANCESTRY_UNCAST_TYPES.include?(type_for_attribute(primary_key).type)
-        end
+    def primary_key_is_an_integer?
+      if defined?(@primary_key_is_an_integer)
+        @primary_key_is_an_integer
+      else
+        @primary_key_is_an_integer = !ANCESTRY_UNCAST_TYPES.include?(type_for_attribute(primary_key).type)
       end
     end
   end

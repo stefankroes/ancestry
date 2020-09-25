@@ -16,20 +16,6 @@ ActiveSupport.test_order = :random if ActiveSupport.respond_to?(:test_order=)
 require 'active_record'
 require 'logger'
 
-# Rails 3.2 has issues with mysql 5.7, primary key not being null.
-# See https://stackoverflow.com/questions/33742967
-if ActiveRecord::VERSION::MAJOR < 4
-  begin
-    require 'active_record/connection_adapters/mysql_adapter'
-    ActiveRecord::ConnectionAdapters::MysqlAdapter
-    class ActiveRecord::ConnectionAdapters::MysqlAdapter
-      NATIVE_DATABASE_TYPES[:primary_key] = "int(11) auto_increment PRIMARY KEY"
-    end
-  rescue LoadError
-    # not running with mysql, don't monkey patch
-  end
-end
-
 # Make absolutely sure we are testing local ancestry
 require File.expand_path('../../lib/ancestry', __FILE__)
 
@@ -140,4 +126,4 @@ puts "  Ruby: #{RUBY_VERSION}"
 puts "  ActiveRecord: #{ActiveRecord::VERSION::STRING}"
 puts "  Database: #{ActiveRecord::Base.connection.adapter_name}\n\n"
 
-require 'minitest/autorun' if ActiveSupport::VERSION::STRING > "4"
+require 'minitest/autorun'
