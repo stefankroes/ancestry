@@ -3,15 +3,15 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
-## Version [HEAD] <small>now</small>
+## Version [HEAD] <sub><sup>now</sub></sup>
 
 * dropped support for rails 4.2 and 5.0
 
-## Versions [3.2.1] <small>2020-09-23</small>
+## Versions [3.2.1] <sub><sup>2020-09-23</sub></sup>
 
 * fixed gemspec to include locales and pg (thx @HectorMF)
 
-## Versions [3.2.0] <small>2020-09-23</small>
+## Versions [3.2.0] <sub><sup>2020-09-23</sub></sup>
 
 * introduce i18n
 * pg sql optimization for ancestry changes (thx @suonlight and @geis)
@@ -20,7 +20,7 @@ a nice looking [Changelog](http://keepachangelog.com).
 * able to convert to ancestry from a parent_id column with a different name
 * documentation fixes for better diagrams and grammar (thx @dtamais, @d-m-u, and @CamilleDrapier)
 
-## Versions [3.1.0] <small>2020-08-03</small>
+## Versions [3.1.0] <sub><sup>2020-08-03</sub></sup>
 
 * `:primary_key_format` method lets you change syntax. good for uuids.
 * changed code from being `ancestry` string to `ancestry_ids` focused. May break monkey patches.
@@ -29,16 +29,16 @@ a nice looking [Changelog](http://keepachangelog.com).
 * Better documentation for relationships (thnx @dtamai and @d-m-u)
 * Fix creating children in `after_*` callbacks (thx @jstirk)
 
-## Version [3.0.7] <small>2018-11-06</small>
+## Version [3.0.7] <sub><sup>2018-11-06</sub></sup>
 
 * Fixed rails 5.1 change detection (thx @jrafanie)
 * Introduce counter cache (thx @hw676018683)
 
-## Version [3.0.6] <small>2018-11-06</small>
+## Version [3.0.6] <sub><sup>2018-11-06</sub></sup>
 
 * Fixed rails 4.1 version check (thx @myxoh)
 
-## Version [3.0.5] <small>2018-11-06</small>
+## Version [3.0.5] <sub><sup>2018-11-06</sub></sup>
 
 ## Changed
 
@@ -49,14 +49,14 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 * Reduced memory footprint of parsing ancestry column (thx @NickLaMuro)
 
-## Version [3.0.4] <small>2018-10-27</small>
+## Version [3.0.4] <sub><sup>2018-10-27</sub></sup>
 
 ## Fixes
 
 * Properly detects non-integer columns (thx @adam101)
 * Arrange no longer drops nodes due to missing parents (thx @trafium)
 
-## Version [3.0.3] <small>2018-10-23</small>
+## Version [3.0.3] <sub><sup>2018-10-23</sub></sup>
 
 This branch (3.x) should still be compatible with rails 3 and 4.
 Rails 5.1 and 5.2 support were introduced in this version, but ongoing support
@@ -72,7 +72,7 @@ has been moved to ancestry 4.0
 * Dropped builds for ruby 1.9.3, 2.0, 2.1, and 2.2
 * Dropped builds for Rails 3.x and 4.x (will use Active Record `or` syntax)
 
-## Version [3.0.2] <small>2018-04-24</small>
+## Version [3.0.2] <sub><sup>2018-04-24</sub></sup>
 
 ## Fixes
 
@@ -82,7 +82,7 @@ has been moved to ancestry 4.0
 * added missing `Ancestry::version`
 * added Rails 5.2 support (thx @jjuliano)
 
-## Version [3.0.1] <small>2017-07-05</small>
+## Version [3.0.1] <sub><sup>2017-07-05</sub></sup>
 
 ## Fixes
 
@@ -93,7 +93,7 @@ has been moved to ancestry 4.0
 * fixed tests on mysql 5.7 and rails 3.2
 * Dropped 3.1 scope changes
 
-## Version [3.0.0] <small>2017-05-18</small>
+## Version [3.0.0] <sub><sup>2017-05-18</sub></sup>
 
 ## Changed
 
@@ -109,7 +109,7 @@ has been moved to ancestry 4.0
 * Properly touches parents when different class for STI (thx @samtgarson)
 * Fixed issues with parent_id (only present on master) (thx @domcleal)
 
-## Version [2.2.2] <small>2016-11-01</small>
+## Version [2.2.2] <sub><sup>2016-11-01</sub></sup>
 
 ### Changed
 
@@ -117,7 +117,7 @@ has been moved to ancestry 4.0
 * Fixed bug with explicit order clauses (introduced in 2.2.0)
 * No longer load schema on `has_ancestry` load (thx @ledermann)
 
-## Version [2.2.1] <small>2016-10-25</small>
+## Version [2.2.1] <sub><sup>2016-10-25</sub></sup>
 
 Sorry for blip, local master got out of sync with upstream master.
 Missed 2 commits (which are feature adds)
@@ -126,7 +126,7 @@ Missed 2 commits (which are feature adds)
 * Use like (vs ilike) for rails 5.0 (performance enhancement)
 * Use `COALESCE` for sorting on pg, mysql, and sqlite vs `CASE`
 
-## Version [2.2.0] <small>2016-10-25</small>
+## Version [2.2.0] <sub><sup>2016-10-25</sub></sup>
 
 ### Added
 * Predicates for scopes: e.g.: `ancestor_of?`, `parent_of?` (thx @neglectedvalue)
@@ -141,7 +141,7 @@ Missed 2 commits (which are feature adds)
 * Upgrading tests for ruby versions (thx @brocktimus, @fryguy, @yui-knk)
 * Fix non-default ancestry not getting used properly (thx @javiyu)
 
-## Version [2.1.0]  <small>2014-04-16</small>
+## Version [2.1.0] <sub><sup>2014-04-16</sub></sup>
 * Added arrange_serializable (thx @krishandley, @chicagogrrl)
 * Add the :touch to update ancestors on save (thx @adammck)
 * Change conditions into arel (thx @mlitwiniuk)
@@ -150,7 +150,7 @@ Missed 2 commits (which are feature adds)
 * Performance tweak (thx @mjc)
 * Improvements to organization (thx @xsuchy, @ryakh)
 
-## Version [2.0.0] <small>2013-05-17</small>
+## Version [2.0.0] <sub><sup>2013-05-17</sub></sup>
 * Removed rails 2 compatibility
 * Added table name to condition constructing methods (thx @aflatter)
 * Fix depth_cache not being updated when moving up to ancestors (thx @scottatron)
@@ -162,31 +162,31 @@ Missed 2 commits (which are feature adds)
 * New adopt strategy (thx unknown)
 * Many more improvements
 
-## Version [1.3.0] <small>2012-05-04</small>
+## Version [1.3.0] <sub><sup>2012-05-04</sub></sup>
 * Ancestry now ignores default scopes when moving or destroying nodes, ensuring tree consistency
 * Changed ActiveRecord dependency to 2.3.14
 
-## Version [1.2.5] <small>2012-03-15</small>
+## Version [1.2.5] <sub><sup>2012-03-15</sub></sup>
 * Fixed warnings: "parenthesize argument(s) for future version"
 * Fixed a bug in the restore_ancestry_integrity! method (thx Arthur Holstvoogd)
 
-## Version [1.2.4] <small>2011-04-22</small>
+## Version [1.2.4] <sub><sup>2011-04-22</sub></sup>
 * Prepended table names to column names in queries (thx @raelik)
 * Better check to see if acts_as_tree can be overloaded (thx @jims)
 * Performance inprovements (thx @kueda)
 
-## Version [1.2.3] <small>2010-10-28</small>
+## Version [1.2.3] <sub><sup>2010-10-28</sub></sup>
 * Fixed error with determining ActiveRecord version
 * Added option to specify :primary_key_format (thx @rolftimmermans)
 
-## Version [1.2.2] <small>2010-10-24</small>
+## Version [1.2.2] <sub><sup>2010-10-24</sub></sup>
 * Fixed all deprecation warnings for rails 3.0.X
 * Added `:report` option to `check_ancestry_integrity!`
 * Changed ActiveRecord dependency to 2.2.2
 * Tested and fixed for ruby 1.8.7 and 1.9.2
 * Changed usage of `update_attributes` to `update_attribute` to allow ancestry column protection
 
-## Version [1.2.0] <small>2009-11-07</small>
+## Version [1.2.0] <sub><sup>2009-11-07</sub></sup>
 * Removed some duplication in has_ancestry
 * Cleaned up plugin pattern according to http://yehudakatz.com/2009/11/12/better-ruby-idioms/
 * Moved parts of ancestry into seperate files
@@ -197,23 +197,23 @@ Missed 2 commits (which are feature adds)
 * Updated ordered_by_ancestry scope to support Microsoft SQL Server
 * Added empty hash as parameter to exists? calls for older ActiveRecord versions
 
-## Version [1.1.4] <small>2009-11-07</small>
+## Version [1.1.4] <sub><sup>2009-11-07</sub></sup>
 * Thanks to a patch from tom taylor, Ancestry now works with different primary keys
 
-## Version [1.1.3] <small>2009-11-01</small>
+## Version [1.1.3] <sub><sup>2009-11-01</sub></sup>
 * Fixed a pretty bad bug where several operations took far too many queries
 
-## Version [1.1.2] <small>2009-10-29</small>
+## Version [1.1.2] <sub><sup>2009-10-29</sub></sup>
 * Added validation for depth cache column
 * Added STI support (reported broken)
 
-## Version [1.1.1] <small>2009-10-28</small>
+## Version [1.1.1] <sub><sup>2009-10-28</sub></sup>
 * Fixed some parentheses warnings that where reported
 * Fixed a reported issue with arrangement
 * Fixed issues with ancestors and path order on postgres
 * Added ordered_by_ancestry scope (needed to fix issues)
 
-## Version [1.1.0] <small>2009-10-22</small>
+## Version [1.1.0] <sub><sup>2009-10-22</sub></sup>
 * Depth caching (and cache rebuilding)
 * Depth method for nodes
 * Named scopes for selecting by depth
@@ -236,7 +236,7 @@ Missed 2 commits (which are feature adds)
 * Removed rails specific init
 * Removed uninstall script
 
-## Version 1.0.0 <small>2009-10-16</small>
+## Version 1.0.0 <sub><sup>2009-10-16</sub></sup>
 * Initial version
 * Tree building
 * Tree navigation
@@ -248,8 +248,9 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[HEAD]: https://github.com/stefankroes/ancestry/compare/v3.2.0...HEAD
-[3.1.0]: https://github.com/stefankroes/ancestry/compare/v3.1.0...v3.2.0
+[HEAD]: https://github.com/stefankroes/ancestry/compare/v3.2.1...HEAD
+[3.2.1]: https://github.com/stefankroes/ancestry/compare/v3.2.0...v3.2.1
+[3.2.0]: https://github.com/stefankroes/ancestry/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/stefankroes/ancestry/compare/v3.0.7...v3.1.0
 [3.0.7]: https://github.com/stefankroes/ancestry/compare/v3.0.6...v3.0.7
 [3.0.6]: https://github.com/stefankroes/ancestry/compare/v3.0.5...v3.0.6
