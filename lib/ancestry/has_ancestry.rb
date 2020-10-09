@@ -35,6 +35,14 @@ module Ancestry
       attribute ancestry_column, :materialized_path_string, :casting => pi ? :to_i : :to_s, :delimiter => '/'
       validates ancestry_column, :array_pattern => {:id => true, :pattern => pattern, :integer => pi}
       alias_attribute :ancestor_ids, ancestry_column
+      if ActiveRecord::VERSION::STRING < '5.1.0'
+        alias_method :ancestor_ids_before_last_save, :ancestor_ids_was
+        alias_method :ancestor_ids_in_database, :ancestor_ids_was
+        # usable in after save hook
+        # monkey patching will_save_change to fix rails 
+        alias_method :saved_change_to_ancestor_ids?, :will_save_change_to_ancestor_ids?
+        alias_method :will_save_change_to_ancestor_ids?, :will_save_change_to_ancestor_ids?
+      end
 
       extend Ancestry::MaterializedPath
 

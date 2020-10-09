@@ -2,8 +2,8 @@ module Ancestry
   module InstanceMethods
     # Update descendants with new ancestry (before save)
     def update_descendants_with_new_ancestry
-      # If enabled and node is existing and ancestry was updated and the new ancestry is sane ...
-      if !ancestry_callbacks_disabled? && !new_record? && ancestry_changed? && sane_ancestry?
+      # If enabled and node is existing and ancestry was updated
+      if !ancestry_callbacks_disabled? && !new_record? && will_save_change_to_ancestor_ids? && sane_ancestor_ids?
         # ... for each descendant ...
         unscoped_descendants.each do |descendant|
           # ... replace old ancestry with new ancestry
@@ -72,15 +72,12 @@ module Ancestry
       self.class.decrement_counter _counter_cache_column, parent_id
     end
 
-    def update_parent_counter_cache
-      changed =
-        if ActiveRecord::VERSION::STRING >= '5.1.0'
-          saved_change_to_attribute?(self.ancestry_base_class.ancestry_column)
-        else
-          ancestry_changed?
-        end
+    def parent_id_before_last_save
+      ancestor_ids_before_last_save.last
+    end
 
-      return unless changed
+    def update_parent_counter_cache
+      return unless saved_change_to_ancestor_ids?
 
       if parent_id_was = parent_id_before_last_save
         self.class.decrement_counter _counter_cache_column, parent_id_was
@@ -100,9 +97,11 @@ module Ancestry
     end
     alias :has_parent? :ancestors?
 
-    def ancestry_changed?
+    def will_save_change_to_ancestor_ids?
       column = self.ancestry_base_class.ancestry_column.to_s
-      if ActiveRecord::VERSION::STRING >= '5.1.0'
+      if ActiveRecord::VERSION::STRING >= '6.1.0'
+        # implementation is fine
+      elsif ActiveRecord::VERSION::STRING >= '5.1.0'
         # These methods return nil if there are no changes.
         # This was fixed in a refactoring in rails 6.0: https://github.com/rails/rails/pull/35933
         !!(will_save_change_to_attribute?(column) || saved_change_to_attribute?(column))

@@ -38,7 +38,7 @@ class ArrangementTest < ActiveSupport::TestCase
         attr_reader :modified
 
         def after_hook
-          @modified = ancestry_changed?
+          @modified = saved_change_to_ancestor_ids?
           nil
         end
       end
@@ -59,7 +59,7 @@ class ArrangementTest < ActiveSupport::TestCase
         attr_reader :modified
 
         def before_hook
-          @modified = ancestry_changed?
+          @modified = ancestor_ids_changed?
           nil
         end
       end
