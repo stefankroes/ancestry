@@ -83,8 +83,8 @@ module Ancestry
           self.counter_cache_column = options[:counter_cache]
         end
 
-        after_create :increase_parent_counter_cache, if: :has_parent?
-        after_destroy :decrease_parent_counter_cache, if: :has_parent?
+        after_create :increase_parent_counter_cache, if: :ancestor_ids?
+        after_destroy :decrease_parent_counter_cache, if: :ancestor_ids?
         after_update :update_parent_counter_cache
       end
 

@@ -82,7 +82,7 @@ module Ancestry
     module InstanceMethods
       # private (public so class methods can find it)
       # The ancestry value for this record's children (before save)
-      # This is technically child_ancestor_ids_was
+      # This is technically child_ancestor_ids_in_database
       def child_ancestor_ids
         # New records cannot have children
         raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?

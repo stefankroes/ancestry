@@ -92,11 +92,13 @@ module Ancestry
 
     # Ancestors
 
-    def ancestors?
+    # when field is removed, this will end up back at ancestors
+    def ancestor_ids?
       ancestor_ids.present?
     end
-    alias :has_parent? :ancestors?
-    alias :parent_id? :ancestors?
+    alias :ancestors? :ancestor_ids?
+    alias :has_parent? :ancestor_ids?
+    alias :parent_id? :ancestor_ids?
 
     def will_save_change_to_ancestor_ids?
       column = self.ancestry_base_class.ancestry_column.to_s
