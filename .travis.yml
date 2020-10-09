@@ -13,16 +13,10 @@ env:
   - DB=sqlite3
 
 gemfile:
-  - gemfiles/gemfile_42.gemfile
   - gemfiles/gemfile_50.gemfile
   - gemfiles/gemfile_51.gemfile
   - gemfiles/gemfile_52.gemfile
   - gemfiles/gemfile_60.gemfile
-
-jobs:
-  exclude:
-    - rvm: 2.7
-      gemfile: gemfiles/gemfile_42.gemfile
 
 services:
   - mysql
