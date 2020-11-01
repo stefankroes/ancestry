@@ -115,5 +115,5 @@ module Ancestry
 end
 
 ActiveSupport.on_load :active_record do
-  send :extend, Ancestry::HasAncestry
+  extend Ancestry::HasAncestry
 end
