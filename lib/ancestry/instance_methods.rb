@@ -100,10 +100,10 @@ module Ancestry
 
     # Ancestors
 
-    def ancestors?
+    def has_parent?
       ancestor_ids.present?
     end
-    alias :has_parent? :ancestors?
+    alias :ancestors? :has_parent?
 
     def ancestry_changed?
       column = self.ancestry_base_class.ancestry_column.to_s
@@ -121,7 +121,7 @@ module Ancestry
     end
 
     def ancestors depth_options = {}
-      return self.ancestry_base_class.none unless ancestors?
+      return self.ancestry_base_class.none unless has_parent?
       self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.ancestors_of(self)
     end
 
@@ -162,12 +162,12 @@ module Ancestry
     end
 
     def parent_id
-      ancestor_ids.last if ancestors?
+      ancestor_ids.last if has_parent?
     end
     alias :parent_id? :ancestors?
 
     def parent
-      unscoped_find(parent_id) if ancestors?
+      unscoped_find(parent_id) if has_parent?
     end
 
     def parent_of?(node)
@@ -177,15 +177,15 @@ module Ancestry
     # Root
 
     def root_id
-      ancestors? ? ancestor_ids.first : id
+      has_parent? ? ancestor_ids.first : id
     end
 
     def root
-      ancestors? ? unscoped_find(root_id) : self
+      has_parent? ? unscoped_find(root_id) : self
     end
 
     def is_root?
-      !ancestors?
+      !has_parent?
     end
     alias :root? :is_root?
 
