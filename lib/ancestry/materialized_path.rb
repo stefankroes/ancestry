@@ -1,7 +1,5 @@
 module Ancestry
   module MaterializedPath
-    BEFORE_LAST_SAVE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_before_last_save'.freeze : '_was'.freeze
-    IN_DATABASE_SUFFIX = ActiveRecord::VERSION::STRING >= '5.1.0' ? '_in_database'.freeze : '_was'.freeze
     ANCESTRY_DELIMITER='/'.freeze
 
     def self.extended(base)
@@ -31,14 +29,14 @@ module Ancestry
     def children_of(object)
       t = arel_table
       node = to_node(object)
-      where(t[ancestry_column].eq(node.child_ancestry))
+      where(t[ancestry_column].eq(node.child_ancestor_ids))
     end
 
     # indirect = anyone who is a descendant, but not a child
     def indirects_of(object)
       t = arel_table
       node = to_node(object)
-      where(t[ancestry_column].matches("#{node.child_ancestry}/%", nil, true))
+      where(t[ancestry_column].matches(node.child_ancestor_id_widcard, nil, true))
     end
 
     def descendants_of(object)
@@ -49,7 +47,7 @@ module Ancestry
     def descendant_conditions(object)
       t = arel_table
       node = to_node(object)
-      t[ancestry_column].matches("#{node.child_ancestry}/%", nil, true).or(t[ancestry_column].eq(node.child_ancestry))
+      t[ancestry_column].matches(node.child_ancestor_id_widcard, nil, true).or(t[ancestry_column].eq(node.child_ancestor_ids))
     end
 
     def subtree_of(object)
@@ -82,64 +80,17 @@ module Ancestry
     end
 
     module InstanceMethods
-
-      # Validates the ancestry, but can also be applied if validation is bypassed to determine if children should be affected
-      def sane_ancestry?
-        ancestry_value = read_attribute(self.ancestry_base_class.ancestry_column)
-        (ancestry_value.nil? || !ancestor_ids.include?(self.id)) && valid?
-      end
-
-      # optimization - better to go directly to column and avoid parsing
-      def ancestors?
-        read_attribute(self.ancestry_base_class.ancestry_column).present?
-      end
-      alias :has_parent? :ancestors?
-
-      def ancestor_ids=(value)
-        col = self.ancestry_base_class.ancestry_column
-        value.present? ? write_attribute(col, value.join(ANCESTRY_DELIMITER)) : write_attribute(col, nil)
-      end
-
-      def ancestor_ids
-        parse_ancestry_column(read_attribute(self.ancestry_base_class.ancestry_column))
-      end
-
-      def ancestor_ids_in_database
-        parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}"))
-      end
-
-      def ancestor_ids_before_last_save
-        parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}"))
-      end
-
-      def parent_id_before_last_save
-        ancestry_was = send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}")
-        return unless ancestry_was.present?
-
-        parse_ancestry_column(ancestry_was).last
-      end
-
-      # optimization - better to go directly to column and avoid parsing
-      def sibling_of?(node)
-        self.read_attribute(self.ancestry_base_class.ancestry_column) == node.read_attribute(self.ancestry_base_class.ancestry_column)
-      end
-
       # private (public so class methods can find it)
       # The ancestry value for this record's children (before save)
-      # This is technically child_ancestry_was
-      def child_ancestry
+      # This is technically child_ancestor_ids_in_database
+      def child_ancestor_ids
         # New records cannot have children
         raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
-        path_was = self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}")
-        path_was.blank? ? id.to_s : "#{path_was}/#{id}"
+        ancestor_ids_in_database + [id]
       end
 
-      private
-
-      def parse_ancestry_column obj
-        return [] unless obj
-        obj_ids = obj.split(ANCESTRY_DELIMITER)
-        self.class.primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
+      def child_ancestor_id_widcard
+        (child_ancestor_ids + ['%']).join(ANCESTRY_DELIMITER)
       end
     end
   end
