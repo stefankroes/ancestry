@@ -38,7 +38,7 @@ class ScopesTest < ActiveSupport::TestCase
 
   def test_chained_scopes
     AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, roots|
-      roots.each do |root, children|
+      roots.each do |root, _children|
         # the first scope limits the second scope
         assert_empty model.children_of(root).roots
         assert_empty model.children_of(root.id).roots
@@ -50,7 +50,7 @@ class ScopesTest < ActiveSupport::TestCase
   end
 
   def test_order_by
-    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, _roots|
       # not thrilled with this. mac postgres has odd sorting requirements
       if ENV["DB"].to_s =~ /pg/ && RUBY_PLATFORM !~ /x86_64-darwin/
         expected = model.all.sort_by { |m| [m.ancestor_ids.map(&:to_s).join, m.id.to_i] }
@@ -63,7 +63,7 @@ class ScopesTest < ActiveSupport::TestCase
   end
 
   def test_order_by_reverse
-    AncestryTestDatabase.with_model(:width => 1, :depth => 3) do |model, roots|
+    AncestryTestDatabase.with_model(:width => 1, :depth => 3) do |model, _roots|
       child = model.last
       assert child
       assert_nothing_raised do #IrreversibleOrderError

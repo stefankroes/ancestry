@@ -2,7 +2,7 @@ require_relative '../environment'
 
 class DepthConstraintsTest < ActiveSupport::TestCase
   def test_descendants_with_depth_constraints
-    AncestryTestDatabase.with_model :depth => 4, :width => 4, :cache_depth => true do |model, roots|
+    AncestryTestDatabase.with_model :depth => 4, :width => 4, :cache_depth => true do |model, _roots|
       assert_equal 4, model.roots.first.descendants(:before_depth => 2).count
       assert_equal 20, model.roots.first.descendants(:to_depth => 2).count
       assert_equal 16, model.roots.first.descendants(:at_depth => 2).count
@@ -12,7 +12,7 @@ class DepthConstraintsTest < ActiveSupport::TestCase
   end
 
   def test_subtree_with_depth_constraints
-    AncestryTestDatabase.with_model :depth => 4, :width => 4, :cache_depth => true do |model, roots|
+    AncestryTestDatabase.with_model :depth => 4, :width => 4, :cache_depth => true do |model, _roots|
       assert_equal 5, model.roots.first.subtree(:before_depth => 2).count
       assert_equal 21, model.roots.first.subtree(:to_depth => 2).count
       assert_equal 16, model.roots.first.subtree(:at_depth => 2).count

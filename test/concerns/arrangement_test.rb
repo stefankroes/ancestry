@@ -44,91 +44,91 @@ class ArrangementTest < ActiveSupport::TestCase
   end
 
   def test_arrangement
-    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, _roots|
       assert_tree model.arrange, [3, 3, 3, 0]
     end
   end
 
   def test_subtree_arrange_root_node
-    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, _roots|
       assert_tree root_node(model).subtree.arrange, [1, 2, 2, 0]
     end
   end
 
   def test_subtree_arrange_middle_node
-    AncestryTestDatabase.with_model :depth => 4, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 4, :width => 2 do |model, _roots|
       assert_tree middle_node(model).subtree.arrange, [1, 2, 2, 0]
     end
   end
 
   def test_subtree_arrange_leaf_node
-    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, _roots|
       assert_tree leaf_node(model).subtree.arrange, [1, 0]
     end
   end
 
   def test_descendants_arrange_root_node
-    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, _roots|
       assert_tree root_node(model).descendants.arrange, [2, 2, 0]
     end
   end
 
   def test_descendants_arrange_middle_node
-    AncestryTestDatabase.with_model :depth => 4, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 4, :width => 2 do |model, _roots|
       assert_tree middle_node(model).descendants.arrange, [2, 2, 0]
     end
   end
 
   def test_descendants_arrange_leaf_node
-    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, _roots|
       assert_tree leaf_node(model).descendants.arrange, [0]
     end
   end
 
   def test_path_arrange_root_node
-    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, _roots|
       test_node = root_node(model)
       assert_tree_path test_node.path.arrange, test_node.path_ids
     end
   end
 
   def test_path_arrange_middle_node
-    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, _roots|
       test_node = middle_node(model)
       assert_tree_path test_node.path.arrange, test_node.path_ids
     end
   end
 
   def test_path_arrange_leaf_node
-    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, _roots|
       test_node = leaf_node(model)
       assert_tree_path test_node.path.arrange, test_node.path_ids
     end
   end
 
   def test_ancestors_arrange_root_node
-    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, _roots|
       test_node = root_node(model)
       assert_tree_path test_node.ancestors.arrange, test_node.ancestor_ids
     end
   end
 
   def test_ancestors_arrange_middle_node
-    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, _roots|
       test_node = middle_node(model)
       assert_tree_path test_node.ancestors.arrange, test_node.ancestor_ids
     end
   end
 
   def test_ancestors_arrange_leaf_node
-    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 2 do |model, _roots|
       test_node = leaf_node(model)
       assert_tree_path test_node.ancestors.arrange, test_node.ancestor_ids
     end
   end
 
   def test_arrange_serializable
-    AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, _roots|
       result = [{"ancestry"=>nil,
           "id"=>4,
           "children"=>
@@ -145,7 +145,7 @@ class ArrangementTest < ActiveSupport::TestCase
   end
 
   def test_arrange_serializable_with_block
-    AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, _roots|
       expected_result = [{
           "id"=>4,
           "children"=>
@@ -167,7 +167,7 @@ class ArrangementTest < ActiveSupport::TestCase
   end
 
   def test_arrange_order_option
-    AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
+    AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, _roots|
       descending_nodes_lvl0 = model.arrange :order => 'id desc'
       ascending_nodes_lvl0 = model.arrange :order => 'id asc'
 

@@ -5,7 +5,7 @@ class DefaultScopesTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model(
       :width => 3, :depth => 3, :extra_columns => {:deleted_at => :datetime},
       :default_scope_params => {:deleted_at => nil}
-    ) do |model, roots|
+    ) do |model, _roots|
       roots = model.roots.to_a
       grandparent = roots[0]
       new_grandparent = roots[1]
@@ -27,7 +27,7 @@ class DefaultScopesTest < ActiveSupport::TestCase
       :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime},
       :default_scope_params => {:deleted_at => nil},
       :orphan_strategy => :destroy
-    ) do |model, roots|
+    ) do |model, _roots|
       parent = model.roots.first
       child = parent.children.first
 
@@ -44,7 +44,7 @@ class DefaultScopesTest < ActiveSupport::TestCase
       :width => 1, :depth => 2, :extra_columns => {:deleted_at => :datetime},
       :default_scope_params => {:deleted_at => nil},
       :orphan_strategy => :rootify
-    ) do |model, roots|
+    ) do |model, _roots|
       parent = model.roots.first
       child = parent.children.first
 

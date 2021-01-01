@@ -2,15 +2,15 @@ require_relative '../environment'
 
 class CounterCacheTest < ActiveSupport::TestCase
   def test_counter_cache_when_creating
-    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |model, roots|
-      roots.each do |lvl0_node, lvl0_children|
+    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |_model, roots|
+      roots.each do |lvl0_node, _lvl0_children|
         assert_equal 2, lvl0_node.reload.children_count
       end
     end
   end
 
   def test_counter_cache_when_destroying
-    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |model, roots|
+    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |_model, roots|
       parent = roots.first.first
       child = parent.children.first
       assert_difference 'parent.reload.children_count', -1 do
@@ -22,20 +22,20 @@ class CounterCacheTest < ActiveSupport::TestCase
   def test_counter_cache_when_reduplicate_destroying
     return unless ActiveRecord::VERSION::STRING >= '5.1.0'
 
-    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |model, roots|
+    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |_model, roots|
       parent = roots.first.first
       child = parent.children.first
-      _child = child.class.find(child.id)
+      child2 = child.class.find(child.id)
 
       assert_difference 'parent.reload.children_count', -1 do
         child.destroy
-        _child.destroy
+        child2.destroy
       end
     end
   end
 
   def test_counter_cache_when_updating_parent
-    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |model, roots|
+    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |_model, roots|
       parent1 = roots.first.first
       parent2 = roots.last.first
       child = parent1.children.first
@@ -49,7 +49,7 @@ class CounterCacheTest < ActiveSupport::TestCase
   end
 
   def test_counter_cache_when_updating_parent_and_previous_is_nil
-    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |model, roots|
+    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |_model, roots|
       child = roots.first.first
       parent = roots.last.first
 
@@ -60,7 +60,7 @@ class CounterCacheTest < ActiveSupport::TestCase
   end
 
   def test_counter_cache_when_updating_parent_and_current_is_nil
-    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |model, roots|
+    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |_model, roots|
       parent = roots.first.first
       child = parent.children.first
 
@@ -71,15 +71,15 @@ class CounterCacheTest < ActiveSupport::TestCase
   end
 
   def test_custom_counter_cache_column
-    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => :nodes_count do |model, roots|
-      roots.each do |lvl0_node, lvl0_children|
+    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => :nodes_count do |_model, roots|
+      roots.each do |lvl0_node, _lvl0_children|
         assert_equal 2, lvl0_node.reload.nodes_count
       end
     end
   end
 
   def test_counter_cache_when_updating_record
-    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true, :extra_columns => {:name => :string} do |model, roots|
+    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true, :extra_columns => {:name => :string} do |_model, roots|
       parent = roots.first.first
       child = parent.children.first
 

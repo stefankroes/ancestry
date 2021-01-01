@@ -32,7 +32,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
   end
 
   def test_descendants_move_with_node
-    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |_model, roots|
       root1, root2, root3 = roots.map(&:first)
       assert_no_difference 'root1.descendants.size' do
         assert_difference 'root2.descendants.size', root1.subtree.size do
@@ -58,7 +58,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
   end
 
   def test_modified_parents_set_ancestry_properly
-    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |_model, roots|
       root1, root2, root3 = roots.map(&:first) # r1, r2, r3
       root2.update(:parent => root1) # r1 <= r2, r3
       root3.update(:parent => root2) # r1 <= r2 <= r3
@@ -67,7 +67,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
   end
 
   def test_set_parent_with_non_default_ancestry_column
-    AncestryTestDatabase.with_model :depth => 3, :width => 3, :ancestry_column => :alternative_ancestry do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 3, :ancestry_column => :alternative_ancestry do |_model, roots|
       root1, root2, _root3 = roots.map(&:first)
       assert_no_difference 'root1.descendants.size' do
         assert_difference 'root2.descendants.size', root1.subtree.size do
@@ -79,7 +79,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
   end
 
   def test_set_parent_id
-    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |_model, roots|
       root1, root2, _root3 = roots.map(&:first)
       assert_no_difference 'root1.descendants.size' do
         assert_difference 'root2.descendants.size', root1.subtree.size do
@@ -91,7 +91,7 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
   end
 
   def test_set_parent_id_with_non_default_ancestry_column
-    AncestryTestDatabase.with_model :depth => 3, :width => 3, :ancestry_column => :alternative_ancestry do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 3, :ancestry_column => :alternative_ancestry do |_model, roots|
       root1, root2, _root3 = roots.map(&:first)
       assert_no_difference 'root1.descendants.size' do
         assert_difference 'root2.descendants.size', root1.subtree.size do
