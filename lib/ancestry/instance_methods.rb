@@ -39,7 +39,7 @@ module Ancestry
         when :adopt # make child elements of this node, child of its parent
           descendants.each do |descendant|
             descendant.without_ancestry_callbacks do
-              descendant.update_attribute :ancestor_ids, descendant.ancestor_ids.delete_if { |x| x == self.id }
+              descendant.update_attribute :ancestor_ids, (descendant.ancestor_ids.delete_if { |x| x == self.id })
             end
           end
         when :restrict # throw an exception if it has children

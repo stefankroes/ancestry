@@ -58,7 +58,7 @@ class ScopesTest < ActiveSupport::TestCase
         expected = model.all.sort_by { |m| [m.ancestor_ids.map(&:to_s), m.id.to_i] }
       end
       actual = model.ordered_by_ancestry_and(:id)
-      assert_equal expected.map { |r| [r.ancestor_ids, r.id.to_s] }, actual.map { |r| [r.ancestor_ids, r.id.to_s] }
+      assert_equal (expected.map { |r| [r.ancestor_ids, r.id.to_s] }), (actual.map { |r| [r.ancestor_ids, r.id.to_s] })
     end
   end
 
