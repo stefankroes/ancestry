@@ -2,7 +2,7 @@ require_relative '../environment'
 
 class TreePredicateTest < ActiveSupport::TestCase
   def test_tree_predicates
-    AncestryTestDatabase.with_model :depth => 2, :width => 3 do |model, roots|
+    AncestryTestDatabase.with_model :depth => 2, :width => 3 do |_model, roots|
       roots.each do |lvl0_node, lvl0_children|
         root, children = lvl0_node, lvl0_children.map(&:first)
         # Ancestors assertions

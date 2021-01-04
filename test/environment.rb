@@ -28,10 +28,10 @@ class AncestryTestDatabase
 
     # Assume Travis CI database config if no custom one exists
     filename = if File.exist?(File.expand_path('../database.yml', __FILE__))
-      File.expand_path('../database.yml', __FILE__)
-    else
-      File.expand_path('../database.ci.yml', __FILE__)
-    end
+                 File.expand_path('../database.yml', __FILE__)
+               else
+                 File.expand_path('../database.ci.yml', __FILE__)
+               end
 
     # Setup database connection
     config = YAML.load_file(filename)[db_type]

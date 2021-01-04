@@ -2,7 +2,7 @@ require_relative '../environment'
 
 class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
   def test_integrity_checking
-    AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
+    AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, _roots|
       # Check that there are no errors on a valid tree
       assert_nothing_raised do
         model.check_ancestry_integrity!
