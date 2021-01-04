@@ -63,7 +63,7 @@ class AncestryTestDatabase
     table_options={}
     table_options[:id] = options.delete(:id) if options.key?(:id)
 
-    ActiveRecord::Base.connection.create_table 'test_nodes', table_options do |table|
+    ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
       table.string options[:ancestry_column] || :ancestry
       table.integer options[:depth_cache_column] || :ancestry_depth if options[:cache_depth]
       if options[:counter_cache]

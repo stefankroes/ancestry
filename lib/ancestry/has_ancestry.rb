@@ -5,7 +5,7 @@ module Ancestry
       raise Ancestry::AncestryException.new(I18n.t("ancestry.option_must_be_hash")) unless options.is_a? Hash
       options.each do |key, value|
         unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy].include? key
-          raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_option", {:key => key.inspect, :value => value.inspect}))
+          raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_option", key: key.inspect, value: value.inspect))
         end
       end
 
