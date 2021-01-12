@@ -87,12 +87,7 @@ module Ancestry
 
       after_touch :touch_ancestors_callback
       after_destroy :touch_ancestors_callback
-
-      if ActiveRecord::VERSION::STRING >= '5.1.0'
-        after_save :touch_ancestors_callback, if: :saved_changes?
-      else
-        after_save :touch_ancestors_callback, if: :changed?
-      end
+      after_save :touch_ancestors_callback, if: :saved_changes?
     end
 
     def acts_as_tree(*args)
