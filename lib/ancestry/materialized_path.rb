@@ -68,7 +68,7 @@ module Ancestry
       if %w(mysql mysql2 sqlite sqlite3).include?(connection.adapter_name.downcase)
         reorder(arel_table[ancestry_column], order)
       elsif %w(postgresql).include?(connection.adapter_name.downcase) && ActiveRecord::VERSION::STRING >= "6.1"
-        reorder(Arel::Nodes::Ascending.new(arel_table[ancestry_column]).nulls_first)
+        reorder(Arel::Nodes::Ascending.new(arel_table[ancestry_column]).nulls_first, order)
       else
         reorder(
           Arel::Nodes::Ascending.new(Arel::Nodes::NamedFunction.new('COALESCE', [arel_table[ancestry_column], Arel.sql("''")])),
