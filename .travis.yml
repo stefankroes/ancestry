@@ -3,8 +3,7 @@ cache: bundler
 
 rvm:
   - 2.5
-  - 2.6
-  - 2.7
+  - 3.0
 
 env:
   - DB=pg
@@ -12,8 +11,21 @@ env:
   - DB=sqlite3
 
 gemfile:
-  - gemfiles/gemfile_52.gemfile
   - gemfiles/gemfile_60.gemfile
+  - gemfiles/gemfile_61.gemfile
+
+# rails 5.2
+jobs:
+  include:
+    - env: DB=pg
+      rvm: 2.5
+      gemfile: gemfiles/gemfile_52.gemfile
+    - env: DB=mysql2
+      rvm: 2.5
+      gemfile: gemfiles/gemfile_52.gemfile
+    - env: DB=sqlite3
+      rvm: 2.5
+      gemfile: gemfiles/gemfile_52.gemfile
 
 services:
   - mysql
