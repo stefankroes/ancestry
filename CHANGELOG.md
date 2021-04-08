@@ -5,13 +5,16 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 ## Version [HEAD] <sub><sup>now</sub></sup>
 
-* dropped support for rails 4.2 and 5.0
+## Version [4.0.0] <sub><sup>2021-04-02</sub></sup>
 
-## Versions [3.2.1] <sub><sup>2020-09-23</sub></sup>
+* dropped support for rails 4.2 and 5.0
+* documentation addition for counter cache option (thx @pustomytnyk)
+
+## Version [3.2.1] <sub><sup>2020-09-23</sub></sup>
 
 * fixed gemspec to include locales and pg (thx @HectorMF)
 
-## Versions [3.2.0] <sub><sup>2020-09-23</sub></sup>
+## Version [3.2.0] <sub><sup>2020-09-23</sub></sup>
 
 * introduce i18n
 * pg sql optimization for ancestry changes (thx @suonlight and @geis)
@@ -20,7 +23,7 @@ a nice looking [Changelog](http://keepachangelog.com).
 * able to convert to ancestry from a parent_id column with a different name
 * documentation fixes for better diagrams and grammar (thx @dtamais, @d-m-u, and @CamilleDrapier)
 
-## Versions [3.1.0] <sub><sup>2020-08-03</sub></sup>
+## Version [3.1.0] <sub><sup>2020-08-03</sub></sup>
 
 * `:primary_key_format` method lets you change syntax. good for uuids.
 * changed code from being `ancestry` string to `ancestry_ids` focused. May break monkey patches.
@@ -248,7 +251,8 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[HEAD]: https://github.com/stefankroes/ancestry/compare/v3.2.1...HEAD
+[HEAD]: https://github.com/stefankroes/ancestry/compare/v4.0.0...HEAD
+[4.0.0]: https://github.com/stefankroes/ancestry/compare/v3.2.1...v4.0.0
 [3.2.1]: https://github.com/stefankroes/ancestry/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/stefankroes/ancestry/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/stefankroes/ancestry/compare/v3.0.7...v3.1.0
