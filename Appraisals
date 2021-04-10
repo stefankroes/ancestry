@@ -1,4 +1,4 @@
-%w(5.2.4.4 6.0.3.4 6.1.1).each do |ar_version|
+%w(5.2.4.5 6.0.3.6 6.1.3.1).each do |ar_version|
   appraise "gemfile-#{ar_version.split('.').first(2).join}" do
     gem "activerecord", ar_version
     gem "pg"
