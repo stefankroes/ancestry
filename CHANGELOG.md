@@ -7,8 +7,13 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 ## Version [4.0.0] <sub><sup>2021-04-02</sub></sup>
 
-* dropped support for rails 4.2 and 5.0
-* documentation addition for counter cache option (thx @pustomytnyk)
+* dropped support for rails 4.2 and 5.0 (thx @d-m-u)
+* better documentation counter cache option (thx @pustomytnyk)
+* clean up code (thx @amatsuda @d-m-u)
+* fixed rails scoping deprecation warnings (thx @cmr119)
+* phasing out `parent_id?`, `ancestors?` and using `has_parent?` instead
+* fix postgres order bug on rails 6.2 and higher (thx @smoyth @danini-the-panini)
+
 
 ## Version [3.2.1] <sub><sup>2020-09-23</sub></sup>
 
