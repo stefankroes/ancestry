@@ -158,7 +158,11 @@ module Ancestry
     alias :parent_id? :ancestors?
 
     def parent
-      unscoped_find(parent_id) if has_parent?
+      if has_parent?
+        unscoped_where do |scope|
+          scope.find_by id: parent_id
+        end
+      end
     end
 
     def parent_of?(node)

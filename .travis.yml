@@ -2,7 +2,11 @@ language: ruby
 cache: bundler
 
 rvm:
-  - 2.6
+# rails 5.2    ...2.6 (prefer 2.5)
+# rails 6.0 2.5...3.0 (prefer 2.6)
+# rails 6.1 2.5..3.0  (prefer 3.0)
+# rails 6.2 2.5..3.0  (prefer 3.0)
+  - 2.5
   - 3.0
 
 env:
@@ -18,13 +22,13 @@ gemfile:
 jobs:
   include:
     - env: DB=pg
-      rvm: 2.6
+      rvm: 2.5
       gemfile: gemfiles/gemfile_52.gemfile
     - env: DB=mysql2
-      rvm: 2.6
+      rvm: 2.5
       gemfile: gemfiles/gemfile_52.gemfile
     - env: DB=sqlite3
-      rvm: 2.6
+      rvm: 2.5
       gemfile: gemfiles/gemfile_52.gemfile
 
 services:
