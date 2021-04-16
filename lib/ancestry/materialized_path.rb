@@ -69,6 +69,8 @@ module Ancestry
         reorder(arel_table[ancestry_column], order)
       elsif %w(postgresql).include?(connection.adapter_name.downcase) && ActiveRecord::VERSION::STRING >= "6.1"
         reorder(Arel::Nodes::Ascending.new(arel_table[ancestry_column]).nulls_first, order)
+      elsif %w(oracleenhanced).include?(connection.adapter_name.downcase)
+        reorder(Arel.sql("#{connection.quote_table_name(table_name)}.#{connection.quote_column_name(ancestry_column)} ASC NULLS FIRST"), order)
       else
         reorder(
           Arel::Nodes::Ascending.new(Arel::Nodes::NamedFunction.new('COALESCE', [arel_table[ancestry_column], Arel.sql("''")])),
