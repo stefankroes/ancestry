@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem "activerecord", '~> 5.2.4.5'
+gem "activerecord", '~> 6.0.3.6'
 gem "coveralls", require: false
 gem "mysql2"
 gem "pg"

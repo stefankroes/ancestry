@@ -16,7 +16,7 @@ NOTE:
 
 - Ancestry 2.x supports Rails 4.1 and earlier
 - Ancestry 3.x supports Rails 5.0 and 4.2
-- Ancestry 4.0 only supports rails 5.0 and higher
+- Ancestry 4.x only supports rails 6.0 and higher
 
 # Installation
 
@@ -132,8 +132,8 @@ The has_ancestry method supports the following options:
                            By default, primary keys only match integers ([0-9]+)
     :touch                 Instruct Ancestry to touch the ancestors of a node when it changes, to
                            invalidate nested key-based caches. (default: false)
-    :counter_cache         Boolean whether to create counter cache column accessor. 
-                           Default column name is `children_count`. 
+    :counter_cache         Boolean whether to create counter cache column accessor.
+                           Default column name is `children_count`.
                            Pass symbol to use different column name (default: false)
 
 # (Named) Scopes
