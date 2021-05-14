@@ -67,7 +67,7 @@ module Ancestry
     def ordered_by_ancestry(order = nil)
       if %w(mysql mysql2 sqlite sqlite3).include?(connection.adapter_name.downcase)
         reorder(arel_table[ancestry_column], order)
-      elsif %w(postgresql).include?(connection.adapter_name.downcase) && ActiveRecord::VERSION::STRING >= "6.1"
+      elsif %w(postgresql oracleenhanced).include?(connection.adapter_name.downcase) && ActiveRecord::VERSION::STRING >= "6.1"
         reorder(Arel::Nodes::Ascending.new(arel_table[ancestry_column]).nulls_first, order)
       else
         reorder(
