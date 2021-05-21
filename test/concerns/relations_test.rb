@@ -9,12 +9,12 @@ class RelationsTest < ActiveSupport::TestCase
     end
   end
 
-  def test_parent_not_found
+  def test_root_not_found
     AncestryTestDatabase.with_model do |model|
       record = model.create
       # setting the parent_id to something not valid
       record.update_attribute(:ancestor_ids, [record.id + 1])
-      assert_nil record.root
+      assert_equal record.root, record
     end
   end
 

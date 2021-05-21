@@ -176,7 +176,11 @@ module Ancestry
     end
 
     def root
-      has_parent? ? unscoped_find(root_id) : self
+      if has_parent?
+        unscoped_where { |scope| scope.find_by(id: root_id) } || self
+      else
+        self
+      end
     end
 
     def is_root?
