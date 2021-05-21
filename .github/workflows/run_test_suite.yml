@@ -20,10 +20,11 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       mysql:
-          image: mysql:5.7
+          image: mysql:8.0
           env:
             MYSQL_DATABASE: ancestry_test
             MYSQL_ALLOW_EMPTY_PASSWORD: yes
+            MYSQL_ROOT_PASSWORD:
             MYSQL_PASSWORD:
           ports:
             - 3306
