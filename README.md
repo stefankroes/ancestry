@@ -52,6 +52,17 @@ $ rails g migration add_ancestry_to_[table] ancestry:string:index
 $ rake db:migrate
 ```
 
+Depending upon your comfort with databases, you may want to create the column
+with `C` or `POSIX` encoding. This is a more primitive encoding and just compares
+bytes. Since this column will just contains numbers and slashes, it works much
+better. It also works better for the uuid case as well.
+
+
+If you opt out of this, and are trying to run tests on postgres, you may need to
+set the environment variable `COLLATE_SYMBOLS=false`. Sorry to say that a discussion
+on this topic is out of scope. The important take away is postgres sort order is
+not consistent across operating systems but other databases do not have this same
+issue.
 
 ## Add ancestry to your model
 * Add to app/models/[model.rb]:

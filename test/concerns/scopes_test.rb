@@ -51,8 +51,9 @@ class ScopesTest < ActiveSupport::TestCase
 
   def test_order_by
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, _roots|
-      # not thrilled with this. mac postgres has odd sorting requirements
-      if ENV["DB"].to_s =~ /pg/ && RUBY_PLATFORM !~ /x86_64-darwin/
+      # Some pg databases do not use symbols in sorting
+      # if this is failing, try running the test via DB=pg COLLATE_SYMBOLS=false rake test
+      if ENV["COLLATE_SYMBOLS"].to_s =~ /false/i
         expected = model.all.sort_by { |m| [m.ancestor_ids.map(&:to_s).join, m.id.to_i] }
       else
         expected = model.all.sort_by { |m| [m.ancestor_ids.map(&:to_s), m.id.to_i] }
