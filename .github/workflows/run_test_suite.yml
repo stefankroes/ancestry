@@ -8,12 +8,14 @@ on:
 jobs:
   test:
     services:
+      # https://github.com/docker-library/docs/blob/master/postgres/README.md
       postgres:
-        image: postgres:10.8
+        image: postgres:13
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: ancestry_test
+        ports:
+          - "5432:5432"
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -22,12 +24,10 @@ jobs:
       mysql:
           image: mysql:8.0
           env:
+            MYSQL_ROOT_PASSWORD: password
             MYSQL_DATABASE: ancestry_test
-            MYSQL_ALLOW_EMPTY_PASSWORD: yes
-            MYSQL_ROOT_PASSWORD:
-            MYSQL_PASSWORD:
           ports:
-            - 3306
+            - "3306:3306"
           options: >-
             --health-cmd="mysqladmin ping"
             --health-interval=10s
@@ -46,52 +46,59 @@ jobs:
           - ruby: 3.0
             activerecord: 61
     env:
-       PGUSER: postgres
-       PGPASSWORD: postgres
-       PGDATABASE: postgres
-       PGHOST: 127.0.0.1
-       PGPORT: 5432
-       BUNDLE_GEMFILE: gemfiles/gemfile_${{ matrix.activerecord }}.gemfile
-       MYSQL_DATABASE: ancestry_test
-
+      # for the pg cli (psql, pg_isready) and possibly rails
+      PGHOST: 127.0.0.1 # container is mapping it locally
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: password
+      # for the mysql cli (mysql, mysqladmin)
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PWD: password
+      # for rails tests (from matrix)
+      BUNDLE_GEMFILE: gemfiles/gemfile_${{ matrix.activerecord }}.gemfile
     steps:
       - name: checkout code
         uses: actions/checkout@v2
 
       - name: setup Ruby
-        # This will automatically get bug fixes and new Ruby versions (see https://github.com/ruby/setup-ruby#versioning)
+        # https://github.com/ruby/setup-ruby#versioning
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
 
-      - name: install gems
-        run: |
-          bundle config path vendor/bundle
-          bundle install --jobs 4 --retry 3
-      - name: setup mysql test database
-        run: |
-          sudo apt-get update && sudo apt-get install -y mysql-client
-          sudo /etc/init.d/mysql start
-          mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports[3306] }} -uroot -e 'CREATE SCHEMA IF NOT EXISTS 'ancestry_test';'
-      - name: setup postgres test database
-        run: |
-          sudo /etc/init.d/postgresql start
-          sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
-          psql -U postgres -c 'create database ancestry_test;'
-      - name: run pg tests
-        env:
-          DB: pg
-        run: bundle exec rake
-
-      - name: run mysql tests
-        env:
-          DB: mysql2
-          MYSQL_DATABASE: ancestry_test
-          PORT: ${{ job.services.mysql.ports[3306] }}
-        run: bundle exec rake
-
       - name: run sqlite tests
         env:
           DB: sqlite3
         run: bundle exec rake
+
+      - name: run pg tests
+        env:
+          DB: pg
+          COLLATE_SYMBOLS: false
+        run: |
+          COUNT=1
+          while ! pg_isready ; do
+            echo "waiting for postgres to start"
+            COUNT=$(($COUNT + 1))
+            [[ $COUNT -lt 20 ]] || break
+            sleep 1
+          done
+          # db container is currently creating the database
+          # psql -c 'create database ancestry_test;' || echo 'db exists'
+          bundle exec rake
+
+      - name: run mysql tests
+        env:
+          DB: mysql2
+        run: |
+          COUNT=1
+          while ! mysqladmin ping -h $MYSQL_HOST -P3306 --silent ; do
+            echo "waiting for mysql to start"
+            COUNT=$(($COUNT + 1))
+            [[ $COUNT -lt 20 ]] || break
+            sleep 1
+          done
+          # db container is currently creating the database
+          # mysql --host $MYSQL_HOST --port 3306 -u $MYSQL_USER  -e 'CREATE SCHEMA IF NOT EXISTS 'ancestry_test';'
+          bundle exec rake
