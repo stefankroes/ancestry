@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'bundler/setup'
 
-unless ENV["CI"]
+if ENV["COVERAGE"]
   require 'simplecov'
   SimpleCov.start do
     add_filter '/test/'
