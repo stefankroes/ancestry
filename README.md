@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/stefankroes/ancestry.svg?branch=master)](https://travis-ci.org/stefankroes/ancestry) [![Coverage Status](https://coveralls.io/repos/stefankroes/ancestry/badge.svg)](https://coveralls.io/r/stefankroes/ancestry) [![Gitter](https://badges.gitter.im/Join+Chat.svg)](https://gitter.im/stefankroes/ancestry?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Security](https://hakiri.io/github/stefankroes/ancestry/master.svg)](https://hakiri.io/github/stefankroes/ancestry/master)
+[![Gitter](https://badges.gitter.im/Join+Chat.svg)](https://gitter.im/stefankroes/ancestry?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Security](https://hakiri.io/github/stefankroes/ancestry/master.svg)](https://hakiri.io/github/stefankroes/ancestry/master)
 
 # Ancestry
 

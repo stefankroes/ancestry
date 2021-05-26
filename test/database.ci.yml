@@ -10,12 +10,7 @@ pg:
   username: postgres
   password: password
   min_messages: WARNING
-mysql:
-  adapter: mysql
-  database: ancestry_test
-  username: travis
-  encoding: utf8
-mysql2:
+mysql2: &mysql
   adapter: mysql2
   database: ancestry_test
   hostname: 127.0.0.1
@@ -23,3 +18,5 @@ mysql2:
   username: root
   password: password
   encoding: utf8
+mysql:
+  <<: *mysql

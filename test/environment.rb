@@ -1,12 +1,12 @@
 require 'rubygems'
 require 'bundler/setup'
 
-require 'simplecov'
-require 'coveralls'
-SimpleCov.formatter = Coveralls::SimpleCov::Formatter
-SimpleCov.start do
-  add_filter '/test/'
-  add_filter '/vendor/'
+if ENV["COVERAGE"]
+  require 'simplecov'
+  SimpleCov.start do
+    add_filter '/test/'
+    add_filter '/vendor/'
+  end
 end
 
 require 'active_support'
