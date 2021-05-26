@@ -34,7 +34,13 @@ class AncestryTestDatabase
                end
 
     # Setup database connection
-    config = YAML.load_file(filename)[db_type]
+    all_config = YAML.load_file(filename)
+    config = all_config[db_type]
+    if config.blank?
+      $stderr.puts "","","ERROR: Could not find '#{db_type}' in #{filename}"
+      $stderr.puts "Pick from: #{all_config.keys.join(", ")}", "", ""
+      exit(1)
+    end
     ActiveRecord::Base.establish_connection config
     begin
       ActiveRecord::Base.connection

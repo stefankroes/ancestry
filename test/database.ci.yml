@@ -5,7 +5,10 @@ sqlite3:
 pg:
   adapter: postgresql
   database: ancestry_test
+  hostname: 127.0.0.1
+  port: 5432
   username: postgres
+  password: password
   min_messages: WARNING
 mysql:
   adapter: mysql
@@ -15,5 +18,8 @@ mysql:
 mysql2:
   adapter: mysql2
   database: ancestry_test
-  username: travis
+  hostname: 127.0.0.1
+  port: 3306
+  username: root
+  password: password
   encoding: utf8
