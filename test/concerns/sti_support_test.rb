@@ -35,4 +35,30 @@ class StiSupportTest < ActiveSupport::TestCase
       Object.send :remove_const, 'SubclassWithAncestry'
     end
   end
+
+  def test_sti_support_for_counter_cache
+    AncestryTestDatabase.with_model :counter_cache => true, :extra_columns => {:type => :string} do |model|
+      # NOTE had to use subclasses other than Subclass1/Subclass2 from above
+      # due to (I think) Rails caching those STI classes and that not getting
+      # reset between specs
+
+      Object.const_set 'Subclass3', Class.new(model)
+      Object.const_set 'Subclass4', Class.new(model)
+
+      node1 = Subclass3.create!
+      node2 = Subclass4.create! :parent => node1
+      node3 = Subclass3.create! :parent => node1
+      node4 = Subclass4.create! :parent => node3
+      node5 = Subclass3.create! :parent => node4
+
+      assert_equal 2, node1.reload.children_count
+      assert_equal nil, node2.reload.children_count
+      assert_equal 1, node3.reload.children_count
+      assert_equal 1, node4.reload.children_count
+      assert_equal nil, node5.reload.children_count
+
+      Object.send :remove_const, 'Subclass3'
+      Object.send :remove_const, 'Subclass4'
+    end
+  end
 end
