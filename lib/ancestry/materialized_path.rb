@@ -82,13 +82,6 @@ module Ancestry
     end
 
     module InstanceMethods
-
-      # Validates the ancestry, but can also be applied if validation is bypassed to determine if children should be affected
-      def sane_ancestry?
-        ancestry_value = read_attribute(self.ancestry_base_class.ancestry_column)
-        ancestry_value.nil? || (!ancestor_ids.include?(self.id) && (valid? || errors[self.ancestry_base_class.ancestry_column].blank?))
-      end
-
       # optimization - better to go directly to column and avoid parsing
       def ancestors?
         read_attribute(self.ancestry_base_class.ancestry_column).present?
