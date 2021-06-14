@@ -8,7 +8,7 @@ module Ancestry
     # Update descendants with new ancestry (before save)
     def update_descendants_with_new_ancestry
       # If enabled and node is existing and ancestry was updated and the new ancestry is sane ...
-      if !ancestry_callbacks_disabled? && !new_record? && ancestry_changed? && sane_ancestry?
+      if !ancestry_callbacks_disabled? && !new_record? && ancestry_changed? && sane_ancestor_ids?
         # ... for each descendant ...
         unscoped_descendants.each do |descendant|
           # ... replace old ancestry with new ancestry
@@ -108,7 +108,20 @@ module Ancestry
     end
 
     def sane_ancestor_ids?
-      valid? || errors[self.ancestry_base_class.ancestry_column].blank?
+      current_context, self.validation_context = validation_context, nil
+      errors.clear
+
+      attribute = ancestry_base_class.ancestry_column
+      ancestry_value = send(attribute)
+      return true unless ancestry_value
+
+      self.class.validators_on(attribute).each do |validator|
+        validator.validate_each(self, attribute, ancestry_value)
+      end
+      ancestry_exclude_self
+      errors.none?
+    ensure
+      self.validation_context = current_context
     end
 
     def ancestors depth_options = {}
