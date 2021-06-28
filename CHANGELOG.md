@@ -5,6 +5,14 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 ## Version [HEAD] <sub><sup>now</sub></sup>
 
+## Version [4.1.0] <sub><sup>2021-06-25</sub></sup>
+
+* `parent` with an invalid id now returns nil (thx @vanboom)
+* `root` returns self if ancestry is invalid (thx @vanboom)
+* fix case where invalid object prevented ancestry updates (thx @d-m-u)
+* oracleenhanced uses nulls first for sorting (thx @lual)
+* fix counter cache and STI (thx @mattvague)
+
 ## Version [4.0.0] <sub><sup>2021-04-12</sub></sup>
 
 * dropped support for rails 4.2 and 5.0 (thx @d-m-u)
@@ -255,7 +263,8 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[HEAD]: https://github.com/stefankroes/ancestry/compare/v4.0.0...HEAD
+[HEAD]: https://github.com/stefankroes/ancestry/compare/v4.1.0...HEAD
+[4.1.0]: https://github.com/stefankroes/ancestry/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/stefankroes/ancestry/compare/v3.2.1...v4.0.0
 [3.2.1]: https://github.com/stefankroes/ancestry/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/stefankroes/ancestry/compare/v3.1.0...v3.2.0
