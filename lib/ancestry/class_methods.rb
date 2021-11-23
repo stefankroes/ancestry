@@ -74,6 +74,22 @@ module Ancestry
       end
     end
 
+     # Fix for issue #559: implements tree_view from the arrange method
+     # returns tree_view of a subtree
+    def tree_view(column, data = nil)
+      data = arrange unless data
+      data.each do |parent, children|
+        if parent.depth == 0
+          puts parent[column]
+        else
+          num = parent.depth - 1
+          indent = "   "*num
+          puts " #{"|" if parent.depth > 1}#{indent}|_ #{parent[column]}"
+        end
+        tree_view(column, children) if children
+      end
+    end
+
     # Pseudo-preordered array of nodes.  Children will always follow parents,
     def sort_by_ancestry(nodes, &block)
       arranged = nodes if nodes.is_a?(Hash)
