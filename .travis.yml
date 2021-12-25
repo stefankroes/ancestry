@@ -17,6 +17,7 @@ env:
 gemfile:
   - gemfiles/gemfile_60.gemfile
   - gemfiles/gemfile_61.gemfile
+  - gemfiles/gemfile_70.gemfile
 
 # rails 5.2
 jobs:
