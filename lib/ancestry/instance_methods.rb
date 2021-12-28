@@ -297,6 +297,7 @@ module Ancestry
     def without_ancestry_callbacks
       @disable_ancestry_callbacks = true
       yield
+    ensure
       @disable_ancestry_callbacks = false
     end
 
