@@ -41,7 +41,12 @@ class AncestryTestDatabase
       $stderr.puts "Pick from: #{all_config.keys.join(", ")}", "", ""
       exit(1)
     end
-    ActiveRecord::Base.establish_connection config
+    if ActiveRecord::VERSION::MAJOR >= 6
+      ActiveRecord::Base.establish_connection **config
+    else
+      ActiveRecord::Base.establish_connection config
+    end
+
     begin
       ActiveRecord::Base.connection
 
