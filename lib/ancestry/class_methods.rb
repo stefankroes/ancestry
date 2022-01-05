@@ -74,8 +74,6 @@ module Ancestry
       end
     end
 
-     # Fix for issue #559: implements tree_view from the arrange method
-     # returns tree_view of a subtree
     def tree_view(column, data = nil)
       data = arrange unless data
       data.each do |parent, children|
