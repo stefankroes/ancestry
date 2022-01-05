@@ -43,7 +43,7 @@ jobs:
             activerecord: 60
           - ruby: 2.7
             activerecord: 61
-          - ruby: 3.0
+          - ruby: "3.0"
             activerecord: 61
     env:
       # for the pg cli (psql, pg_isready) and possibly rails
