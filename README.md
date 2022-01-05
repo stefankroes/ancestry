@@ -44,6 +44,8 @@ $ bundle install
 
 ```bash
 $ rails g migration add_ancestry_to_[table] ancestry:string:index
+# or use different column name of your choosing. e.g. name:
+# rails g migration add_name_to_[people] name:string:index
 ```
 
 *   Migrate your database:
@@ -74,7 +76,8 @@ NOTE: A Btree index (as is recommended) has a limitaton of 2704 characters for t
 # app/models/[model.rb]
 
 class [Model] < ActiveRecord::Base
-   has_ancestry
+   has_ancestry # or alternatively as below:
+   # has_ancestry ancestry_column: :name ## if you've used a different column name
 end
 ```
 
