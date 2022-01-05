@@ -10,6 +10,9 @@ class ScopesTest < ActiveSupport::TestCase
       a_root = roots.first.first
       assert_equal model.siblings_of(a_root).sort, roots.map(&:first).sort
 
+      # Leaves assertion
+      assert_equal model.all.select(&:is_childless?), model.leaves.order(:id).to_a
+
       model.all.each do |test_node|
         # Assertions for ancestors_of named scope
         assert_equal test_node.ancestors.to_a, model.ancestors_of(test_node).to_a
