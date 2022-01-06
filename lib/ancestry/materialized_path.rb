@@ -38,11 +38,13 @@ module Ancestry
     def indirects_of(object)
       t = arel_table
       node = to_node(object)
-      where(t[ancestry_column].matches("#{node.child_ancestry}/%", nil, true))
+      where(t[ancestry_column].matches("#{node.child_ancestry}#{ANCESTRY_DELIMITER}%", nil, true))
     end
 
     def descendants_of(object)
-      where(descendant_conditions(object))
+      t = arel_table
+      node = to_node(object)
+      indirects_of(node).or(children_of(node))
     end
 
     # deprecated
@@ -55,7 +57,7 @@ module Ancestry
     def subtree_of(object)
       t = arel_table
       node = to_node(object)
-      where(descendant_conditions(node).or(t[primary_key].eq(node.id)))
+      descendants_of(node).or(where(t[primary_key].eq(node.id)))
     end
 
     def siblings_of(object)
