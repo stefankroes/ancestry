@@ -173,7 +173,7 @@ module Ancestry
     def parent
       if has_parent?
         unscoped_where do |scope|
-          scope.find_by id: parent_id
+          scope.find_by scope.primary_key => parent_id
         end
       end
     end
