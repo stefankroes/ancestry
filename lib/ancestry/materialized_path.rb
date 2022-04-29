@@ -46,7 +46,6 @@ module Ancestry
     end
 
     def descendants_of(object)
-      t = arel_table
       node = to_node(object)
       indirects_of(node).or(children_of(node))
     end
