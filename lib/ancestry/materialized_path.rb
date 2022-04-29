@@ -1,8 +1,12 @@
 module Ancestry
+  # store ancestry as grandparent_id/parent_id
+  # root a=nil,id=1   children=id,id/%      == 1, 1/%
+  # 3: a=1/2,id=3     children=a/id,a/id/%  == 1/2/3, 1/2/3/%
   module MaterializedPath
     BEFORE_LAST_SAVE_SUFFIX = '_before_last_save'.freeze
     IN_DATABASE_SUFFIX = '_in_database'.freeze
     ANCESTRY_DELIMITER='/'.freeze
+    ROOT=nil
 
     def self.extended(base)
       base.send(:include, InstanceMethods)
@@ -13,7 +17,7 @@ module Ancestry
     end
 
     def roots
-      where(arel_table[ancestry_column].eq(nil))
+      where(arel_table[ancestry_column].eq(ROOT))
     end
 
     def ancestors_of(object)
@@ -38,11 +42,13 @@ module Ancestry
     def indirects_of(object)
       t = arel_table
       node = to_node(object)
-      where(t[ancestry_column].matches("#{node.child_ancestry}/%", nil, true))
+      where(t[ancestry_column].matches("#{node.child_ancestry}#{ANCESTRY_DELIMITER}%", nil, true))
     end
 
     def descendants_of(object)
-      where(descendant_conditions(object))
+      t = arel_table
+      node = to_node(object)
+      indirects_of(node).or(children_of(node))
     end
 
     # deprecated
@@ -55,7 +61,7 @@ module Ancestry
     def subtree_of(object)
       t = arel_table
       node = to_node(object)
-      where(descendant_conditions(node).or(t[primary_key].eq(node.id)))
+      descendants_of(node).or(where(t[primary_key].eq(node.id)))
     end
 
     def siblings_of(object)
@@ -84,13 +90,13 @@ module Ancestry
     module InstanceMethods
       # optimization - better to go directly to column and avoid parsing
       def ancestors?
-        read_attribute(self.ancestry_base_class.ancestry_column).present?
+        read_attribute(self.ancestry_base_class.ancestry_column) != ROOT
       end
       alias :has_parent? :ancestors?
 
       def ancestor_ids=(value)
         col = self.ancestry_base_class.ancestry_column
-        value.present? ? write_attribute(col, value.join(ANCESTRY_DELIMITER)) : write_attribute(col, nil)
+        value.present? ? write_attribute(col, generate_ancestry(value)) : write_attribute(col, ROOT)
       end
 
       def ancestor_ids
@@ -107,7 +113,7 @@ module Ancestry
 
       def parent_id_before_last_save
         ancestry_was = send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}")
-        return unless ancestry_was.present?
+        return if ancestry_was == ROOT
 
         parse_ancestry_column(ancestry_was).last
       end
@@ -124,15 +130,17 @@ module Ancestry
         # New records cannot have children
         raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
         path_was = self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}")
-        path_was.blank? ? id.to_s : "#{path_was}/#{id}"
+        path_was.blank? ? id.to_s : "#{path_was}#{ANCESTRY_DELIMITER}#{id}"
       end
 
-      private
-
-      def parse_ancestry_column obj
-        return [] unless obj
+      def parse_ancestry_column(obj)
+        return [] if obj == ROOT
         obj_ids = obj.split(ANCESTRY_DELIMITER)
         self.class.primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
+      end
+
+      def generate_ancestry(ancestor_ids)
+        ancestor_ids.join(ANCESTRY_DELIMITER)
       end
     end
   end

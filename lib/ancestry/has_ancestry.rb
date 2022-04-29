@@ -4,7 +4,7 @@ module Ancestry
       # Check options
       raise Ancestry::AncestryException.new(I18n.t("ancestry.option_must_be_hash")) unless options.is_a? Hash
       options.each do |key, value|
-        unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy].include? key
+        unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :strategy].include? key
           raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_option", key: key.inspect, value: value.inspect))
         end
       end
@@ -27,8 +27,13 @@ module Ancestry
       # Include dynamic class methods
       extend Ancestry::ClassMethods
 
-      validates_format_of self.ancestry_column, :with => derive_ancestry_pattern(options[:primary_key_format]), :allow_nil => true
-      extend Ancestry::MaterializedPath
+      if options[:strategy] == :materialized_path2
+        validates_format_of self.ancestry_column, :with => derive_materialized2_pattern(options[:primary_key_format]), :allow_nil => false
+        extend Ancestry::MaterializedPath2
+      else
+        validates_format_of self.ancestry_column, :with => derive_materialized_pattern(options[:primary_key_format]), :allow_nil => true
+        extend Ancestry::MaterializedPath
+      end
 
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
       include Ancestry::MaterializedPathPg if update_strategy == :sql
@@ -97,13 +102,23 @@ module Ancestry
 
     private
 
-    def derive_ancestry_pattern(primary_key_format, delimiter = '/')
+    def derive_materialized_pattern(primary_key_format, delimiter = '/')
       primary_key_format ||= '[0-9]+'
 
       if primary_key_format.to_s.include?('\A')
         primary_key_format
       else
         /\A#{primary_key_format}(#{delimiter}#{primary_key_format})*\Z/
+      end
+    end
+
+    def derive_materialized2_pattern(primary_key_format, delimiter = '/')
+      primary_key_format ||= '[0-9]+'
+
+      if primary_key_format.to_s.include?('\A')
+        primary_key_format
+      else
+        /\A#{delimiter}(#{primary_key_format}#{delimiter})*\Z/
       end
     end
   end
