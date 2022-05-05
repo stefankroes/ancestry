@@ -5,7 +5,7 @@ sqlite3:
 pg:
   adapter: postgresql
   database: ancestry_test
-  hostname: 127.0.0.1
+  host: 127.0.0.1
   port: 5432
   username: postgres
   password: password
@@ -13,7 +13,7 @@ pg:
 mysql2: &mysql
   adapter: mysql2
   database: ancestry_test
-  hostname: 127.0.0.1
+  host: 127.0.0.1
   port: 3306
   username: root
   password: password
