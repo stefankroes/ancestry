@@ -34,7 +34,11 @@ class AncestryTestDatabase
                end
 
     # Setup database connection
-    all_config = YAML.load_file(filename)
+    all_config = if YAML.respond_to?(:safe_load_file)
+      YAML.safe_load_file(filename, aliases: true)
+    else
+      YAML.load_file(filename)
+    end
     config = all_config[db_type]
     if config.blank?
       $stderr.puts "","","ERROR: Could not find '#{db_type}' in #{filename}"
