@@ -46,7 +46,7 @@ class AncestryTestDatabase
       exit(1)
     end
     if ActiveRecord::VERSION::MAJOR >= 6
-      ActiveRecord::Base.establish_connection **config
+      ActiveRecord::Base.establish_connection(**config)
     else
       ActiveRecord::Base.establish_connection config
     end
