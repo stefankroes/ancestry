@@ -3,7 +3,14 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
-## Version [HEAD] <sub><sup>now</sub></sup>
+## Version [4.2.0] <sub><sup>2022-06-09</sub></sup>
+
+* added strategy: materialized_path2 [#571](https://github.com/stefankroes/ancestry/pull/571)
+* Added tree_view method [#561](https://github.com/stefankroes/ancestry/pull/561) (thx @bizcho)
+* Fixed bug when errors would not undo callbacks [#566](https://github.com/stefankroes/ancestry/pull/566) (thx @daniloisr)
+* ruby 3.0 support
+* rails 7.0 support (thx @chenillen, @petergoldstein)
+* Documentation fixes (thx @benkoshy, @mijoharas)
 
 ## Version [4.1.0] <sub><sup>2021-06-25</sub></sup>
 
@@ -263,7 +270,8 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[HEAD]: https://github.com/stefankroes/ancestry/compare/v4.1.0...HEAD
+[HEAD]: https://github.com/stefankroes/ancestry/compare/v4.2.0...HEAD
+[4.2.0]: https://github.com/stefankroes/ancestry/compare/v4.1.0...v4.2.0
 [4.1.0]: https://github.com/stefankroes/ancestry/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/stefankroes/ancestry/compare/v3.2.1...v4.0.0
 [3.2.1]: https://github.com/stefankroes/ancestry/compare/v3.2.0...v3.2.1
