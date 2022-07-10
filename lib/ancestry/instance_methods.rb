@@ -190,7 +190,7 @@ module Ancestry
 
     def root
       if has_parent?
-        unscoped_where { |scope| scope.find_by(id: root_id) } || self
+        unscoped_where { |scope| scope.find_by(scope.primary_key => root_id) } || self
       else
         self
       end
@@ -315,7 +315,7 @@ module Ancestry
     # works with after save context (hence before_last_save)
     def unscoped_current_and_previous_ancestors
       unscoped_where do |scope|
-        scope.where id: (ancestor_ids + ancestor_ids_before_last_save).uniq
+        scope.where scope.primary_key => (ancestor_ids + ancestor_ids_before_last_save).uniq
       end
     end
 
