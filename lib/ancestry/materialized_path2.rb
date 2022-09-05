@@ -25,18 +25,22 @@ module Ancestry
       reorder(Arel::Nodes::Ascending.new(arel_table[ancestry_column]), order)
     end
 
-    # deprecated
-    def descendant_conditions(object)
-      t = arel_table
-      node = to_node(object)
-      t[ancestry_column].matches("#{node.child_ancestry}%", nil, true)
+    def descendants_by_ancestry(ancestry)
+      arel_table[ancestry_column].matches("#{ancestry}/%", nil, true)
     end
 
     module InstanceMethods
       def child_ancestry
         # New records cannot have children
-        raise Ancestry::AncestryException.new('No child ancestry for new record. Save record before performing tree operations.') if new_record?
+        raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
         path_was = self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}")
+        "#{path_was}#{id}#{ANCESTRY_DELIMITER}"
+      end
+
+      def child_ancestry_before_save
+        # New records cannot have children
+        raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
+        path_was = self.send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}")
         "#{path_was}#{id}#{ANCESTRY_DELIMITER}"
       end
 
