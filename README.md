@@ -152,6 +152,12 @@ The has_ancestry method supports the following options:
     :counter_cache         Boolean whether to create counter cache column accessor. 
                            Default column name is `children_count`. 
                            Pass symbol to use different column name (default: false)
+    :update_strategy       Choose the strategy to update descendants nodes (default: `ruby`)
+                           :ruby     All descendants are updated using the ruby algorithm. This strategy
+                                     triggers update callbacks for each descendants nodes
+                           :sql      All descendants are updated using a single SQL statement. This strategy
+                                     does not trigger update callbacks for the descendants. This strategy is 
+                                     available only for PostgreSql implementations
 
 # (Named) Scopes
 
