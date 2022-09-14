@@ -32,6 +32,8 @@ class ArrangementTest < ActiveSupport::TestCase
   end
 
   def test_update_descendants_with_changed_parent_value
+    return if Ancestry.default_update_strategy == :sql # sql stragery doesn't trigger callbacks
+
     AncestryTestDatabase.with_model(
       extra_columns: { name: :string, name_path: :string }
     ) do |model|
