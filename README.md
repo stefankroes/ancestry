@@ -56,7 +56,7 @@ $ rake db:migrate
 
 Depending upon your comfort with databases, you may want to create the column
 with `C` or `POSIX` encoding. This is a more primitive encoding and just compares
-bytes. Since this column will just contains numbers and slashes, it works much
+bytes. Since this column will just contain numbers and slashes, it works much
 better. It also works better for the uuid case as well.
 
 Alternatively, if you create a [`text_pattern_ops`](https://www.postgresql.org/docs/current/indexes-opclass.html) index for your postgresql column, subtree selection will use an efficient index for you regardless of whether you created the column with `POSIX` encoding.
