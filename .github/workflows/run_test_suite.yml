@@ -48,6 +48,8 @@ jobs:
             activerecord: 61
           - ruby: 3.1
             activerecord: 70
+          - ruby: 3.2
+            activerecord: 70
     env:
       # for the pg cli (psql, pg_isready) and possibly rails
       PGHOST: 127.0.0.1 # container is mapping it locally
