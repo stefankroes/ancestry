@@ -45,8 +45,8 @@ module Ancestry
       # Validate that the ancestor ids don't include own id
       validate :ancestry_exclude_self
 
-      # Update descendants with new ancestry before save
-      before_save :update_descendants_with_new_ancestry
+      # Update descendants with new ancestry after update
+      after_update :update_descendants_with_new_ancestry
 
       # Apply orphan strategy before destroy
       before_destroy :apply_orphan_strategy

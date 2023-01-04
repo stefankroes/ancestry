@@ -5,15 +5,15 @@ module Ancestry
       errors.add(:base, I18n.t("ancestry.exclude_self", class_name: self.class.name.humanize)) if ancestor_ids.include? self.id
     end
 
-    # Update descendants with new ancestry (before save)
+    # Update descendants with new ancestry (after update)
     def update_descendants_with_new_ancestry
       # If enabled and node is existing and ancestry was updated and the new ancestry is sane ...
       if !ancestry_callbacks_disabled? && !new_record? && ancestry_changed? && sane_ancestor_ids?
         # ... for each descendant ...
-        unscoped_descendants.each do |descendant|
+        unscoped_descendants_before_save.each do |descendant|
           # ... replace old ancestry with new ancestry
           descendant.without_ancestry_callbacks do
-            new_ancestor_ids = path_ids + (descendant.ancestor_ids - path_ids_in_database)
+            new_ancestor_ids = path_ids + (descendant.ancestor_ids - path_ids_before_last_save)
             descendant.update_attribute(:ancestor_ids, new_ancestor_ids)
           end
         end
@@ -133,8 +133,8 @@ module Ancestry
       ancestor_ids + [id]
     end
 
-    def path_ids_in_database
-      ancestor_ids_in_database + [id]
+    def path_ids_before_last_save
+      ancestor_ids_before_last_save + [id]
     end
 
     def path depth_options = {}
@@ -309,6 +309,12 @@ module Ancestry
     def unscoped_descendants
       unscoped_where do |scope|
         scope.where self.ancestry_base_class.descendant_conditions(self)
+      end
+    end
+
+    def unscoped_descendants_before_save
+      unscoped_where do |scope|
+        scope.where self.ancestry_base_class.descendant_before_save_conditions(self)
       end
     end
 

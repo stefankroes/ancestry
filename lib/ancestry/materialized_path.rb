@@ -50,11 +50,19 @@ module Ancestry
       indirects_of(node).or(children_of(node))
     end
 
-    # deprecated
-    def descendant_conditions(object)
+    def descendants_by_ancestry(ancestry)
       t = arel_table
+      t[ancestry_column].matches("#{ancestry}/%", nil, true).or(t[ancestry_column].eq(ancestry))
+    end
+
+    def descendant_conditions(object)
       node = to_node(object)
-      t[ancestry_column].matches("#{node.child_ancestry}/%", nil, true).or(t[ancestry_column].eq(node.child_ancestry))
+      descendants_by_ancestry( node.child_ancestry )
+    end
+
+    def descendant_before_save_conditions(object)
+      node = to_node(object)
+      descendants_by_ancestry( node.child_ancestry_before_save )
     end
 
     def subtree_of(object)
@@ -102,10 +110,6 @@ module Ancestry
         parse_ancestry_column(read_attribute(self.ancestry_base_class.ancestry_column))
       end
 
-      def ancestor_ids_in_database
-        parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}"))
-      end
-
       def ancestor_ids_before_last_save
         parse_ancestry_column(send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}"))
       end
@@ -129,6 +133,13 @@ module Ancestry
         # New records cannot have children
         raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
         path_was = self.send("#{self.ancestry_base_class.ancestry_column}#{IN_DATABASE_SUFFIX}")
+        path_was.blank? ? id.to_s : "#{path_was}#{ANCESTRY_DELIMITER}#{id}"
+      end
+
+      def child_ancestry_before_save
+        # New records cannot have children
+        raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
+        path_was = self.send("#{self.ancestry_base_class.ancestry_column}#{BEFORE_LAST_SAVE_SUFFIX}")
         path_was.blank? ? id.to_s : "#{path_was}#{ANCESTRY_DELIMITER}#{id}"
       end
 

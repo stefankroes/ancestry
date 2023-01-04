@@ -31,6 +31,44 @@ class ArrangementTest < ActiveSupport::TestCase
     end
   end
 
+  def test_update_descendants_with_changed_parent_value
+    return if Ancestry.default_update_strategy == :sql # sql stragery doesn't trigger callbacks
+
+    AncestryTestDatabase.with_model(
+      extra_columns: { name: :string, name_path: :string }
+    ) do |model|
+
+      model.class_eval do
+        before_save :update_name_path
+
+        def update_name_path
+          self.name_path = [parent&.name_path, name].compact.join('/')
+        end
+      end
+
+      m1 = model.create!( name: "parent" )
+      m2 = model.create( parent: m1, name: "child" )
+      m3 = model.create( parent: m2, name: "grandchild" )
+      m4 = model.create( parent: m3, name: "grandgrandchild" )
+      assert_equal([m1.id], m2.ancestor_ids)
+      assert_equal("parent", m1.reload.name_path)
+      assert_equal("parent/child", m2.reload.name_path)
+      assert_equal("parent/child/grandchild", m3.reload.name_path)
+      assert_equal("parent/child/grandchild/grandgrandchild", m4.reload.name_path)
+
+      m5 = model.create!( name: "changed" )
+
+      m2.update!( parent_id: m5.id )
+      assert_equal("changed", m5.reload.name_path)
+      assert_equal([m5.id], m2.reload.ancestor_ids)
+      assert_equal("changed/child", m2.reload.name_path)
+      assert_equal([m5.id,m2.id], m3.reload.ancestor_ids)
+      assert_equal("changed/child/grandchild", m3.reload.name_path)
+      assert_equal([m5.id,m2.id,m3.id], m4.reload.ancestor_ids)
+      assert_equal("changed/child/grandchild/grandgrandchild", m4.reload.name_path)
+    end
+  end
+
   def test_has_ancestry_detects_changes_in_after_save
     AncestryTestDatabase.with_model(:extra_columns => {:name => :string, :name_path => :string}) do |model|
       model.class_eval do
