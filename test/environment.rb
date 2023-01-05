@@ -74,7 +74,7 @@ class AncestryTestDatabase
     width                = options.delete(:width) || 0
     extra_columns        = options.delete(:extra_columns)
     default_scope_params = options.delete(:default_scope_params)
-    options[:strategy]   = ENV["STRATEGY"] if ENV["STRATEGY"].present?
+    options[:ancestry_format]   = ENV["FORMAT"].to_sym if ENV["FORMAT"].present?
 
     table_options={}
     table_options[:id] = options.delete(:id) if options.key?(:id)

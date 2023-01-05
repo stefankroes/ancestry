@@ -78,7 +78,7 @@ jobs:
         run: |
           # for this database, run all the forms of our tests
           bundle exec rake
-          STRATEGY=materialized_path2 bundle exec rake
+          FORMAT=materialized_path2 bundle exec rake
 
       - name: run pg tests
         env:
@@ -95,8 +95,8 @@ jobs:
           # db container is currently creating the database
           # psql -c 'create database ancestry_test;' || echo 'db exists'
           bundle exec rake
+          FORMAT=materialized_path2 bundle exec rake
 
-          STRATEGY=materialized_path2 bundle exec rake
       - name: run mysql tests
         env:
           DB: mysql2
@@ -111,5 +111,4 @@ jobs:
           # db container is currently creating the database
           # mysql --host $MYSQL_HOST --port 3306 -u $MYSQL_USER  -e 'CREATE SCHEMA IF NOT EXISTS 'ancestry_test';'
           bundle exec rake
-
-          STRATEGY=materialized_path2 bundle exec rake
+          FORMAT=materialized_path2 bundle exec rake

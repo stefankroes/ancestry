@@ -3,6 +3,10 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
+## Version [4.3.0] <sub><sup>2023-01-05</sub></sup>
+* Fix: materialized_path2 strategy was completely broken [#597](https://github.com/stefankroes/ancestry/pull/597) (thx @kshnurov)
+* Fix: descendants ancestry should be updated in after_update callbacks [#589](https://github.com/stefankroes/ancestry/pull/589) (thx @kshnurov)
+
 ## Version [4.2.0] <sub><sup>2022-06-09</sub></sup>
 
 * added strategy: materialized_path2 [#571](https://github.com/stefankroes/ancestry/pull/571)
@@ -270,7 +274,8 @@ Missed 2 commits (which are feature adds)
 * Validations
 
 
-[HEAD]: https://github.com/stefankroes/ancestry/compare/v4.2.0...HEAD
+[HEAD]: https://github.com/stefankroes/ancestry/compare/v4.3.0...HEAD
+[4.3.0]: https://github.com/stefankroes/ancestry/compare/v4.2.0...v4.3.0
 [4.2.0]: https://github.com/stefankroes/ancestry/compare/v4.1.0...v4.2.0
 [4.1.0]: https://github.com/stefankroes/ancestry/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/stefankroes/ancestry/compare/v3.2.1...v4.0.0
