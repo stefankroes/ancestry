@@ -48,7 +48,7 @@ module Ancestry
 
       attribute self.ancestry_column, default: self.ancestry_root
 
-      validates self.ancestry_column, self.ancestry_validation_options
+      validates self.ancestry_column, ancestry_validation_options
 
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
       include Ancestry::MaterializedPathPg if update_strategy == :sql
