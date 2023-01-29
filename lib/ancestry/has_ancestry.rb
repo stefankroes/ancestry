@@ -39,7 +39,7 @@ module Ancestry
 
       # Save self as base class (for STI)
       self.class_variable_set('@@ancestry_base_class', self)
-      cattr_reader :ancestry_base_class
+      cattr_reader :ancestry_base_class, instance_reader: false
 
       # Include instance methods
       include Ancestry::InstanceMethods
