@@ -10,9 +10,8 @@ module Ancestry
           "#{self.class.ancestry_column} = regexp_replace(#{self.class.ancestry_column}, '^#{Regexp.escape(old_ancestry)}', '#{new_ancestry}')"
         ]
 
-        if ancestry_base_class.respond_to?(:depth_cache_column) && respond_to?(ancestry_base_class.depth_cache_column)
-          depth_cache_column = ancestry_base_class.depth_cache_column.to_s
-          update_clause << "#{depth_cache_column} = length(regexp_replace(regexp_replace(ancestry, '^#{Regexp.escape(old_ancestry)}', '#{new_ancestry}'), '[^#{ancestry_base_class.ancestry_delimiter}]', '', 'g')) #{ancestry_base_class.ancestry_format == :materialized_path2 ? '-' : '+'} 1"
+        if ancestry_base_class.ancestry_options[:cache_depth] && respond_to?(ancestry_base_class.ancestry_options[:depth_cache_column])
+          update_clause << "#{ancestry_base_class.ancestry_options[:depth_cache_column]} = length(regexp_replace(regexp_replace(ancestry, '^#{Regexp.escape(old_ancestry)}', '#{new_ancestry}'), '[^#{ancestry_base_class.ancestry_delimiter}]', '', 'g')) #{ancestry_base_class.ancestry_options[:ancestry_format] == :materialized_path2 ? '-' : '+'} 1"
         end
 
         unscoped_descendants_before_save.update_all update_clause.join(', ')

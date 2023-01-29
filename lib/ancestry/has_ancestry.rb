@@ -24,8 +24,18 @@ module Ancestry
       self.class_variable_set('@@ancestry_column', options[:ancestry_column] || :ancestry)
       cattr_reader :ancestry_column, instance_reader: false
 
-      cattr_accessor :ancestry_primary_key_format
-      self.ancestry_primary_key_format = options[:primary_key_format].presence || Ancestry.default_primary_key_format
+      self.class_variable_set('@@ancestry_options', {
+        primary_key_format: options[:primary_key_format].presence || Ancestry.default_primary_key_format,
+        touch: options[:touch] || false,
+        ancestry_format: options[:ancestry_format] || Ancestry.default_ancestry_format,
+        cache_depth: options[:cache_depth] || false,
+        depth_cache_column: options[:depth_cache_column] || :ancestry_depth,
+        counter_cache: options[:counter_cache],
+        counter_cache_column: options[:counter_cache] == true ? 'children_count' : options[:counter_cache].to_s,
+        update_strategy: options[:update_strategy] || Ancestry.default_update_strategy,
+        orphan_strategy: options[:orphan_strategy] || :destroy,
+      }.freeze)
+      cattr_reader :ancestry_options, instance_reader: false
 
       self.class_variable_set('@@ancestry_delimiter', '/')
       cattr_reader :ancestry_delimiter, instance_reader: false
@@ -34,31 +44,24 @@ module Ancestry
       self.class_variable_set('@@ancestry_base_class', self)
       cattr_reader :ancestry_base_class
 
-      # Touch ancestors after updating
-      cattr_accessor :touch_ancestors
-      self.touch_ancestors = options[:touch] || false
-
       # Include instance methods
       include Ancestry::InstanceMethods
 
       # Include dynamic class methods
       extend Ancestry::ClassMethods
 
-      cattr_accessor :ancestry_format
-      self.ancestry_format = options[:ancestry_format] || Ancestry.default_ancestry_format
-
-      if ancestry_format == :materialized_path2
+      if ancestry_options[:ancestry_format] == :materialized_path2
         extend Ancestry::MaterializedPath2
       else
         extend Ancestry::MaterializedPath
       end
 
       attribute self.ancestry_column, default: self.ancestry_root
-
       validates self.ancestry_column, ancestry_validation_options
 
-      update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
-      include Ancestry::MaterializedPathPg if update_strategy == :sql
+      if ancestry_options[:update_strategy] == :sql
+        include Ancestry::MaterializedPathPg
+      end
 
       # Validate that the ancestor ids don't include own id
       validate :ancestry_exclude_self
@@ -76,24 +79,17 @@ module Ancestry
       end
 
       # Create ancestry column accessor and set to option or default
-      if options[:cache_depth]
-        # Create accessor for column name and set to option or default
-        self.cattr_accessor :depth_cache_column
-        self.depth_cache_column = options[:depth_cache_column] || :ancestry_depth
-
+      if ancestry_options[:cache_depth]
         # Cache depth in depth cache column before save
         before_validation :cache_depth
         before_save :cache_depth
 
         # Validate depth column
-        validates_numericality_of depth_cache_column, :greater_than_or_equal_to => 0, :only_integer => true, :allow_nil => false
+        validates_numericality_of ancestry_options[:depth_cache_column], greater_than_or_equal_to: 0, only_integer: true, allow_nil: false
       end
 
       # Create counter cache column accessor and set to option or default
-      if options[:counter_cache]
-        cattr_accessor :counter_cache_column
-        self.counter_cache_column = options[:counter_cache] == true ? 'children_count' : options[:counter_cache].to_s
-
+      if ancestry_options[:counter_cache]
         after_create :increase_parent_counter_cache, if: :has_parent?
         after_destroy :decrease_parent_counter_cache, if: :has_parent?
         after_update :update_parent_counter_cache
@@ -104,8 +100,8 @@ module Ancestry
         scope scope_name, lambda { |depth|
           raise Ancestry::AncestryException.new(I18n.t("ancestry.named_scope_depth_cache",
                                                        :scope_name => scope_name
-                                                       )) unless options[:cache_depth]
-          where("#{depth_cache_column} #{operator} ?", depth)
+                                                       )) unless ancestry_options[:cache_depth]
+          where("#{ancestry_options[:depth_cache_column]} #{operator} ?", depth)
         }
       end
 
