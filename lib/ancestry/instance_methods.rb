@@ -131,7 +131,7 @@ module Ancestry
     end
 
     def ancestors depth_options = {}
-      return self.ancestry_base_class.none unless has_parent?
+      return self.class.none unless has_parent?
       self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.ancestors_of(self)
     end
 
