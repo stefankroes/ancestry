@@ -62,7 +62,7 @@ module Ancestry
 
     # Touch each of this record's ancestors (after save)
     def touch_ancestors_callback
-      return unless !ancestry_callbacks_disabled? && ancestry_base_class.ancestry_options[:touch]
+      return unless !ancestry_callbacks_disabled? && self.class.ancestry_options[:touch]
 
       # Touch each of the old *and* new ancestors
       unscoped_current_and_previous_ancestors.each do |ancestor|
@@ -74,7 +74,7 @@ module Ancestry
 
     # Counter Cache
     def increase_parent_counter_cache
-      self.ancestry_base_class.increment_counter ancestry_base_class.ancestry_options[:counter_cache_column], parent_id
+      self.ancestry_base_class.increment_counter self.class.ancestry_options[:counter_cache_column], parent_id
     end
 
     def decrease_parent_counter_cache
@@ -86,14 +86,14 @@ module Ancestry
       return if defined?(@_trigger_destroy_callback) && !@_trigger_destroy_callback
       return if ancestry_callbacks_disabled?
 
-      self.ancestry_base_class.decrement_counter ancestry_base_class.ancestry_options[:counter_cache_column], parent_id
+      self.ancestry_base_class.decrement_counter self.class.ancestry_options[:counter_cache_column], parent_id
     end
 
     def update_parent_counter_cache
       return unless saved_change_to_attribute?(self.class.ancestry_column)
 
       if parent_id_was = parent_id_before_last_save
-        self.ancestry_base_class.decrement_counter ancestry_base_class.ancestry_options[:counter_cache_column], parent_id_was
+        self.ancestry_base_class.decrement_counter self.class.ancestry_options[:counter_cache_column], parent_id_was
       end
 
       parent_id && increase_parent_counter_cache
@@ -152,7 +152,7 @@ module Ancestry
     end
 
     def cache_depth
-      write_attribute ancestry_base_class.ancestry_options[:depth_cache_column], depth
+      write_attribute self.class.ancestry_options[:depth_cache_column], depth
     end
 
     def ancestor_of?(node)
