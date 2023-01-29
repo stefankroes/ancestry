@@ -119,7 +119,7 @@ module Ancestry
             if !node.sane_ancestor_ids?
               raise Ancestry::AncestryIntegrityException.new(I18n.t("ancestry.invalid_ancestry_column",
                                                                     node_id: node.id,
-                                                                    ancestry_column: "#{node.read_attribute node.ancestry_base_class.ancestry_column}"
+                                                                    ancestry_column: "#{node.read_attribute node.class.ancestry_column}"
                                                                     ))
             end
             # ... check that all ancestors exist
