@@ -2,7 +2,7 @@ module Ancestry
   module ClassMethods
     # Fetch tree node if necessary
     def to_node object
-      if object.is_a?(self.ancestry_base_class)
+      if object.is_a?(ancestry_base_class)
         object
       else
         unscoped_where { |scope| scope.find(object.try(primary_key) || object) }
@@ -11,7 +11,7 @@ module Ancestry
 
     # Scope on relative depth options
     def scope_depth depth_options, depth
-      depth_options.inject(self.ancestry_base_class) do |scope, option|
+      depth_options.inject(ancestry_base_class) do |scope, option|
         scope_name, relative_depth = option
         if [:before_depth, :to_depth, :at_depth, :from_depth, :after_depth].include? scope_name
           scope.send scope_name, depth + relative_depth
@@ -29,9 +29,9 @@ module Ancestry
     # Get all nodes and sort them into an empty hash
     def arrange options = {}
       if (order = options.delete(:order))
-        arrange_nodes self.ancestry_base_class.order(order).where(options)
+        arrange_nodes ancestry_base_class.order(order).where(options)
       else
-        arrange_nodes self.ancestry_base_class.where(options)
+        arrange_nodes ancestry_base_class.where(options)
       end
     end
 
@@ -164,7 +164,7 @@ module Ancestry
     def restore_ancestry_integrity!
       parent_ids = {}
       # Wrap the whole thing in a transaction ...
-      self.ancestry_base_class.transaction do
+      ancestry_base_class.transaction do
         unscoped_where do |scope|
           # For each node ...
           scope.find_each do |node|
@@ -216,7 +216,7 @@ module Ancestry
     def rebuild_depth_cache!
       raise Ancestry::AncestryException.new(I18n.t("ancestry.cannot_rebuild_depth_cache")) unless respond_to? :depth_cache_column
 
-      self.ancestry_base_class.transaction do
+      ancestry_base_class.transaction do
         unscoped_where do |scope|
           scope.find_each do |node|
             node.update_attribute depth_cache_column, node.depth
@@ -226,7 +226,7 @@ module Ancestry
     end
 
     def unscoped_where
-      yield self.ancestry_base_class.default_scoped.unscope(:where)
+      yield ancestry_base_class.default_scoped.unscope(:where)
     end
 
     ANCESTRY_UNCAST_TYPES = [:string, :uuid, :text].freeze
