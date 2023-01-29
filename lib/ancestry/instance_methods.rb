@@ -74,7 +74,7 @@ module Ancestry
 
     # Counter Cache
     def increase_parent_counter_cache
-      self.ancestry_base_class.increment_counter self.class.ancestry_options[:counter_cache_column], parent_id
+      self.class.ancestry_base_class.increment_counter self.class.ancestry_options[:counter_cache_column], parent_id
     end
 
     def decrease_parent_counter_cache
@@ -86,14 +86,14 @@ module Ancestry
       return if defined?(@_trigger_destroy_callback) && !@_trigger_destroy_callback
       return if ancestry_callbacks_disabled?
 
-      self.ancestry_base_class.decrement_counter self.class.ancestry_options[:counter_cache_column], parent_id
+      self.class.ancestry_base_class.decrement_counter self.class.ancestry_options[:counter_cache_column], parent_id
     end
 
     def update_parent_counter_cache
       return unless saved_change_to_attribute?(self.class.ancestry_column)
 
       if parent_id_was = parent_id_before_last_save
-        self.ancestry_base_class.decrement_counter self.class.ancestry_options[:counter_cache_column], parent_id_was
+        self.class.ancestry_base_class.decrement_counter self.class.ancestry_options[:counter_cache_column], parent_id_was
       end
 
       parent_id && increase_parent_counter_cache
@@ -132,7 +132,7 @@ module Ancestry
 
     def ancestors depth_options = {}
       return self.class.none unless has_parent?
-      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.ancestors_of(self)
+      self.class.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.ancestors_of(self)
     end
 
     def path_ids
@@ -144,7 +144,7 @@ module Ancestry
     end
 
     def path depth_options = {}
-      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.inpath_of(self)
+      self.class.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.inpath_of(self)
     end
 
     def depth
@@ -214,7 +214,7 @@ module Ancestry
     # Children
 
     def children
-      self.ancestry_base_class.children_of(self)
+      self.class.ancestry_base_class.children_of(self)
     end
 
     def child_ids
@@ -238,7 +238,7 @@ module Ancestry
     # Siblings
 
     def siblings
-      self.ancestry_base_class.siblings_of(self)
+      self.class.ancestry_base_class.siblings_of(self)
     end
 
     # NOTE: includes self
@@ -263,7 +263,7 @@ module Ancestry
     # Descendants
 
     def descendants depth_options = {}
-      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).descendants_of(self)
+      self.class.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).descendants_of(self)
     end
 
     def descendant_ids depth_options = {}
@@ -277,7 +277,7 @@ module Ancestry
     # Indirects
 
     def indirects depth_options = {}
-      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).indirects_of(self)
+      self.class.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).indirects_of(self)
     end
 
     def indirect_ids depth_options = {}
@@ -291,7 +291,7 @@ module Ancestry
     # Subtree
 
     def subtree depth_options = {}
-      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).subtree_of(self)
+      self.class.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).subtree_of(self)
     end
 
     def subtree_ids depth_options = {}
@@ -314,13 +314,13 @@ module Ancestry
   private
     def unscoped_descendants
       unscoped_where do |scope|
-        scope.where self.ancestry_base_class.descendant_conditions(self)
+        scope.where self.class.ancestry_base_class.descendant_conditions(self)
       end
     end
 
     def unscoped_descendants_before_save
       unscoped_where do |scope|
-        scope.where self.ancestry_base_class.descendant_before_save_conditions(self)
+        scope.where self.class.ancestry_base_class.descendant_before_save_conditions(self)
       end
     end
 
@@ -338,7 +338,7 @@ module Ancestry
     end
 
     def unscoped_where
-      self.ancestry_base_class.unscoped_where do |scope|
+      self.class.ancestry_base_class.unscoped_where do |scope|
         yield scope
       end
     end
