@@ -4,11 +4,10 @@ module Ancestry
     def update_descendants_with_new_ancestry
       # If enabled and node is existing and ancestry was updated and the new ancestry is sane ...
       if !ancestry_callbacks_disabled? && !new_record? && ancestry_changed? && sane_ancestor_ids?
-        ancestry_column = ancestry_base_class.ancestry_column
         old_ancestry = generate_ancestry( path_ids_before_last_save )
         new_ancestry = generate_ancestry( path_ids )
         update_clause = [
-          "#{ancestry_column} = regexp_replace(#{ancestry_column}, '^#{Regexp.escape(old_ancestry)}', '#{new_ancestry}')"
+          "#{self.class.ancestry_column} = regexp_replace(#{self.class.ancestry_column}, '^#{Regexp.escape(old_ancestry)}', '#{new_ancestry}')"
         ]
 
         if ancestry_base_class.respond_to?(:depth_cache_column) && respond_to?(ancestry_base_class.depth_cache_column)

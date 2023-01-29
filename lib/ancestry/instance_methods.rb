@@ -90,9 +90,7 @@ module Ancestry
     end
 
     def update_parent_counter_cache
-      changed = saved_change_to_attribute?(self.ancestry_base_class.ancestry_column)
-
-      return unless changed
+      return unless saved_change_to_attribute?(self.class.ancestry_column)
 
       if parent_id_was = parent_id_before_last_save
         self.ancestry_base_class.decrement_counter counter_cache_column, parent_id_was
@@ -109,7 +107,7 @@ module Ancestry
     alias :ancestors? :has_parent?
 
     def ancestry_changed?
-      column = self.ancestry_base_class.ancestry_column.to_s
+      column = self.class.ancestry_column.to_s
         # These methods return nil if there are no changes.
         # This was fixed in a refactoring in rails 6.0: https://github.com/rails/rails/pull/35933
         !!(will_save_change_to_attribute?(column) || saved_change_to_attribute?(column))
@@ -119,7 +117,7 @@ module Ancestry
       current_context, self.validation_context = validation_context, nil
       errors.clear
 
-      attribute = ancestry_base_class.ancestry_column
+      attribute = self.class.ancestry_column
       ancestry_value = send(attribute)
       return true unless ancestry_value
 
@@ -220,7 +218,7 @@ module Ancestry
     end
 
     def child_ids
-      children.pluck(self.ancestry_base_class.primary_key)
+      children.pluck(self.class.primary_key)
     end
 
     def has_children?
@@ -245,7 +243,7 @@ module Ancestry
 
     # NOTE: includes self
     def sibling_ids
-      siblings.pluck(self.ancestry_base_class.primary_key)
+      siblings.pluck(self.class.primary_key)
     end
 
     def has_siblings?
@@ -269,7 +267,7 @@ module Ancestry
     end
 
     def descendant_ids depth_options = {}
-      descendants(depth_options).pluck(self.ancestry_base_class.primary_key)
+      descendants(depth_options).pluck(self.class.primary_key)
     end
 
     def descendant_of?(node)
@@ -283,7 +281,7 @@ module Ancestry
     end
 
     def indirect_ids depth_options = {}
-      indirects(depth_options).pluck(self.ancestry_base_class.primary_key)
+      indirects(depth_options).pluck(self.class.primary_key)
     end
 
     def indirect_of?(node)
@@ -297,7 +295,7 @@ module Ancestry
     end
 
     def subtree_ids depth_options = {}
-      subtree(depth_options).pluck(self.ancestry_base_class.primary_key)
+      subtree(depth_options).pluck(self.class.primary_key)
     end
 
     # Callback disabling

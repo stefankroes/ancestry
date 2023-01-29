@@ -21,18 +21,18 @@ module Ancestry
       orphan_strategy = options[:orphan_strategy] || :destroy
 
       # Create ancestry column accessor and set to option or default
-      cattr_accessor :ancestry_column
-      self.ancestry_column = options[:ancestry_column] || :ancestry
+      self.class_variable_set('@@ancestry_column', options[:ancestry_column] || :ancestry)
+      cattr_reader :ancestry_column, instance_reader: false
 
       cattr_accessor :ancestry_primary_key_format
       self.ancestry_primary_key_format = options[:primary_key_format].presence || Ancestry.default_primary_key_format
 
-      cattr_accessor :ancestry_delimiter
-      self.ancestry_delimiter = '/'
+      self.class_variable_set('@@ancestry_delimiter', '/')
+      cattr_reader :ancestry_delimiter, instance_reader: false
 
       # Save self as base class (for STI)
-      cattr_accessor :ancestry_base_class
-      self.ancestry_base_class = self
+      self.class_variable_set('@@ancestry_base_class', self)
+      cattr_reader :ancestry_base_class
 
       # Touch ancestors after updating
       cattr_accessor :touch_ancestors
