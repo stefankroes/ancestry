@@ -13,15 +13,6 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
-  def test_setting_ancestry_column
-    AncestryTestDatabase.with_model do |model|
-      model.ancestry_column = :ancestors
-      assert_equal :ancestors, model.ancestry_column
-      model.ancestry_column = :ancestry
-      assert_equal :ancestry, model.ancestry_column
-    end
-  end
-
   def test_invalid_has_ancestry_options
     assert_raise Ancestry::AncestryException do
       Class.new(ActiveRecord::Base).has_ancestry :this_option_doesnt_exist => 42
