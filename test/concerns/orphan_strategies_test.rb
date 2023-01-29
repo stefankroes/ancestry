@@ -3,36 +3,18 @@ require_relative '../environment'
 class OphanStrategiesTest < ActiveSupport::TestCase
   def test_default_orphan_strategy
     AncestryTestDatabase.with_model do |model|
-      assert_equal :destroy, model.orphan_strategy
+      assert_equal :destroy, model.ancestry_options[:orphan_strategy]
     end
   end
 
   def test_non_default_orphan_strategy
-    AncestryTestDatabase.with_model :orphan_strategy => :rootify do |model|
-      assert_equal :rootify, model.orphan_strategy
-    end
-  end
-
-  def test_setting_orphan_strategy
-    AncestryTestDatabase.with_model do |model|
-      model.orphan_strategy = :rootify
-      assert_equal :rootify, model.orphan_strategy
-      model.orphan_strategy = :destroy
-      assert_equal :destroy, model.orphan_strategy
-    end
-  end
-
-  def test_setting_invalid_orphan_strategy
-    AncestryTestDatabase.with_model do |model|
-      assert_raise Ancestry::AncestryException do
-        model.orphan_strategy = :non_existent_orphan_strategy
-      end
+    AncestryTestDatabase.with_model orphan_strategy: :rootify do |model|
+      assert_equal :rootify, model.ancestry_options[:orphan_strategy]
     end
   end
 
   def test_orphan_rootify_strategy
-    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
-      model.orphan_strategy = :rootify
+    AncestryTestDatabase.with_model depth: 3, width: 3, orphan_strategy: :rootify do |model, roots|
       root = roots.first.first
       children = root.children.to_a
       root.destroy
@@ -45,8 +27,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
   end
 
   def test_orphan_destroy_strategy
-    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
-      model.orphan_strategy = :destroy
+    AncestryTestDatabase.with_model depth: 3, width: 3, orphan_strategy: :destroy do |model, roots|
       root = roots.first.first
       assert_difference 'model.count', -root.subtree.size do
         root.destroy
@@ -59,8 +40,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
   end
 
   def test_orphan_restrict_strategy
-    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
-      model.orphan_strategy = :restrict
+    AncestryTestDatabase.with_model depth: 3, width: 3, orphan_strategy: :restrict do |model, roots|
       root = roots.first.first
       assert_raise Ancestry::AncestryException do
         root.destroy
@@ -72,8 +52,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
   end
 
   def test_orphan_adopt_strategy
-    AncestryTestDatabase.with_model do |model|
-      model.orphan_strategy = :adopt  # set the orphan strategy as paerntify
+    AncestryTestDatabase.with_model orphan_strategy: :adopt  do |model|
       n1 = model.create!                  #create a root node
       n2 = model.create!(:parent => n1)   #create child with parent=root
       n3 = model.create!(:parent => n2)   #create child with parent=n2, depth = 2
@@ -83,7 +62,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
       assert_equal(model.find(n3.id).parent,n1, "orphan's not parentified" )
       assert_equal(model.find(n5.id).ancestor_ids, [n1.id,n4.id], "ancestry integrity not maintained")
       n1.destroy                          # delete a root node with desecendants
-      if model.ancestry_format == :materialized_path2
+      if model.ancestry_options[:ancestry_format] == :materialized_path2
         assert_equal(model.find(n3.id).ancestry, model.ancestry_root, " new root node has no root ancestry string")
       else
         assert_nil(model.find(n3.id).ancestry," new root node has no empty ancestry string")

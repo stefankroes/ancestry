@@ -35,7 +35,7 @@ module Ancestry
     end
 
     def ancestry_format_regexp
-      /\A#{Regexp.escape(ancestry_delimiter)}(#{ancestry_primary_key_format}#{Regexp.escape(ancestry_delimiter)})*\z/.freeze
+      /\A#{Regexp.escape(ancestry_delimiter)}(#{ancestry_options[:primary_key_format]}#{Regexp.escape(ancestry_delimiter)})*\z/.freeze
     end
 
     module InstanceMethods

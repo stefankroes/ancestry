@@ -21,17 +21,6 @@ module Ancestry
       end
     end
 
-    # Orphan strategy writer
-    def orphan_strategy= orphan_strategy
-      # Check value of orphan strategy, only rootify, adopt, restrict or destroy is allowed
-      if [:rootify, :adopt, :restrict, :destroy].include? orphan_strategy
-        class_variable_set :@@orphan_strategy, orphan_strategy
-      else
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.invalid_orphan_strategy"))
-      end
-    end
-
-
     # these methods arrange an entire subtree into nested hashes for easy navigation after database retrieval
     # the arrange method also works on a scoped class
     # the arrange method takes ActiveRecord find options
@@ -129,8 +118,8 @@ module Ancestry
             # ... check validity of ancestry column
             if !node.sane_ancestor_ids?
               raise Ancestry::AncestryIntegrityException.new(I18n.t("ancestry.invalid_ancestry_column",
-                                                                    :node_id => node.id,
-                                                                    :ancestry_column => "#{node.read_attribute node.ancestry_column}"
+                                                                    node_id: node.id,
+                                                                    ancestry_column: "#{node.read_attribute node.ancestry_base_class.ancestry_column}"
                                                                     ))
             end
             # ... check that all ancestors exist
@@ -219,12 +208,12 @@ module Ancestry
 
     # Rebuild depth cache if it got corrupted or if depth caching was just turned on
     def rebuild_depth_cache!
-      raise Ancestry::AncestryException.new(I18n.t("ancestry.cannot_rebuild_depth_cache")) unless respond_to? :depth_cache_column
+      raise Ancestry::AncestryException.new(I18n.t("ancestry.cannot_rebuild_depth_cache")) unless ancestry_options[:cache_depth]
 
       self.ancestry_base_class.transaction do
         unscoped_where do |scope|
           scope.find_each do |node|
-            node.update_attribute depth_cache_column, node.depth
+            node.update_attribute ancestry_options[:depth_cache_column], node.depth
           end
         end
       end
