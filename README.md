@@ -134,6 +134,9 @@ The yellow nodes are those returned by the method.
 The has_ancestry method supports the following options:
 
     :ancestry_column       Pass in a symbol to store ancestry in a different column
+    :ancestry_format       Ancestry format (see Formats below):
+                           :materialized_path (default) 1/2/3, root nodes ancestry=nil
+                           :materialized_path2  /1/2/3/, root nodes ancestry=/
     :orphan_strategy       Instruct Ancestry what to do with children of a node that is destroyed:
                            :destroy   All children are destroyed as well (default)
                            :rootify   The children of the destroyed node become root nodes
@@ -149,14 +152,14 @@ The has_ancestry method supports the following options:
                            By default, primary keys only match integers ([0-9]+)
     :touch                 Instruct Ancestry to touch the ancestors of a node when it changes, to
                            invalidate nested key-based caches. (default: false)
-    :counter_cache         Boolean whether to create counter cache column accessor. 
-                           Default column name is `children_count`. 
+    :counter_cache         Boolean whether to create counter cache column accessor.
+                           Default column name is `children_count`.
                            Pass symbol to use different column name (default: false)
     :update_strategy       Choose the strategy to update descendants nodes (default: `ruby`)
                            :ruby     All descendants are updated using the ruby algorithm. This strategy
                                      triggers update callbacks for each descendants nodes
                            :sql      All descendants are updated using a single SQL statement. This strategy
-                                     does not trigger update callbacks for the descendants. This strategy is 
+                                     does not trigger update callbacks for the descendants. This strategy is
                                      available only for PostgreSql implementations
 
 # (Named) Scopes
@@ -263,6 +266,29 @@ The `sort_by_ancestry` class method: `TreeNode.sort_by_ancestry(array_of_nodes)`
 to sort an array of nodes as if traversing in preorder. (Note that since materialised path
 trees do not support ordering within a rank, the order of siblings is
 dependant upon their original array order.)
+
+# Formats
+
+You can choose from 2 ancestry formats:
+
+```
+:materialized_path (default) 1/2/3, root nodes ancestry=nil
+    descendants: ancestry LIKE '1/2/3/%' OR ancestry = '1/2/3'
+:materialized_path2  /1/2/3/, root nodes ancestry=/
+    descendants: ancestry LIKE '/1/2/3/%'
+```
+
+`materialized_path2` has easier sorting and faster descendants queries since
+there's no NULL values and no OR condition.
+
+Migrating from `materialized_path` to `materialized_path2`:
+```
+klass = YourModel
+klass.where.not(klass.arel_table[klass.ancestry_column].eq(nil)).update_all("#{klass.ancestry_column} = CONCAT('#{klass.ancestry_delimiter}', #{klass.ancestry_column}, '#{klass.ancestry_delimiter}')")
+klass.where(klass.arel_table[klass.ancestry_column].eq(nil)).update_all("#{klass.ancestry_column} = '#{klass.ancestry_root}'")
+
+change_column_null klass.table_name, klass.ancestry_column, false
+```
 
 # Migrating from plugin that uses parent_id column
 

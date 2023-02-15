@@ -4,14 +4,24 @@ module Ancestry
       # Check options
       raise Ancestry::AncestryException.new(I18n.t("ancestry.option_must_be_hash")) unless options.is_a? Hash
       options.each do |key, value|
-        unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :strategy].include? key
+        unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format].include? key
           raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_option", key: key.inspect, value: value.inspect))
         end
+      end
+
+      if options[:ancestry_format].present? && ![:materialized_path, :materialized_path2].include?( options[:ancestry_format] )
+        raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_format", value: options[:ancestry_format]))
       end
 
       # Create ancestry column accessor and set to option or default
       cattr_accessor :ancestry_column
       self.ancestry_column = options[:ancestry_column] || :ancestry
+
+      cattr_accessor :ancestry_primary_key_format
+      self.ancestry_primary_key_format = options[:primary_key_format].presence || '[0-9]+'
+
+      cattr_accessor :ancestry_delimiter
+      self.ancestry_delimiter = '/'
 
       # Save self as base class (for STI)
       cattr_accessor :ancestry_base_class
@@ -27,13 +37,18 @@ module Ancestry
       # Include dynamic class methods
       extend Ancestry::ClassMethods
 
-      if options[:strategy] == :materialized_path2
-        validates_format_of self.ancestry_column, :with => derive_materialized2_pattern(options[:primary_key_format]), :allow_nil => false
+      cattr_accessor :ancestry_format
+      self.ancestry_format = options[:ancestry_format] || :materialized_path
+
+      if options[:ancestry_format] == :materialized_path2
         extend Ancestry::MaterializedPath2
       else
-        validates_format_of self.ancestry_column, :with => derive_materialized_pattern(options[:primary_key_format]), :allow_nil => true
         extend Ancestry::MaterializedPath
       end
+
+      attribute self.ancestry_column, default: self.ancestry_root
+
+      validates self.ancestry_column, ancestry_validation_options
 
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
       include Ancestry::MaterializedPathPg if update_strategy == :sql
@@ -98,28 +113,6 @@ module Ancestry
     def acts_as_tree(*args)
       return super if defined?(super)
       has_ancestry(*args)
-    end
-
-    private
-
-    def derive_materialized_pattern(primary_key_format, delimiter = '/')
-      primary_key_format ||= '[0-9]+'
-
-      if primary_key_format.to_s.include?('\A')
-        primary_key_format
-      else
-        /\A#{primary_key_format}(#{delimiter}#{primary_key_format})*\Z/
-      end
-    end
-
-    def derive_materialized2_pattern(primary_key_format, delimiter = '/')
-      primary_key_format ||= '[0-9]+'
-
-      if primary_key_format.to_s.include?('\A')
-        primary_key_format
-      else
-        /\A#{delimiter}(#{primary_key_format}#{delimiter})*\Z/
-      end
     end
   end
 end

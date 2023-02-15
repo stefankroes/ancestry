@@ -129,16 +129,29 @@ class ArrangementTest < ActiveSupport::TestCase
 
   def test_arrange_serializable
     AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, _roots|
-      result = [{"ancestry"=>nil,
-          "id"=>4,
-          "children"=>
-           [{"ancestry"=>"4", "id"=>6, "children"=>[]},
-            {"ancestry"=>"4", "id"=>5, "children"=>[]}]},
-         {"ancestry"=>nil,
-          "id"=>1,
-          "children"=>
-           [{"ancestry"=>"1", "id"=>3, "children"=>[]},
-            {"ancestry"=>"1", "id"=>2, "children"=>[]}]}]
+      if model.ancestry_format == :materialized_path2
+        result = [{"ancestry"=>'/',
+            "id"=>4,
+            "children"=>
+            [{"ancestry"=>"/4/", "id"=>6, "children"=>[]},
+              {"ancestry"=>"/4/", "id"=>5, "children"=>[]}]},
+          {"ancestry"=>'/',
+            "id"=>1,
+            "children"=>
+            [{"ancestry"=>"/1/", "id"=>3, "children"=>[]},
+              {"ancestry"=>"/1/", "id"=>2, "children"=>[]}]}]
+      else
+        result = [{"ancestry"=>nil,
+            "id"=>4,
+            "children"=>
+            [{"ancestry"=>"4", "id"=>6, "children"=>[]},
+              {"ancestry"=>"4", "id"=>5, "children"=>[]}]},
+          {"ancestry"=>nil,
+            "id"=>1,
+            "children"=>
+            [{"ancestry"=>"1", "id"=>3, "children"=>[]},
+              {"ancestry"=>"1", "id"=>2, "children"=>[]}]}]
+      end
 
       assert_equal model.arrange_serializable(order: "id desc"), result
     end
