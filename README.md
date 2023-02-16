@@ -48,24 +48,32 @@ $ rails g migration add_ancestry_to_[table] ancestry:string:index
 # rails g migration add_name_to_[people] name:string:index
 ```
 
+You will have best results to set the collation of the field. It works without
+the collation, but without collation, it will not use the ancestry index. Alternatively
+adding oppset will fix this.
+
+Postgres on ubuntu in particular has been troublesome because by default,
+it sorts ignoring slashes.
+
+
+For postgres use `collate: :default`, and for mysql and sqllite use `collate: :binary`.
+
+```ruby
+class AddAncestryToTable < ActiveRecord::Migration[6.1]
+  def change
+    add_column :table, :ancestry, :string, collation: :default # alt: :binary
+    add_index :table, :ancestry
+  end
+end
+```
+
 *   Migrate your database:
 
 ```bash
 $ rake db:migrate
 ```
 
-Depending upon your comfort with databases, you may want to create the column
-with `C` or `POSIX` encoding. This is a more primitive encoding and just compares
-bytes. Since this column will just contain numbers and slashes, it works much
-better. It also works better for the uuid case as well.
-
-Alternatively, if you create a [`text_pattern_ops`](https://www.postgresql.org/docs/current/indexes-opclass.html) index for your postgresql column, subtree selection will use an efficient index for you regardless of whether you created the column with `POSIX` encoding.
-
-If you opt out of this, and are trying to run tests on postgres, you may need to
-set the environment variable `COLLATE_SYMBOLS=false`. Sorry to say that a discussion
-on this topic is out of scope. The important take away is postgres sort order is
-not consistent across operating systems but other databases do not have this same
-issue.
+NOTE: If you decide to add collation to this column at a later time, please remember to drop and recreate this index.
 
 NOTE: A Btree index (as is recommended) has a limitaton of 2704 characters for the ancestry column. This means you can't have an tree with a depth that is too great (~> 900 items at most).
 

@@ -69,6 +69,18 @@ class AncestryTestDatabase
     end
   end
 
+  # pass ANCESTRY_LOCALE=default to not override locale on ancestry
+  def self.ancestry_collation
+    env = ENV["ANCESTRY_LOCALE"].presence
+    if env
+      env
+    elsif postgres?
+      "C"
+    else
+      "binary"
+    end
+  end
+
   def self.with_model options = {}
     depth                = options.delete(:depth) || 0
     width                = options.delete(:width) || 0
@@ -79,8 +91,11 @@ class AncestryTestDatabase
     table_options={}
     table_options[:id] = options.delete(:id) if options.key?(:id)
 
+    column_options = {:collation => ancestry_collation}
+    column_options = {} if column_options[:collation] == "default"
+
     ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
-      table.string options[:ancestry_column] || :ancestry
+      table.string options[:ancestry_column] || :ancestry, **column_options
       table.integer options[:depth_cache_column] || :ancestry_depth if options[:cache_depth]
       if options[:counter_cache]
         counter_cache_column = options[:counter_cache] == true ? :children_count : options[:counter_cache]

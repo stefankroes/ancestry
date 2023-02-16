@@ -83,7 +83,6 @@ jobs:
       - name: run pg tests
         env:
           DB: pg
-          COLLATE_SYMBOLS: false
         run: |
           COUNT=1
           while ! pg_isready ; do
