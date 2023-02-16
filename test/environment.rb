@@ -56,7 +56,7 @@ class AncestryTestDatabase
 
       # This only affects postgres
       # the :ruby code path will get tested in mysql and sqlite3
-      Ancestry.default_update_strategy = :sql if db_type == "pg"
+      Ancestry.default_update_strategy = :sql if postgres?
 
     rescue => err
       if ENV["CI"]
@@ -128,6 +128,9 @@ class AncestryTestDatabase
     else; []; end
   end
 
+  def self.postgres?
+    db_type == "pg"
+  end
   private
 
   def self.db_type
