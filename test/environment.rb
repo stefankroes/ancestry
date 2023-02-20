@@ -56,7 +56,7 @@ class AncestryTestDatabase
 
       # This only affects postgres
       # the :ruby code path will get tested in mysql and sqlite3
-      Ancestry.default_update_strategy = :sql if db_type == "pg"
+      Ancestry.default_update_strategy = :sql if postgres?
 
     rescue => err
       if ENV["CI"]
@@ -66,6 +66,18 @@ class AncestryTestDatabase
         puts "  #{err}\n\n"
         exit 0
       end
+    end
+  end
+
+  # pass ANCESTRY_LOCALE=default to not override locale on ancestry
+  def self.ancestry_collation
+    env = ENV["ANCESTRY_LOCALE"].presence
+    if env
+      env
+    elsif postgres?
+      "C"
+    else
+      "binary"
     end
   end
 
@@ -79,8 +91,11 @@ class AncestryTestDatabase
     table_options={}
     table_options[:id] = options.delete(:id) if options.key?(:id)
 
+    column_options = {:collation => ancestry_collation}
+    column_options = {} if column_options[:collation] == "default"
+
     ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
-      table.string options[:ancestry_column] || :ancestry
+      table.string options[:ancestry_column] || :ancestry, **column_options
       table.integer options[:depth_cache_column] || :ancestry_depth if options[:cache_depth]
       if options[:counter_cache]
         counter_cache_column = options[:counter_cache] == true ? :children_count : options[:counter_cache]
@@ -128,6 +143,9 @@ class AncestryTestDatabase
     else; []; end
   end
 
+  def self.postgres?
+    db_type == "pg"
+  end
   private
 
   def self.db_type
