@@ -62,6 +62,20 @@ module Ancestry
       end
     end
 
+    # convert a hash of the form {node => children} to an array of nodes, child first
+    # modifies input hash
+    #
+    # @param arranged [Hash{Node => {Node => {}, Node => {}}}] arranged nodes
+    # @returns [Array[Node]] array of nodes with the parent before the children
+    def flatten_arranged_nodes(arranged)
+      arranged.inject([]) do |sorted_nodes, pair|
+        node, children = pair
+        sorted_nodes << node
+        sorted_nodes += flatten_arranged_nodes(children) unless children.blank?
+        sorted_nodes
+      end
+    end
+
      # Arrangement to nested array for serialization
      # You can also supply your own serialization logic using blocks
      # also allows you to pass the order just as you can pass it to the arrange method
@@ -105,12 +119,7 @@ module Ancestry
         arranged = arrange_nodes(presorted_nodes)
       end
 
-      arranged.inject([]) do |sorted_nodes, pair|
-        node, children = pair
-        sorted_nodes << node
-        sorted_nodes += sort_by_ancestry(children, &block) unless children.blank?
-        sorted_nodes
-      end
+      flatten_arranged_nodes(arranged)
     end
 
     # Integrity checking
