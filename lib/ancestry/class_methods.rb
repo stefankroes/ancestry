@@ -46,8 +46,10 @@ module Ancestry
       end
     end
 
-    # Arrange array of nodes into a nested hash of the form
-    # {node => children}, where children = {} if the node has no children
+    # arranges array of nodes to a hierarchical hash
+    #
+    # @param nodes [Array[Node]] nodes to be arranged
+    # @returns Hash{Node => {Node => {}, Node => {}}}
     # If a node's parent is not included, the node will be included as if it is a top level node
     def arrange_nodes(nodes)
       node_ids = Set.new(nodes.map(&:id))
@@ -89,18 +91,15 @@ module Ancestry
     end
 
     # Pseudo-preordered array of nodes.  Children will always follow parents,
+    # This is deterministic unless the parents are missing *and* a sort block is specified
     def sort_by_ancestry(nodes, &block)
       arranged = nodes if nodes.is_a?(Hash)
 
       unless arranged
         presorted_nodes = nodes.sort do |a, b|
-          a_cestry, b_cestry = a.ancestry || '0', b.ancestry || '0'
-
-          if block_given? && a_cestry == b_cestry
-            yield a, b
-          else
-            a_cestry <=> b_cestry
-          end
+          rank = (a.ancestry || ' ') <=> (b.ancestry || ' ')
+          rank = yield(a, b) if rank == 0 && block_given?
+          rank
         end
 
         arranged = arrange_nodes(presorted_nodes)
