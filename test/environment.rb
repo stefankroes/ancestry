@@ -57,6 +57,7 @@ class AncestryTestDatabase
       # This only affects postgres
       # the :ruby code path will get tested in mysql and sqlite3
       Ancestry.default_update_strategy = :sql if postgres?
+      Ancestry.default_ancestry_format = ENV["FORMAT"].to_sym if ENV["FORMAT"].present?
 
     rescue => err
       if ENV["CI"]
@@ -86,7 +87,6 @@ class AncestryTestDatabase
     width                = options.delete(:width) || 0
     extra_columns        = options.delete(:extra_columns)
     default_scope_params = options.delete(:default_scope_params)
-    options[:ancestry_format]   = ENV["FORMAT"].to_sym if ENV["FORMAT"].present?
 
     table_options={}
     table_options[:id] = options.delete(:id) if options.key?(:id)
