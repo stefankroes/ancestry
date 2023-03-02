@@ -117,6 +117,7 @@ module Ancestry
   end
 end
 
+require 'active_support'
 ActiveSupport.on_load :active_record do
   extend Ancestry::HasAncestry
 end
