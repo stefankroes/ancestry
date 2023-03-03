@@ -72,13 +72,17 @@ class AncestryTestDatabase
 
   # pass ANCESTRY_LOCALE=default to not override locale on ancestry
   def self.ancestry_collation
-    env = ENV["ANCESTRY_LOCALE"].presence
-    if env
-      env
-    elsif postgres?
-      "C"
-    else
-      "binary"
+    @ancestry_collation ||= begin
+      env = ENV["ANCESTRY_LOCALE"].presence
+      if env
+        env
+      elsif postgres?
+        "C"
+      elsif db_type =~ /mysql/i
+        "utf8mb4_bin"
+      else
+        "binary"
+      end
     end
   end
 
