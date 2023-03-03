@@ -13,6 +13,11 @@ module Ancestry
         raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_format", value: options[:ancestry_format]))
       end
 
+      orphan_strategy = options[:orphan_strategy] || :destroy
+      if ![:rootify, :adopt, :restrict, :destroy].include?(orphan_strategy)
+        raise Ancestry::AncestryException.new(I18n.t("ancestry.invalid_orphan_strategy"))
+      end
+
       # Create ancestry column accessor and set to option or default
       cattr_accessor :ancestry_column
       self.ancestry_column = options[:ancestry_column] || :ancestry
@@ -53,9 +58,9 @@ module Ancestry
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
       include Ancestry::MaterializedPathPg if update_strategy == :sql
 
-      # Create orphan strategy accessor and set to option or default (writer comes from DynamicClassMethods)
+      # set orphan strategy
       cattr_reader :orphan_strategy
-      self.orphan_strategy = options[:orphan_strategy] || :destroy
+      class_variable_set :@@orphan_strategy, orphan_strategy
 
       # Validate that the ancestor ids don't include own id
       validate :ancestry_exclude_self

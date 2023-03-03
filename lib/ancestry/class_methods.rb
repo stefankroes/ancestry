@@ -21,17 +21,6 @@ module Ancestry
       end
     end
 
-    # Orphan strategy writer
-    def orphan_strategy= orphan_strategy
-      # Check value of orphan strategy, only rootify, adopt, restrict or destroy is allowed
-      if [:rootify, :adopt, :restrict, :destroy].include? orphan_strategy
-        class_variable_set :@@orphan_strategy, orphan_strategy
-      else
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.invalid_orphan_strategy"))
-      end
-    end
-
-
     # these methods arrange an entire subtree into nested hashes for easy navigation after database retrieval
     # the arrange method also works on a scoped class
     # the arrange method takes ActiveRecord find options
