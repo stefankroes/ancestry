@@ -18,7 +18,7 @@ module Ancestry
       self.ancestry_column = options[:ancestry_column] || :ancestry
 
       cattr_accessor :ancestry_primary_key_format
-      self.ancestry_primary_key_format = options[:primary_key_format].presence || '[0-9]+'
+      self.ancestry_primary_key_format = options[:primary_key_format].presence || Ancestry.default_primary_key_format
 
       cattr_accessor :ancestry_delimiter
       self.ancestry_delimiter = '/'
@@ -38,9 +38,9 @@ module Ancestry
       extend Ancestry::ClassMethods
 
       cattr_accessor :ancestry_format
-      self.ancestry_format = options[:ancestry_format] || :materialized_path
+      self.ancestry_format = options[:ancestry_format] || Ancestry.default_update_strategy
 
-      if options[:ancestry_format] == :materialized_path2
+      if ancestry_format == :materialized_path2
         extend Ancestry::MaterializedPath2
       else
         extend Ancestry::MaterializedPath
