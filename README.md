@@ -315,7 +315,7 @@ Chances are, you can ignore this section as you most likely want to use `:materi
 
 The currently suggested way to create a postgres field is using `'C'` collation:
 
-````ruby
+```ruby
 t.string "ancestry", collation: 'C', null: false
 t.index "ancestry"
 ```
@@ -355,7 +355,7 @@ ALTER DATABASE dbname SET bytea_output to 'escape';
 
 The currently suggested way to create a postgres field is using `'C'` collation:
 
-````ruby
+```ruby
 t.string "ancestry", collation: 'utf8mb4_bin', null: false
 t.index "ancestry"
 ```
