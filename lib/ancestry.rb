@@ -12,7 +12,7 @@ I18n.load_path += Dir[File.join(File.expand_path(File.dirname(__FILE__)),
 
 module Ancestry
   @@default_update_strategy = :ruby
-  @@default_ancestry_format = :materialized_path2
+  @@default_ancestry_format = :materialized_path
   @@default_primary_key_format = '[0-9]+'
 
   # @!default_update_strategy

@@ -38,7 +38,7 @@ module Ancestry
       extend Ancestry::ClassMethods
 
       cattr_accessor :ancestry_format
-      self.ancestry_format = options[:ancestry_format] || Ancestry.default_update_strategy
+      self.ancestry_format = options[:ancestry_format] || Ancestry.default_ancestry_format
 
       if ancestry_format == :materialized_path2
         extend Ancestry::MaterializedPath2
