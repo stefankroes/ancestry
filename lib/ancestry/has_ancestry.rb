@@ -87,12 +87,7 @@ module Ancestry
       # Create counter cache column accessor and set to option or default
       if options[:counter_cache]
         cattr_accessor :counter_cache_column
-
-        if options[:counter_cache] == true
-          self.counter_cache_column = :children_count
-        else
-          self.counter_cache_column = options[:counter_cache]
-        end
+        self.counter_cache_column = options[:counter_cache] == true ? 'children_count' : options[:counter_cache].to_s
 
         after_create :increase_parent_counter_cache, if: :has_parent?
         after_destroy :decrease_parent_counter_cache, if: :has_parent?
