@@ -62,7 +62,7 @@ module Ancestry
 
     # Counter Cache
     def increase_parent_counter_cache
-      self.ancestry_base_class.increment_counter _counter_cache_column, parent_id
+      self.ancestry_base_class.increment_counter counter_cache_column, parent_id
     end
 
     def decrease_parent_counter_cache
@@ -74,7 +74,7 @@ module Ancestry
       return if defined?(@_trigger_destroy_callback) && !@_trigger_destroy_callback
       return if ancestry_callbacks_disabled?
 
-      self.ancestry_base_class.decrement_counter _counter_cache_column, parent_id
+      self.ancestry_base_class.decrement_counter counter_cache_column, parent_id
     end
 
     def update_parent_counter_cache
@@ -83,14 +83,10 @@ module Ancestry
       return unless changed
 
       if parent_id_was = parent_id_before_last_save
-        self.ancestry_base_class.decrement_counter _counter_cache_column, parent_id_was
+        self.ancestry_base_class.decrement_counter counter_cache_column, parent_id_was
       end
 
-      parent_id && self.ancestry_base_class.increment_counter(_counter_cache_column, parent_id)
-    end
-
-    def _counter_cache_column
-      self.ancestry_base_class.counter_cache_column.to_s
+      parent_id && increase_parent_counter_cache
     end
 
     # Ancestors
