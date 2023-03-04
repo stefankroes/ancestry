@@ -3,9 +3,16 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
-## Version [4.3.0] <sub><sup>2023-01-05</sub></sup>
-* Fix: materialized_path2 strategy was completely broken [#597](https://github.com/stefankroes/ancestry/pull/597) (thx @kshnurov)
-* Fix: descendants ancestry should be updated in after_update callbacks [#589](https://github.com/stefankroes/ancestry/pull/589) (thx @kshnurov)
+## Version [4.3.0] <sub><sup>2023-03-04</sub></sup>
+
+* Fix: materialized_path2 strategy [#597](https://github.com/stefankroes/ancestry/pull/597) (thx @kshnurov)
+* Fix: descendants ancestry is now updated in after_update callbacks [#589](https://github.com/stefankroes/ancestry/pull/589) (thx @kshnurov)
+* Document updated grammar [#594](https://github.com/stefankroes/ancestry/pull/594) (thx @omarr-gamal)
+* Documented `update_strategy` [#588](https://github.com/stefankroes/ancestry/pull/588) (thx @victorfgs)
+* Fix: fixed has_parent? when non-default primary id [#585](https://github.com/stefankroes/ancestry/pull/585) (thx @Zhong-z)
+* Documented column collation and testing [#601](https://github.com/stefankroes/ancestry/pull/601) [#607](https://github.com/stefankroes/ancestry/pull/607) (thx @kshnurov)
+* Added initializer with default_ancestry_format [#612](https://github.com/stefankroes/ancestry/pull/612) [#613](https://github.com/stefankroes/ancestry/pull/613)
+* ruby 3.2 support [#596](https://github.com/stefankroes/ancestry/pull/596) (thx @petergoldstein)
 
 ## Version [4.2.0] <sub><sup>2022-06-09</sub></sup>
 
