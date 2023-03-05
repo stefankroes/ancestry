@@ -14,9 +14,6 @@ module Ancestry
       end
 
       orphan_strategy = options[:orphan_strategy] || :destroy
-      if ![:rootify, :adopt, :restrict, :destroy].include?(orphan_strategy)
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.invalid_orphan_strategy"))
-      end
 
       # Create ancestry column accessor and set to option or default
       cattr_accessor :ancestry_column
@@ -58,10 +55,6 @@ module Ancestry
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
       include Ancestry::MaterializedPathPg if update_strategy == :sql
 
-      # set orphan strategy
-      cattr_reader :orphan_strategy
-      class_variable_set :@@orphan_strategy, orphan_strategy
-
       # Validate that the ancestor ids don't include own id
       validate :ancestry_exclude_self
 
@@ -69,7 +62,13 @@ module Ancestry
       after_update :update_descendants_with_new_ancestry
 
       # Apply orphan strategy before destroy
-      before_destroy :apply_orphan_strategy
+      case orphan_strategy
+      when :rootify  then before_destroy :apply_orphan_strategy_rootify
+      when :destroy  then before_destroy :apply_orphan_strategy_destroy
+      when :adopt    then before_destroy :apply_orphan_strategy_adopt
+      when :restrict then before_destroy :apply_orphan_strategy_restrict
+      else raise Ancestry::AncestryException.new(I18n.t("ancestry.invalid_orphan_strategy"))
+      end
 
       # Create ancestry column accessor and set to option or default
       if options[:cache_depth]

@@ -1,18 +1,6 @@
 require_relative '../environment'
 
 class OphanStrategiesTest < ActiveSupport::TestCase
-  def test_default_orphan_strategy
-    AncestryTestDatabase.with_model do |model|
-      assert_equal :destroy, model.orphan_strategy
-    end
-  end
-
-  def test_non_default_orphan_strategy
-    AncestryTestDatabase.with_model orphan_strategy: :rootify do |model|
-      assert_equal :rootify, model.orphan_strategy
-    end
-  end
-
   def test_setting_invalid_orphan_strategy
     AncestryTestDatabase.with_model skip_ancestry: true do |model|
       assert_raise Ancestry::AncestryException do
