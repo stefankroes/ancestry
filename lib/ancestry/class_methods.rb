@@ -46,8 +46,10 @@ module Ancestry
       end
     end
 
-    # Arrange array of nodes into a nested hash of the form
-    # {node => children}, where children = {} if the node has no children
+    # arranges array of nodes to a hierarchical hash
+    #
+    # @param nodes [Array[Node]] nodes to be arranged
+    # @returns Hash{Node => {Node => {}, Node => {}}}
     # If a node's parent is not included, the node will be included as if it is a top level node
     def arrange_nodes(nodes)
       node_ids = Set.new(nodes.map(&:id))
@@ -58,6 +60,18 @@ module Ancestry
         index[node.parent_id][node] = children
         arranged[node] = children unless node_ids.include?(node.parent_id)
       end
+    end
+
+    # convert a hash of the form {node => children} to an array of nodes, child first
+    #
+    # @param arranged [Hash{Node => {Node => {}, Node => {}}}] arranged nodes
+    # @returns [Array[Node]] array of nodes with the parent before the children
+    def flatten_arranged_nodes(arranged, nodes = [])
+      arranged.each do |node, children|
+        nodes << node
+        flatten_arranged_nodes(children, nodes) unless children.empty?
+      end
+      nodes
     end
 
      # Arrangement to nested array for serialization
@@ -89,29 +103,21 @@ module Ancestry
     end
 
     # Pseudo-preordered array of nodes.  Children will always follow parents,
+    # This is deterministic unless the parents are missing *and* a sort block is specified
     def sort_by_ancestry(nodes, &block)
       arranged = nodes if nodes.is_a?(Hash)
 
       unless arranged
         presorted_nodes = nodes.sort do |a, b|
-          a_cestry, b_cestry = a.ancestry || '0', b.ancestry || '0'
-
-          if block_given? && a_cestry == b_cestry
-            yield a, b
-          else
-            a_cestry <=> b_cestry
-          end
+          rank = (a.ancestry || ' ') <=> (b.ancestry || ' ')
+          rank = yield(a, b) if rank == 0 && block_given?
+          rank
         end
 
         arranged = arrange_nodes(presorted_nodes)
       end
 
-      arranged.inject([]) do |sorted_nodes, pair|
-        node, children = pair
-        sorted_nodes << node
-        sorted_nodes += sort_by_ancestry(children, &block) unless children.blank?
-        sorted_nodes
-      end
+      flatten_arranged_nodes(arranged)
     end
 
     # Integrity checking

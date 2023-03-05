@@ -37,7 +37,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model do |model|
       n1, n2, n3, n4, n5, n6 = build_tree(model)
 
-      records = model.sort_by_ancestry(model.all.order(:id).reverse)
+      records = model.sort_by_ancestry(model.all.ordered_by_ancestry_and(:id => :desc))
       assert_equal [n1, n5, n6, n2, n4, n3].map(&:id), records.map(&:id)
     end
   end
@@ -51,7 +51,8 @@ class SortByAncestryTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model do |model|
       _, _, n3, n4, _, _ = build_tree(model)
 
-      assert_equal [n4, n3].map(&:id), model.sort_by_ancestry([n4, n3]).map(&:id)
+      records = model.sort_by_ancestry(model.all.ordered_by_ancestry_and(:id => :desc).offset(3).take(2))
+      assert_equal [n4, n3].map(&:id), records.map(&:id)
     end
   end
 
@@ -61,7 +62,9 @@ class SortByAncestryTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model do |model|
       _, _, n3, n4, n5, _ = build_tree(model)
 
-      assert_equal [n5, n4, n3].map(&:id), model.sort_by_ancestry([n5, n4, n3]).map(&:id)
+      records = [n5, n4, n3]
+      # records = model.sort_by_ancestry(model.all.ordered_by_ancestry_and(:id => :desc).offset(3).take(3))
+      assert_equal [n5, n4, n3].map(&:id), records.map(&:id)
     end
   end
 
@@ -69,7 +72,8 @@ class SortByAncestryTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model do |model|
       n1, n2, _, _, n5, _ = build_tree(model)
 
-      assert_equal [n1, n5, n2].map(&:id), model.sort_by_ancestry([n5, n2, n1]).map(&:id)
+      records = model.sort_by_ancestry(model.all.ordered_by_ancestry_and(:id => :desc).offset(0).take(3))
+      assert_equal [n1, n5, n2].map(&:id), records.map(&:id)
     end
   end
 
@@ -142,7 +146,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model :extra_columns => {:rank => :integer} do |model|
       n1, n2, n3, n4, n5, n6 = build_ranked_tree(model)
 
-      records = model.sort_by_ancestry(model.all.order(:rank))
+      records = model.sort_by_ancestry(model.all.ordered_by_ancestry_and(:rank))
       assert_equal [n1, n5, n3, n2, n4, n6].map(&:id), records.map(&:id)
     end
   end
@@ -151,7 +155,8 @@ class SortByAncestryTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model :extra_columns => {:rank => :integer} do |model|
       n1, n2, _, _, n5, _ = build_ranked_tree(model)
 
-      assert_equal [n1, n5, n2].map(&:id), model.sort_by_ancestry([n1, n2, n5], &RANK_SORT).map(&:id)
+      records = model.sort_by_ancestry(model.all.ordered_by_ancestry_and(:rank).take(3), &RANK_SORT)
+      assert_equal [n1, n5, n2].map(&:id), records.map(&:id)
     end
   end
 
@@ -176,7 +181,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model :extra_columns => {:rank => :integer} do |model|
       _, _, n3, n4, n5, n6 = build_ranked_tree(model)
 
-      records = model.sort_by_ancestry([n3, n4, n5, n6], &RANK_SORT)
+      records = model.sort_by_ancestry(model.all.ordered_by_ancestry_and(:rank).offset(2), &RANK_SORT)
       if CORRECT || records[0] == n5
         assert_equal [n5, n3, n4, n6].map(&:id), records.map(&:id)
       else
@@ -191,20 +196,20 @@ class SortByAncestryTest < ActiveSupport::TestCase
   #   - n2 (1)
   #     - n4 (0)
   #     - x
-  # Issue: n2 will always go before n4.
+  # Issue: n2 will always go before n4, n5.
   #        But n1 is not available to put n3 before the n2 tree.
   #        not sure why it doesn't follow the input order
   #
   # NOTE: even for partial trees, if the input records are ranked, the output works
   def test_sort_by_ancestry_with_sql_sort_paginated_missing_parents_and_children
     AncestryTestDatabase.with_model :extra_columns => {:rank => :integer} do |model|
-      _, n2, n3, n4, _, _ = build_ranked_tree(model)
+      _, n2, n3, n4, n5, _ = build_ranked_tree(model)
 
-      records = model.sort_by_ancestry([n2, n4, n3])
+      records = model.sort_by_ancestry(model.all.ordered_by_ancestry_and(:rank).offset(1).take(4))
       if CORRECT
-        assert_equal [n3, n2, n4].map(&:id), records.map(&:id)
+        assert_equal [n3, n2, n4, n5].map(&:id), records.map(&:id)
       else
-        assert_equal [n2, n4, n3].map(&:id), records.map(&:id)
+        assert_equal [n2, n4, n5, n3].map(&:id), records.map(&:id)
       end
     end
   end
@@ -218,13 +223,13 @@ class SortByAncestryTest < ActiveSupport::TestCase
   #     - n5
   def test_sort_by_ancestry_with_block_paginated_missing_parents_and_children
     AncestryTestDatabase.with_model :extra_columns => {:rank => :integer} do |model|
-      _, n2, n3, n4, _, _ = build_ranked_tree(model)
+      _, n2, n3, n4, n5, _ = build_ranked_tree(model)
 
-      records = model.sort_by_ancestry([n2, n4, n3], &RANK_SORT)
+      records = model.sort_by_ancestry(model.all.ordered_by_ancestry_and(:rank).offset(1).take(4), &RANK_SORT)
       if CORRECT
-        assert_equal [n3, n2, n4].map(&:id), records.map(&:id)
+        assert_equal [n3, n2, n4, n5].map(&:id), records.map(&:id)
       else
-        assert_equal [n2, n4, n3].map(&:id), records.map(&:id)
+        assert_equal [n2, n4, n5, n3].map(&:id), records.map(&:id)
       end
     end
   end
