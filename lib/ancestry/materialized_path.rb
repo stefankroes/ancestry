@@ -112,29 +112,29 @@ module Ancestry
     module InstanceMethods
       # optimization - better to go directly to column and avoid parsing
       def ancestors?
-        read_attribute(self.ancestry_base_class.ancestry_column) != self.ancestry_base_class.ancestry_root
+        read_attribute(self.class.ancestry_column) != self.class.ancestry_root
       end
       alias :has_parent? :ancestors?
 
       def ancestor_ids=(value)
-        write_attribute(self.ancestry_base_class.ancestry_column, generate_ancestry(value))
+        write_attribute(self.class.ancestry_column, generate_ancestry(value))
       end
 
       def ancestor_ids
-        parse_ancestry_column(read_attribute(self.ancestry_base_class.ancestry_column))
+        parse_ancestry_column(read_attribute(self.class.ancestry_column))
       end
 
       def ancestor_ids_before_last_save
-        parse_ancestry_column(attribute_before_last_save(self.ancestry_base_class.ancestry_column))
+        parse_ancestry_column(attribute_before_last_save(self.class.ancestry_column))
       end
 
       def parent_id_before_last_save
-        parse_ancestry_column(attribute_before_last_save(self.ancestry_base_class.ancestry_column)).last
+        parse_ancestry_column(attribute_before_last_save(self.class.ancestry_column)).last
       end
 
       # optimization - better to go directly to column and avoid parsing
       def sibling_of?(node)
-        self.read_attribute(self.ancestry_base_class.ancestry_column) == node.read_attribute(self.ancestry_base_class.ancestry_column)
+        self.read_attribute(self.class.ancestry_column) == node.read_attribute(self.class.ancestry_column)
       end
 
       # private (public so class methods can find it)
@@ -143,26 +143,26 @@ module Ancestry
       def child_ancestry
         # New records cannot have children
         raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
-        [attribute_in_database(self.ancestry_base_class.ancestry_column), id].compact.join(self.ancestry_base_class.ancestry_delimiter)
+        [attribute_in_database(self.class.ancestry_column), id].compact.join(self.class.ancestry_delimiter)
       end
 
       def child_ancestry_before_save
         # New records cannot have children
         raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
-        [attribute_before_last_save(self.ancestry_base_class.ancestry_column), id].compact.join(self.ancestry_base_class.ancestry_delimiter)
+        [attribute_before_last_save(self.class.ancestry_column), id].compact.join(self.class.ancestry_delimiter)
       end
 
       def parse_ancestry_column(obj)
-        return [] if obj.nil? || obj == self.ancestry_base_class.ancestry_root
-        obj_ids = obj.split(self.ancestry_base_class.ancestry_delimiter).delete_if(&:blank?)
+        return [] if obj.nil? || obj == self.class.ancestry_root
+        obj_ids = obj.split(self.class.ancestry_delimiter).delete_if(&:blank?)
         self.class.primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
       end
 
       def generate_ancestry(ancestor_ids)
         if ancestor_ids.present? && ancestor_ids.any?
-          ancestor_ids.join(self.ancestry_base_class.ancestry_delimiter)
+          ancestor_ids.join(self.class.ancestry_delimiter)
         else
-          self.ancestry_base_class.ancestry_root
+          self.class.ancestry_root
         end
       end
     end
