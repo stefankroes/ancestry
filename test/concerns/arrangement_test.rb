@@ -129,7 +129,7 @@ class ArrangementTest < ActiveSupport::TestCase
 
   def test_arrange_serializable
     AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, _roots|
-      if model.ancestry_format == :materialized_path2
+      if AncestryTestDatabase.materialized_path2?
         result = [{"ancestry"=>'/',
             "id"=>4,
             "children"=>

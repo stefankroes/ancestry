@@ -85,7 +85,7 @@ class ArrangementTest < ActiveSupport::TestCase
       m2 = model.create!(:parent => m1, :name => "child")
       m2.parent = nil
       m2.save!
-      assert_equal(model.ancestry_format == :materialized_path2 ? true : false, m1.modified)
+      assert_equal(AncestryTestDatabase.materialized_path2?, m1.modified)
       assert_equal(true, m2.modified)
     end
   end
@@ -106,7 +106,7 @@ class ArrangementTest < ActiveSupport::TestCase
       m2 = model.create!(:parent => m1, :name => "child")
       m2.parent = nil
       m2.save!
-      assert_equal(model.ancestry_format == :materialized_path2 ? true : false, m1.modified)
+      assert_equal(AncestryTestDatabase.materialized_path2?, m1.modified)
       assert_equal(true, m2.modified)
     end
   end
