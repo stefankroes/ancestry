@@ -245,8 +245,11 @@ can be fetched directly from the ancestry column without needing a query. Use
 
 # Arrangement
 
+## `arrange`
+
 A subtree can be arranged into nested hashes for easy navigation after database retrieval.
-`TreeNode.arrange` could, for instance, return:
+
+The resulting format is a hash of hashes
 
 ```ruby
 {
@@ -259,24 +262,22 @@ A subtree can be arranged into nested hashes for easy navigation after database 
 }
 ```
 
-The `arrange` method can work on a scoped class (`TreeNode.find_by(:name => 'Crunchy').subtree.arrange`),
-and can take ActiveRecord find options. If you want ordered hashes, pass the order to the method instead of
-the scope as follows:
-
-`TreeNode.find_by(:name => 'Crunchy').subtree.arrange(:order => :name)`.
-
-The `arrange_serializable` method returns the arranged nodes as a nested array of hashes. Order
-can be passed in the same fashion as to the `arrange` method:
-`TreeNode.arrange_serializable(:order => :name)` The result can easily be serialized to json with `to_json`
-or other formats. You can also supply your own serialization logic with blocks.
-
-Using `ActiveModel` serializers:
-
-`TreeNode.arrange_serializable { |parent, children| MySerializer.new(parent, children: children) }`.
-
-Or plain hashes:
+There are many ways to call `arrange`:
 
 ```ruby
+TreeNode.find_by(:name => 'Crunchy').subtree.arrange
+TreeNode.find_by(:name => 'Crunchy').subtree.arrange(:order => :name)
+```
+
+## `arrange_serializable`
+
+If a hash of arrays is preferred, `arrange_serializable` can be used. The results
+work well with `to_json`.
+
+```ruby
+TreeNode.arrange_serializable(:order => :name)
+# use an active model serializer
+TreeNode.arrange_serializable { |parent, children| MySerializer.new(parent, children: children) }
 TreeNode.arrange_serializable do |parent, children|
   {
      my_id: parent.id,
