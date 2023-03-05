@@ -23,10 +23,6 @@ module Ancestry
       cattr_accessor :ancestry_delimiter
       self.ancestry_delimiter = '/'
 
-      # Save self as base class (for STI)
-      cattr_accessor :ancestry_base_class
-      self.ancestry_base_class = self
-
       # Touch ancestors after updating
       cattr_accessor :touch_ancestors
       self.touch_ancestors = options[:touch] || false

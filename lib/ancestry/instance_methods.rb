@@ -23,7 +23,7 @@ module Ancestry
     # Apply orphan strategy (before destroy - no changes)
     def apply_orphan_strategy
       if !ancestry_callbacks_disabled? && !new_record?
-        case self.ancestry_base_class.orphan_strategy
+        case self.class.base_class.orphan_strategy
         when :rootify # make all children root if orphan strategy is rootify
           unscoped_descendants.each do |descendant|
             descendant.without_ancestry_callbacks do
@@ -50,7 +50,7 @@ module Ancestry
 
     # Touch each of this record's ancestors (after save)
     def touch_ancestors_callback
-      if !ancestry_callbacks_disabled? && self.ancestry_base_class.touch_ancestors
+      if !ancestry_callbacks_disabled? && self.class.base_class.touch_ancestors
         # Touch each of the old *and* new ancestors
         unscoped_current_and_previous_ancestors.each do |ancestor|
           ancestor.without_ancestry_callbacks do
@@ -62,7 +62,7 @@ module Ancestry
 
     # Counter Cache
     def increase_parent_counter_cache
-      self.ancestry_base_class.increment_counter _counter_cache_column, parent_id
+      self.class.base_class.increment_counter _counter_cache_column, parent_id
     end
 
     def decrease_parent_counter_cache
@@ -74,7 +74,7 @@ module Ancestry
       return if defined?(@_trigger_destroy_callback) && !@_trigger_destroy_callback
       return if ancestry_callbacks_disabled?
 
-      self.ancestry_base_class.decrement_counter _counter_cache_column, parent_id
+      self.class.base_class.decrement_counter _counter_cache_column, parent_id
     end
 
     def update_parent_counter_cache
@@ -83,14 +83,14 @@ module Ancestry
       return unless changed
 
       if parent_id_was = parent_id_before_last_save
-        self.ancestry_base_class.decrement_counter _counter_cache_column, parent_id_was
+        self.class.base_class.decrement_counter _counter_cache_column, parent_id_was
       end
 
-      parent_id && self.ancestry_base_class.increment_counter(_counter_cache_column, parent_id)
+      parent_id && self.class.base_class.increment_counter(_counter_cache_column, parent_id)
     end
 
     def _counter_cache_column
-      self.ancestry_base_class.counter_cache_column.to_s
+      self.class.base_class.counter_cache_column.to_s
     end
 
     # Ancestors
@@ -125,8 +125,8 @@ module Ancestry
     end
 
     def ancestors depth_options = {}
-      return self.ancestry_base_class.none unless has_parent?
-      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.ancestors_of(self)
+      return self.class.base_class.none unless has_parent?
+      self.class.base_class.scope_depth(depth_options, depth).ordered_by_ancestry.ancestors_of(self)
     end
 
     def path_ids
@@ -138,7 +138,7 @@ module Ancestry
     end
 
     def path depth_options = {}
-      self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.inpath_of(self)
+      self.class.base_class.scope_depth(depth_options, depth).ordered_by_ancestry.inpath_of(self)
     end
 
     def depth
@@ -146,7 +146,7 @@ module Ancestry
     end
 
     def cache_depth
-      write_attribute self.ancestry_base_class.depth_cache_column, depth
+      write_attribute self.class.base_class.depth_cache_column, depth
     end
 
     def ancestor_of?(node)
@@ -208,7 +208,7 @@ module Ancestry
     # Children
 
     def children
-      self.ancestry_base_class.children_of(self)
+      self.class.base_class.children_of(self)
     end
 
     def child_ids
@@ -232,7 +232,7 @@ module Ancestry
     # Siblings
 
     def siblings
-      self.ancestry_base_class.siblings_of(self)
+      self.class.base_class.siblings_of(self)
     end
 
     # NOTE: includes self
@@ -257,7 +257,7 @@ module Ancestry
     # Descendants
 
     def descendants depth_options = {}
-      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).descendants_of(self)
+      self.class.base_class.ordered_by_ancestry.scope_depth(depth_options, depth).descendants_of(self)
     end
 
     def descendant_ids depth_options = {}
@@ -271,7 +271,7 @@ module Ancestry
     # Indirects
 
     def indirects depth_options = {}
-      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).indirects_of(self)
+      self.class.base_class.ordered_by_ancestry.scope_depth(depth_options, depth).indirects_of(self)
     end
 
     def indirect_ids depth_options = {}
@@ -285,7 +285,7 @@ module Ancestry
     # Subtree
 
     def subtree depth_options = {}
-      self.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).subtree_of(self)
+      self.class.base_class.ordered_by_ancestry.scope_depth(depth_options, depth).subtree_of(self)
     end
 
     def subtree_ids depth_options = {}
@@ -308,13 +308,13 @@ module Ancestry
   private
     def unscoped_descendants
       unscoped_where do |scope|
-        scope.where self.ancestry_base_class.descendant_conditions(self)
+        scope.where self.class.base_class.descendant_conditions(self)
       end
     end
 
     def unscoped_descendants_before_save
       unscoped_where do |scope|
-        scope.where self.ancestry_base_class.descendant_before_save_conditions(self)
+        scope.where self.class.base_class.descendant_before_save_conditions(self)
       end
     end
 
@@ -332,7 +332,7 @@ module Ancestry
     end
 
     def unscoped_where
-      self.ancestry_base_class.unscoped_where do |scope|
+      self.class.base_class.unscoped_where do |scope|
         yield scope
       end
     end

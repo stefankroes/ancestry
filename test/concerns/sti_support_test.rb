@@ -51,7 +51,7 @@ class StiSupportTest < ActiveSupport::TestCase
 
       # children
 
-      assert_equal [child], root.children.order(:id) # missing model_child
+      assert_equal [child, model_child], root.children.order(:id)
       assert_equal root, child.parent
       assert_equal root, model_child.parent
 
