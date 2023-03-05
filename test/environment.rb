@@ -150,6 +150,11 @@ class AncestryTestDatabase
   def self.postgres?
     db_type == "pg"
   end
+
+  def self.materialized_path2?
+    return @materialized_path2 if defined?(@materialized_path2)
+    @materialized_path2 = (ENV["FORMAT"] == "materialized_path2")
+  end
   private
 
   def self.db_type
