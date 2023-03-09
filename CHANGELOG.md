@@ -3,7 +3,7 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
-## Version [4.3.0] <sub><sup>2023-03-04</sub></sup>
+## Version [4.3.0] <sub><sup>2023-03-09</sub></sup>
 
 * Fix: materialized_path2 strategy [#597](https://github.com/stefankroes/ancestry/pull/597) (thx @kshnurov)
 * Fix: descendants ancestry is now updated in after_update callbacks [#589](https://github.com/stefankroes/ancestry/pull/589) (thx @kshnurov)
@@ -13,6 +13,7 @@ a nice looking [Changelog](http://keepachangelog.com).
 * Documented column collation and testing [#601](https://github.com/stefankroes/ancestry/pull/601) [#607](https://github.com/stefankroes/ancestry/pull/607) (thx @kshnurov)
 * Added initializer with default_ancestry_format [#612](https://github.com/stefankroes/ancestry/pull/612) [#613](https://github.com/stefankroes/ancestry/pull/613)
 * ruby 3.2 support [#596](https://github.com/stefankroes/ancestry/pull/596) (thx @petergoldstein)
+* arrange is 3x faster and uses 20-30x less memory [#415](https://github.com/stefankroes/ancestry/pull/415)
 
 ## Version [4.2.0] <sub><sup>2022-06-09</sub></sup>
 
