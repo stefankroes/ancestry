@@ -1,38 +1,16 @@
 require_relative '../environment'
 
 class OphanStrategiesTest < ActiveSupport::TestCase
-  def test_default_orphan_strategy
-    AncestryTestDatabase.with_model do |model|
-      assert_equal :destroy, model.orphan_strategy
-    end
-  end
-
-  def test_non_default_orphan_strategy
-    AncestryTestDatabase.with_model :orphan_strategy => :rootify do |model|
-      assert_equal :rootify, model.orphan_strategy
-    end
-  end
-
-  def test_setting_orphan_strategy
-    AncestryTestDatabase.with_model do |model|
-      model.orphan_strategy = :rootify
-      assert_equal :rootify, model.orphan_strategy
-      model.orphan_strategy = :destroy
-      assert_equal :destroy, model.orphan_strategy
-    end
-  end
-
   def test_setting_invalid_orphan_strategy
-    AncestryTestDatabase.with_model do |model|
+    AncestryTestDatabase.with_model skip_ancestry: true do |model|
       assert_raise Ancestry::AncestryException do
-        model.orphan_strategy = :non_existent_orphan_strategy
+        model.has_ancestry orphan_strategy: :non_existent_orphan_strategy
       end
     end
   end
 
   def test_orphan_rootify_strategy
-    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
-      model.orphan_strategy = :rootify
+    AncestryTestDatabase.with_model orphan_strategy: :rootify, :depth => 3, :width => 3 do |model, roots|
       root = roots.first.first
       children = root.children.to_a
       root.destroy
@@ -45,8 +23,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
   end
 
   def test_orphan_destroy_strategy
-    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
-      model.orphan_strategy = :destroy
+    AncestryTestDatabase.with_model orphan_strategy: :destroy, :depth => 3, :width => 3 do |model, roots|
       root = roots.first.first
       assert_difference 'model.count', -root.subtree.size do
         root.destroy
@@ -59,8 +36,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
   end
 
   def test_orphan_restrict_strategy
-    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
-      model.orphan_strategy = :restrict
+    AncestryTestDatabase.with_model orphan_strategy: :restrict, :depth => 3, :width => 3 do |model, roots|
       root = roots.first.first
       assert_raise Ancestry::AncestryException do
         root.destroy
@@ -72,8 +48,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
   end
 
   def test_orphan_adopt_strategy
-    AncestryTestDatabase.with_model do |model|
-      model.orphan_strategy = :adopt  # set the orphan strategy as paerntify
+    AncestryTestDatabase.with_model orphan_strategy: :adopt do |model|
       n1 = model.create!                  #create a root node
       n2 = model.create!(:parent => n1)   #create child with parent=root
       n3 = model.create!(:parent => n2)   #create child with parent=n2, depth = 2

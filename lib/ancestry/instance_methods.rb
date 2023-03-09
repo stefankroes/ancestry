@@ -20,32 +20,44 @@ module Ancestry
       end
     end
 
-    # Apply orphan strategy (before destroy - no changes)
-    def apply_orphan_strategy
-      if !ancestry_callbacks_disabled? && !new_record?
-        case self.ancestry_base_class.orphan_strategy
-        when :rootify # make all children root if orphan strategy is rootify
-          unscoped_descendants.each do |descendant|
-            descendant.without_ancestry_callbacks do
-              descendant.update_attribute :ancestor_ids, descendant.ancestor_ids - path_ids
-            end
-          end
-        when :destroy # destroy all descendants if orphan strategy is destroy
-          unscoped_descendants.each do |descendant|
-            descendant.without_ancestry_callbacks do
-              descendant.destroy
-            end
-          end
-        when :adopt # make child elements of this node, child of its parent
-          descendants.each do |descendant|
-            descendant.without_ancestry_callbacks do
-              descendant.update_attribute :ancestor_ids, (descendant.ancestor_ids.delete_if { |x| x == self.id })
-            end
-          end
-        when :restrict # throw an exception if it has children
-          raise Ancestry::AncestryException.new(I18n.t("ancestry.cannot_delete_descendants")) unless is_childless?
+    # make all children root if orphan strategy is rootify
+    def apply_orphan_strategy_rootify
+      return if ancestry_callbacks_disabled? || new_record?
+
+      unscoped_descendants.each do |descendant|
+        descendant.without_ancestry_callbacks do
+          descendant.update_attribute :ancestor_ids, descendant.ancestor_ids - path_ids
         end
       end
+    end
+
+    # destroy all descendants if orphan strategy is destroy
+    def apply_orphan_strategy_destroy
+      return if ancestry_callbacks_disabled? || new_record?
+
+      unscoped_descendants.each do |descendant|
+        descendant.without_ancestry_callbacks do
+          descendant.destroy
+        end
+      end
+    end
+
+    # make child elements of this node, child of its parent
+    def apply_orphan_strategy_adopt
+      return if ancestry_callbacks_disabled? || new_record?
+
+      descendants.each do |descendant|
+        descendant.without_ancestry_callbacks do
+          descendant.update_attribute :ancestor_ids, (descendant.ancestor_ids.delete_if { |x| x == self.id })
+        end
+      end
+    end
+
+    # throw an exception if it has children
+    def apply_orphan_strategy_restrict
+      return if ancestry_callbacks_disabled? || new_record?
+
+      raise Ancestry::AncestryException.new(I18n.t("ancestry.cannot_delete_descendants")) unless is_childless?
     end
 
     # Touch each of this record's ancestors (after save)
