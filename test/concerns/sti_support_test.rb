@@ -36,8 +36,10 @@ class StiSupportTest < ActiveSupport::TestCase
       subclass1 = Object.const_set 'SubclassWithAncestry', Class.new(model)
       subclass2 = Object.const_set 'SubclassOfSubclassWithAncestry', Class.new(subclass1)
 
-      # we are defining it one level below the parent ("model" class)
-      subclass1.has_ancestry :ancestry_column => :t1, :counter_cache => true
+      ActiveSupport::Deprecation.silence do
+        # we are defining it one level below the parent ("model" class)
+        subclass1.has_ancestry :ancestry_column => :t1, :counter_cache => true
+      end
 
       # if ancestry is not propogated, then create will fail
 
