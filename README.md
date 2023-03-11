@@ -153,7 +153,7 @@ The yellow nodes are those returned by the method.
 
 When using `STI` all classes are returned from the scopes unless you specify otherwise using `where(:type => "ChildClass")`.
 
-<sup id="fn1">1. [other root records are considered siblings]<a href="#ref1" title="Jump back to footnote 1.">↩</a></sup>
+<sup id="fn1">1. [other root records are not considered siblings]<a href="#ref1" title="Jump back to footnote 1.">↩</a></sup>
 
 # has_ancestry options
 

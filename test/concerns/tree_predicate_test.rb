@@ -23,8 +23,8 @@ class TreePredicateTest < ActiveSupport::TestCase
         assert children.map { |n| !root.child_of?(n) }.all?
         assert children.map { |n| n.child_of?(root) }.all?
         # Siblings assertions
-        assert root.has_siblings?
-        assert !root.is_only_child?
+        refute root.has_siblings?
+        assert root.is_only_child?
         assert children.map { |n| !n.is_only_child? }.all?
         assert children.map { |n| !root.sibling_of?(n) }.all?
         assert children.permutation(2).map { |l, r| l.sibling_of?(r) }.all?

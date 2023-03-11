@@ -6,9 +6,9 @@ class ScopesTest < ActiveSupport::TestCase
       # Roots assertion
       assert_equal roots.map(&:first).sort, model.roots.to_a.sort
 
-      # All roots are root's siblings (want to change this)
+      # roots have no siblings
       a_root = roots.first.first
-      assert_equal model.siblings_of(a_root).sort, roots.map(&:first).sort
+      assert model.siblings_of(a_root).empty?
 
       model.all.each do |test_node|
         # Assertions for ancestors_of named scope

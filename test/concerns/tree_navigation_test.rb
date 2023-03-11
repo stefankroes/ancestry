@@ -24,10 +24,10 @@ class TreeNavigationTest < ActiveSupport::TestCase
         assert lvl0_node.has_children?
         assert !lvl0_node.is_childless?
         # Siblings assertions
-        assert_equal roots.map(&:first).map(&:id), lvl0_node.sibling_ids
-        assert_equal roots.map(&:first), lvl0_node.siblings
-        assert lvl0_node.has_siblings?
-        assert !lvl0_node.is_only_child?
+        assert lvl0_node.sibling_ids.empty?
+        assert lvl0_node.siblings.empty?
+        refute lvl0_node.has_siblings?
+        assert lvl0_node.is_only_child?
         # Descendants assertions
         descendants = model.all.find_all do |node|
           node.ancestor_ids.include? lvl0_node.id
