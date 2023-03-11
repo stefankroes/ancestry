@@ -37,19 +37,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # this matrix is driven by these sources:
+        # - https://www.fastruby.io/blog/ruby/rails/versions/compatibility-table.html
+        # - https://www.ruby-lang.org/en/downloads/branches/
+        # - https://guides.rubyonrails.org/maintenance_policy.html
+        format: [materialized_path, materialized_path2]
+        activerecord: [70]
+        ruby: [3.1, 3.2]
+        # additional tests
         include:
+          # EOL 6/2022
           - ruby: 2.5
             activerecord: 52
+          # EOL 2023
           - ruby: 2.7
             activerecord: 60
+          # rails 6.1 and 7.0 have different ruby versions
           - ruby: 2.7
             activerecord: 61
           - ruby: "3.0"
             activerecord: 61
-          - ruby: 3.1
-            activerecord: 70
-          - ruby: 3.2
-            activerecord: 70
     env:
       # for the pg cli (psql, pg_isready) and possibly rails
       PGHOST: 127.0.0.1 # container is mapping it locally
@@ -67,47 +74,35 @@ jobs:
 
       - name: setup Ruby
         # https://github.com/ruby/setup-ruby#versioning
+        # runs 'bundle install' and caches installed gems automatically
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+          bundler-cache: true
 
       - name: run sqlite tests
         env:
           DB: sqlite3
         run: |
-          # for this database, run all the forms of our tests
-          bundle exec rake
-          FORMAT=materialized_path2 bundle exec rake
-
+          FORMAT=${{ matrix.format }} bundle exec rake
       - name: run pg tests
         env:
           DB: pg
         run: |
-          COUNT=1
-          while ! pg_isready ; do
-            echo "waiting for postgres to start"
-            COUNT=$(($COUNT + 1))
-            [[ $COUNT -lt 20 ]] || break
-            sleep 1
-          done
-          # db container is currently creating the database
-          # psql -c 'create database ancestry_test;' || echo 'db exists'
-          bundle exec rake
-          FORMAT=materialized_path2 bundle exec rake
+          FORMAT=${{ matrix.format }} bundle exec rake
+      - name: run pg tests (UPDATE_STRATEGY=sql)
+        env:
+          DB: pg
+        run: |
+          FORMAT=${{ matrix.format }} UPDATE_STRATEGY=sql bundle exec rake
 
       - name: run mysql tests
         env:
           DB: mysql2
         run: |
-          COUNT=1
-          while ! mysqladmin ping -h $MYSQL_HOST -P3306 --silent ; do
-            echo "waiting for mysql to start"
-            COUNT=$(($COUNT + 1))
-            [[ $COUNT -lt 20 ]] || break
-            sleep 1
-          done
-          # db container is currently creating the database
-          # mysql --host $MYSQL_HOST --port 3306 -u $MYSQL_USER  -e 'CREATE SCHEMA IF NOT EXISTS 'ancestry_test';'
-          bundle exec rake
-          FORMAT=materialized_path2 bundle exec rake
+          FORMAT=${{ matrix.format }} bundle exec rake
+      - name: run mysql tests (ANCESTRY_COLUMN_TYPE=binary)
+        env:
+          DB: mysql2
+        run: |
+          FORMAT=${{ matrix.format }} ANCESTRY_COLUMN_TYPE=binary bundle exec rake
