@@ -53,11 +53,11 @@ class AncestryTestDatabase
 
     begin
       ActiveRecord::Base.connection
-
-      # This only affects postgres
-      # the :ruby code path will get tested in mysql and sqlite3
-      Ancestry.default_update_strategy = :sql if postgres?
+      Ancestry.default_update_strategy = ENV["UPDATE_STRATEGY"] == "sql" ? :sql : :ruby
       Ancestry.default_ancestry_format = ENV["FORMAT"].to_sym if ENV["FORMAT"].present?
+
+      puts "testing #{db_type} (with #{column_type} column)"
+      puts "column format: #{Ancestry.default_ancestry_format} options: #{column_options.inspect}"
 
     rescue => err
       if ENV["CI"]
@@ -70,10 +70,15 @@ class AncestryTestDatabase
     end
   end
 
-  # pass ANCESTRY_LOCALE=default to not override locale on ancestry
+  def self.column_type
+    @column_type ||= ENV["COLUMN_TYPE"].presence || "string"
+  end
+
   def self.ancestry_collation
-    @ancestry_collation ||= begin
-      env = ENV["ANCESTRY_LOCALE"].presence
+    return @ancestry_collation if defined?(@ancestry_collation)
+
+    env = ENV["ANCESTRY_LOCALE"].presence
+    @ancestry_collation =
       if env
         env
       elsif postgres?
@@ -83,23 +88,39 @@ class AncestryTestDatabase
       else
         "binary"
       end
-    end
+  end
+
+  # @param force_allow_nil [Boolean] true if we want to allow nulls
+  #                        used when we are testing migrating to ancestry
+  def self.column_options(force_allow_nil: false)
+    @column_options ||=
+      if column_type == "string"
+        {
+          :collation => ancestry_collation == "default" ? nil : ancestry_collation,
+          :null  => materialized_path2? ? false : true
+        }
+      else
+        {
+          :limit => 3000,
+          :null  => materialized_path2? ? false : true
+        }
+      end
+    force_allow_nil ? @column_options.merge(:null => true) : @column_options
   end
 
   def self.with_model options = {}
     depth                = options.delete(:depth) || 0
     width                = options.delete(:width) || 0
+    ancestry_column      = options[:ancestry_column] || :ancestry
+    skip_ancestry        = options.delete(:skip_ancestry)
     extra_columns        = options.delete(:extra_columns)
     default_scope_params = options.delete(:default_scope_params)
 
     table_options={}
     table_options[:id] = options.delete(:id) if options.key?(:id)
 
-    column_options = {:collation => ancestry_collation}
-    column_options = {} if column_options[:collation] == "default"
-
     ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
-      table.string options[:ancestry_column] || :ancestry, **column_options
+      table.send(column_type, ancestry_column, **column_options(force_allow_nil: skip_ancestry))
       table.integer options[:depth_cache_column] || :ancestry_depth if options[:cache_depth]
       if options[:counter_cache]
         counter_cache_column = options[:counter_cache] == true ? :children_count : options[:counter_cache]
@@ -124,7 +145,7 @@ class AncestryTestDatabase
         model.send :default_scope, lambda { model.where(default_scope_params) }
       end
 
-      model.has_ancestry options unless options.delete(:skip_ancestry)
+      model.has_ancestry options unless skip_ancestry
 
       if depth > 0
         yield model, create_test_nodes(model, depth, width)
