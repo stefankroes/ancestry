@@ -34,19 +34,23 @@ class StiSupportTest < ActiveSupport::TestCase
                                     :counter_cache => true,
                                     :extra_columns => {:type => :string} do |model|
       subclass1 = Object.const_set 'SubclassWithAncestry', Class.new(model)
-      subclass2 = Object.const_set 'SubclassOfSubclassWithAncestry', Class.new(subclass1)
+      subclass2 = Object.const_set 'SubclassWithAncestry2', Class.new(model)
+      subclass1b = Object.const_set 'SubclassOfSubclassWithAncestry', Class.new(subclass1)
 
       ActiveSupport::Deprecation.silence do
         # we are defining it one level below the parent ("model" class)
         subclass1.has_ancestry :ancestry_column => :t1, :counter_cache => true
+        subclass2.has_ancestry :ancestry_column => :t1
       end
 
-      # if ancestry is not propogated, then create will fail
+      # ensure class variables are distinct
+      assert subclass1.respond_to?(:counter_cache_column)
+      refute subclass2.respond_to?(:counter_cache_column)
 
       root = subclass1.create!
       # this was the line that was blowing up for this orginal feature
       child = subclass1.create!(:parent => root)
-      child2 = subclass2.create!(:parent => root)
+      child2 = subclass1b.create!(:parent => root)
 
       # counter caches across class lines (going up to parent)
 
@@ -58,6 +62,7 @@ class StiSupportTest < ActiveSupport::TestCase
       assert_equal root, child.parent
 
       Object.send :remove_const, 'SubclassWithAncestry'
+      Object.send :remove_const, 'SubclassWithAncestry2'
       Object.send :remove_const, 'SubclassOfSubclassWithAncestry'
     end
   end
