@@ -19,8 +19,7 @@ module Ancestry
       self.class_variable_set('@@ancestry_column', options[:ancestry_column] || :ancestry)
       cattr_reader :ancestry_column, instance_reader: false
 
-      cattr_accessor :ancestry_primary_key_format
-      self.ancestry_primary_key_format = options[:primary_key_format].presence || Ancestry.default_primary_key_format
+      primary_key_format = options[:primary_key_format].presence || Ancestry.default_primary_key_format
 
       self.class_variable_set('@@ancestry_delimiter', '/')
       cattr_reader :ancestry_delimiter, instance_reader: false
@@ -51,7 +50,7 @@ module Ancestry
 
       attribute self.ancestry_column, default: self.ancestry_root
 
-      validates self.ancestry_column, ancestry_validation_options
+      validates self.ancestry_column, ancestry_validation_options(primary_key_format)
 
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
       include Ancestry::MaterializedPathPg if update_strategy == :sql
