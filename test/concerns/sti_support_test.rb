@@ -26,8 +26,6 @@ class StiSupportTest < ActiveSupport::TestCase
     end
   end
 
-  # not sure that we need to support this case
-  # where we are creating a tree in the middle of a model
   def test_sti_support_with_from_subclass
     AncestryTestDatabase.with_model :ancestry_column => :t1,
                                     :skip_ancestry => true,
@@ -37,11 +35,9 @@ class StiSupportTest < ActiveSupport::TestCase
       subclass2 = Object.const_set 'SubclassWithAncestry2', Class.new(model)
       subclass1b = Object.const_set 'SubclassOfSubclassWithAncestry', Class.new(subclass1)
 
-      ActiveSupport::Deprecation.silence do
-        # we are defining it one level below the parent ("model" class)
-        subclass1.has_ancestry :ancestry_column => :t1, :counter_cache => true
-        subclass2.has_ancestry :ancestry_column => :t1
-      end
+      # we are defining it one level below the parent ("model" class)
+      subclass1.has_ancestry :ancestry_column => :t1, :counter_cache => true
+      subclass2.has_ancestry :ancestry_column => :t1
 
       # ensure class variables are distinct
       assert subclass1.respond_to?(:counter_cache_column)
