@@ -1,11 +1,6 @@
 module Ancestry
   module HasAncestry
     def has_ancestry options = {}
-
-      if base_class != self
-        ActiveSupport::Deprecation.warn("Please move has_ancestry to the root of the STI inheritance tree.")
-      end
-
       # Check options
       raise Ancestry::AncestryException.new(I18n.t("ancestry.option_must_be_hash")) unless options.is_a? Hash
       options.each do |key, value|
