@@ -42,20 +42,20 @@ module Ancestry
       def child_ancestry
         # New records cannot have children
         raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
-        "#{attribute_in_database(self.ancestry_base_class.ancestry_column)}#{id}#{self.ancestry_base_class.ancestry_delimiter}"
+        "#{attribute_in_database(self.class.ancestry_column)}#{id}#{self.class.ancestry_delimiter}"
       end
 
       def child_ancestry_before_save
         # New records cannot have children
         raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
-        "#{attribute_before_last_save(self.ancestry_base_class.ancestry_column)}#{id}#{self.ancestry_base_class.ancestry_delimiter}"
+        "#{attribute_before_last_save(self.class.ancestry_column)}#{id}#{self.class.ancestry_delimiter}"
       end
 
       def generate_ancestry(ancestor_ids)
         if ancestor_ids.present? && ancestor_ids.any?
-          "#{self.ancestry_base_class.ancestry_delimiter}#{ancestor_ids.join(self.ancestry_base_class.ancestry_delimiter)}#{self.ancestry_base_class.ancestry_delimiter}"
+          "#{self.class.ancestry_delimiter}#{ancestor_ids.join(self.class.ancestry_delimiter)}#{self.class.ancestry_delimiter}"
         else
-          self.ancestry_base_class.ancestry_root
+          self.class.ancestry_root
         end
       end
     end
