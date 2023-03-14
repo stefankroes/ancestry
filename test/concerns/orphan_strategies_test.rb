@@ -69,6 +69,23 @@ class OphanStrategiesTest < ActiveSupport::TestCase
     end
   end
 
+  def test_override_apply_orphan_strategy
+    AncestryTestDatabase.with_model orphan_strategy: :destroy do |model, roots|
+      root  = model.create!
+      child = model.create!(:parent => root)
+      model.class_eval do
+        def apply_orphan_strategy
+          # disabling destoy callback
+        end
+      end
+      assert_difference 'model.count', -1 do
+        root.destroy
+      end
+      # this should not throw an ActiveRecord::RecordNotFound exception
+      assert child.reload.root_id == root.id
+    end
+  end
+
   def test_basic_delete
     AncestryTestDatabase.with_model do |model|
       n1 = model.create!                  #create a root node
