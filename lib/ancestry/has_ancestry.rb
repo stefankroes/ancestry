@@ -59,7 +59,7 @@ module Ancestry
       validate :ancestry_exclude_self
 
       # Update descendants with new ancestry after update
-      after_update :update_descendants_with_new_ancestry
+      after_update :update_descendants_with_new_ancestry, if: :ancestry_changed?
 
       # Apply orphan strategy before destroy
       case orphan_strategy
