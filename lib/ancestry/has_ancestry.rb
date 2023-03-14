@@ -68,12 +68,18 @@ module Ancestry
 
       # Apply orphan strategy before destroy
       case orphan_strategy
-      when :rootify  then before_destroy :apply_orphan_strategy_rootify
-      when :destroy  then before_destroy :apply_orphan_strategy_destroy
-      when :adopt    then before_destroy :apply_orphan_strategy_adopt
-      when :restrict then before_destroy :apply_orphan_strategy_restrict
-      else raise Ancestry::AncestryException.new(I18n.t("ancestry.invalid_orphan_strategy"))
+      when :rootify
+        alias_method :apply_orphan_strategy, :apply_orphan_strategy_rootify
+      when :destroy
+        alias_method :apply_orphan_strategy, :apply_orphan_strategy_destroy
+      when :adopt
+        alias_method :apply_orphan_strategy, :apply_orphan_strategy_adopt
+      when :restrict
+        alias_method :apply_orphan_strategy, :apply_orphan_strategy_restrict
+      else
+        raise Ancestry::AncestryException.new(I18n.t("ancestry.invalid_orphan_strategy"))
       end
+      before_destroy :apply_orphan_strategy
 
       # Create ancestry column accessor and set to option or default
       if options[:cache_depth]
