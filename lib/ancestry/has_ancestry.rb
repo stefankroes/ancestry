@@ -30,6 +30,7 @@ module Ancestry
       cattr_reader :ancestry_base_class, instance_reader: false
 
       # Touch ancestors after updating
+      # days are limited. need to handle touch in pg case
       cattr_accessor :touch_ancestors
       self.touch_ancestors = options[:touch] || false
 
@@ -110,9 +111,11 @@ module Ancestry
         }
       end
 
-      after_touch :touch_ancestors_callback
-      after_destroy :touch_ancestors_callback
-      after_save :touch_ancestors_callback, if: :saved_changes?
+      if options[:touch]
+        after_touch :touch_ancestors_callback
+        after_destroy :touch_ancestors_callback
+        after_save :touch_ancestors_callback, if: :saved_changes?
+      end
     end
 
     def acts_as_tree(*args)
