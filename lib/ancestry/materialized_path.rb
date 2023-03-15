@@ -115,6 +115,10 @@ module Ancestry
       primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
     end
 
+    def ancestry_depth_change(old_value, new_value)
+      parse_ancestry_column(new_value).size - parse_ancestry_column(old_value).size
+    end
+
     private
 
     def ancestry_validation_options(ancestry_primary_key_format)

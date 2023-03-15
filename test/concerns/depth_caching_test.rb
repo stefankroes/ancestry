@@ -101,4 +101,22 @@ class DepthCachingTest < ActiveSupport::TestCase
       end
     end
   end
+
+  # we are already testing generate and parse against static values
+  # this assumes those are methods are tested and working
+  def test_ancestry_depth_change
+    AncestryTestDatabase.with_model do |model|
+      {
+        [[], [1]]        => +1,
+        [[1], []]        => -1,
+        [[1], [2]]       =>  0,
+        [[1], [1, 2, 3]] => +2,
+        [[1, 2, 3], [1]] => -2
+      }.each do |(before, after), diff|
+        a_before = model.generate_ancestry(before)
+        a_after = model.generate_ancestry(after)
+        assert_equal(diff, model.ancestry_depth_change(a_before, a_after))
+      end
+    end
+  end
 end
