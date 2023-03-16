@@ -1,5 +1,6 @@
 require_relative '../environment'
 
+# all class nodes used to look up objects belong here
 class ScopesTest < ActiveSupport::TestCase
   def test_scopes
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
@@ -49,7 +50,7 @@ class ScopesTest < ActiveSupport::TestCase
     end
   end
 
-  def test_order_by
+  def test_ordered_by_ancestry
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, _roots|
       # Some pg databases do not use symbols in sorting
       # if this is failing, try tweaking the collation of your ancestry columns
