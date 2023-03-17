@@ -56,7 +56,7 @@ class AncestryTestDatabase
       Ancestry.default_update_strategy = ENV["UPDATE_STRATEGY"] == "sql" ? :sql : :ruby
       Ancestry.default_ancestry_format = ENV["FORMAT"].to_sym if ENV["FORMAT"].present?
 
-      puts "testing #{db_type} (with #{column_type} column)"
+      puts "testing #{db_type} #{Ancestry.default_update_strategy == :sql ? "(sql) " : ""}(with #{column_type} column)"
       puts "column format: #{Ancestry.default_ancestry_format} options: #{column_options.inspect}"
 
     rescue => err
