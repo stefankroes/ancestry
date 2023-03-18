@@ -100,6 +100,56 @@ class TreeNavigationTest < ActiveSupport::TestCase
     end
   end
 
+  def test_db_nodes
+    AncestryTestDatabase.with_model do |model|
+      root = model.create!
+      node = model.new
+
+      # new / not saved
+      assert_equal [], node.ancestor_ids_in_database
+      assert_equal [], node.ancestor_ids_before_last_save
+      assert_nil node.parent_id
+      assert_nil node.parent_id_in_database
+      assert_nil node.parent_id_before_last_save
+
+      # saved
+      node.save!
+      assert_equal [], node.ancestor_ids
+      assert_equal [], node.ancestor_ids_in_database
+      assert_equal [], node.ancestor_ids_before_last_save
+      assert_nil node.parent_id
+      assert_nil node.parent_id_in_database
+      assert_nil node.parent_id_before_last_save
+
+      # changed / not saved
+      node.ancestor_ids = [root.id]
+      assert_equal [root.id], node.ancestor_ids
+      assert_equal [], node.ancestor_ids_in_database
+      assert_equal [], node.ancestor_ids_before_last_save
+      assert_equal root.id, node.parent_id
+      assert_nil node.parent_id_in_database
+      assert_nil node.parent_id_before_last_save
+
+      # changed / saved
+      node.save!
+      assert_equal [root.id], node.ancestor_ids
+      assert_equal [root.id], node.ancestor_ids_in_database
+      assert_equal [], node.ancestor_ids_before_last_save # ?
+      assert_equal root.id, node.parent_id
+      assert_equal root.id, node.parent_id_in_database
+      assert_nil node.parent_id_before_last_save # ?
+
+      # reloaded
+      node = model.find(node.id)
+      assert_equal [root.id], node.ancestor_ids
+      assert_equal [root.id], node.ancestor_ids_in_database
+      assert_equal [], node.ancestor_ids_before_last_save # ?
+      assert_equal root.id, node.parent_id
+      assert_equal root.id, node.parent_id_in_database
+      assert_nil node.parent_id_before_last_save # ?
+    end
+  end
+
   private
 
   def assert_attribute(value, node, attribute_name, attrid = nil)
