@@ -1,130 +1,124 @@
 require_relative '../environment'
 
+# this is testing attribute getters
 class TreeNavigationTest < ActiveSupport::TestCase
-  def test_tree_navigation
-    AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, roots|
-      roots.each do |lvl0_node, lvl0_children|
-        # Ancestors assertions
-        assert_equal [], lvl0_node.ancestor_ids
-        assert_equal [], lvl0_node.ancestors
-        assert_equal [lvl0_node.id], lvl0_node.path_ids
-        assert_equal [lvl0_node], lvl0_node.path
-        assert_equal 0, lvl0_node.depth
-        # Parent assertions
-        assert_nil lvl0_node.parent_id
-        assert_nil lvl0_node.parent
-        refute lvl0_node.has_parent?
-        # Root assertions
-        assert_equal lvl0_node.id, lvl0_node.root_id
-        assert_equal lvl0_node, lvl0_node.root
-        assert lvl0_node.is_root?
-        # Children assertions
-        assert_equal lvl0_children.map(&:first).map(&:id), lvl0_node.child_ids
-        assert_equal lvl0_children.map(&:first), lvl0_node.children
-        assert lvl0_node.has_children?
-        assert !lvl0_node.is_childless?
-        # Siblings assertions
-        assert_equal roots.map(&:first).map(&:id), lvl0_node.sibling_ids
-        assert_equal roots.map(&:first), lvl0_node.siblings
-        assert lvl0_node.has_siblings?
-        assert !lvl0_node.is_only_child?
-        # Descendants assertions
-        descendants = model.all.find_all do |node|
-          node.ancestor_ids.include? lvl0_node.id
-        end
-        assert_equal descendants.map(&:id), lvl0_node.descendant_ids
-        assert_equal descendants, lvl0_node.descendants
-        # Subtree assertions
-        subtree = [lvl0_node] + descendants
-        assert_equal subtree.map(&:id), lvl0_node.subtree_ids
-        assert_equal subtree, lvl0_node.subtree
-        # Indirects assertions
-        indirects = lvl0_node.descendants - lvl0_node.children
-        assert_equal indirects.map(&:id), lvl0_node.indirect_ids
-        assert_equal indirects, lvl0_node.indirects
+  # class level getters are in test/concerns/scopes_test.rb
+  # depth tests are in test/concerns/depth_constraints_tests.rb
+  def test_node_getters
+    AncestryTestDatabase.with_model do |model|
+      node1  = model.create!
+      node11 = model.create!(:parent => node1)
+      node111 = model.create!(:parent => node11)
+      node12 = model.create!(:parent => node1)
+      node2  = model.create!
+      node21 = model.create!(:parent => node2)
 
-        lvl0_children.each do |lvl1_node, lvl1_children|
-          # Ancestors assertions
-          assert_equal [lvl0_node.id], lvl1_node.ancestor_ids
-          assert_equal [lvl0_node], lvl1_node.ancestors
-          assert_equal [lvl0_node.id, lvl1_node.id], lvl1_node.path_ids
-          assert_equal [lvl0_node, lvl1_node], lvl1_node.path
-          assert_equal 1, lvl1_node.depth
-          # Parent assertions
-          assert_equal lvl0_node.id, lvl1_node.parent_id
-          assert_equal lvl0_node, lvl1_node.parent
-          assert lvl1_node.has_parent?
-          # Root assertions
-          assert_equal lvl0_node.id, lvl1_node.root_id
-          assert_equal lvl0_node, lvl1_node.root
-          assert !lvl1_node.is_root?
-          # Children assertions
-          assert_equal lvl1_children.map(&:first).map(&:id), lvl1_node.child_ids
-          assert_equal lvl1_children.map(&:first), lvl1_node.children
-          assert lvl1_node.has_children?
-          assert !lvl1_node.is_childless?
-          # Siblings assertions
-          assert_equal lvl0_children.map(&:first).map(&:id), lvl1_node.sibling_ids
-          assert_equal lvl0_children.map(&:first), lvl1_node.siblings
-          assert lvl1_node.has_siblings?
-          assert !lvl1_node.is_only_child?
-          # Descendants assertions
-          descendants = model.all.find_all do |node|
-            node.ancestor_ids.include? lvl1_node.id
-          end
-          assert_equal descendants.map(&:id), lvl1_node.descendant_ids
-          assert_equal descendants, lvl1_node.descendants
-          # Subtree assertions
-          subtree = [lvl1_node] + descendants
-          assert_equal subtree.map(&:id), lvl1_node.subtree_ids
-          assert_equal subtree, lvl1_node.subtree
-          # Indirects assertions
-          indirects = lvl1_node.descendants - lvl1_node.children
-          assert_equal indirects.map(&:id), lvl1_node.indirect_ids
-          assert_equal indirects, lvl1_node.indirects
+      # up:     |parent  |root       |ancestors|
+      # down:   |children|descendants|indirects|
+      # across: |siblings|subtree    |path     |
 
-          lvl1_children.each do |lvl2_node, _lvl2_children|
-            # Ancestors assertions
-            assert_equal [lvl0_node.id, lvl1_node.id], lvl2_node.ancestor_ids
-            assert_equal [lvl0_node, lvl1_node], lvl2_node.ancestors
-            assert_equal [lvl0_node.id, lvl1_node.id, lvl2_node.id], lvl2_node.path_ids
-            assert_equal [lvl0_node, lvl1_node, lvl2_node], lvl2_node.path
-            assert_equal 2, lvl2_node.depth
-            # Parent assertions
-            assert_equal lvl1_node.id, lvl2_node.parent_id
-            assert_equal lvl1_node, lvl2_node.parent
-            assert lvl2_node.has_parent?
-            # Root assertions
-            assert_equal lvl0_node.id, lvl2_node.root_id
-            assert_equal lvl0_node, lvl2_node.root
-            assert !lvl2_node.is_root?
-            # Children assertions
-            assert_equal [], lvl2_node.child_ids
-            assert_equal [], lvl2_node.children
-            assert !lvl2_node.has_children?
-            assert lvl2_node.is_childless?
-            # Siblings assertions
-            assert_equal lvl1_children.map(&:first).map(&:id), lvl2_node.sibling_ids
-            assert_equal lvl1_children.map(&:first), lvl2_node.siblings
-            assert lvl2_node.has_siblings?
-            assert !lvl2_node.is_only_child?
-            # Descendants assertions
-            descendants = model.all.find_all do |node|
-              node.ancestor_ids.include? lvl2_node.id
-            end
-            assert_equal descendants.map(&:id), lvl2_node.descendant_ids
-            assert_equal descendants, lvl2_node.descendants
-            # Subtree assertions
-            subtree = [lvl2_node] + descendants
-            assert_equal subtree.map(&:id), lvl2_node.subtree_ids
-            assert_equal subtree, lvl2_node.subtree
-            # Indirects assertions
-            indirects = lvl2_node.descendants - lvl2_node.children
-            assert_equal indirects.map(&:id), lvl2_node.indirect_ids
-            assert_equal indirects, lvl2_node.indirects
-          end
-        end
-      end
+      # root: node1
+      assert_attribute(nil, node1, :parent)
+      refute node1.has_parent?
+      assert_attribute(node1, node1, :root)
+      assert_attributes([], node1, :ancestors, :ancestor_ids)
+      assert_attributes([node11, node12], node1, :children, :child_ids)
+      assert_attributes([node11, node111, node12], node1, :descendants, :descendant_ids, false)
+      assert_attributes([node111], node1, :indirects, :indirect_ids, false)
+      assert_attributes([node1, node2], node1, :siblings, :sibling_ids)
+      assert_attributes([node1, node11, node111, node12], node1, :subtree, :subtree_ids, false)
+      assert_attributes([node1], node1, :path, nil, false)
+      assert_equal(0, node1.depth)
+
+      # root: node11
+      assert_attribute(node1, node11, :parent)
+      assert node11.has_parent?
+      assert_attribute(node1, node11, :root)
+      assert_attributes([node1], node11, :ancestors, :ancestor_ids)
+      assert_attributes([node111], node11, :children, :child_ids)
+      assert_attributes([node111], node11, :descendants, :descendant_ids, false)
+      assert_attributes([], node11, :indirects, :indirect_ids, false)
+      assert_attributes([node11, node12], node11, :siblings, :sibling_ids)
+      assert_attributes([node11, node111], node11, :subtree, :subtree_ids, false)
+      assert_attributes([node1, node11], node11, :path, nil, false)
+      assert_equal(1, node11.depth)
+
+      # root: node111
+      assert_attribute(node11, node111, :parent)
+      assert node111.has_parent?
+      assert_attribute(node1, node111, :root)
+      assert_attributes([node1, node11], node111, :ancestors, :ancestor_ids)
+      assert_attributes([], node111, :children, :child_ids)
+      assert_attributes([], node111, :descendants, :descendant_ids, false)
+      assert_attributes([], node111, :indirects, :indirect_ids, false)
+      assert_attributes([node111], node111, :siblings, :sibling_ids, false)
+      refute node111.siblings?
+      assert_attributes([node111], node111, :subtree, :subtree_ids, false)
+      assert_attributes([node1, node11, node111], node111, :path, nil, false)
+      assert_equal(2, node111.depth)
+
+      # root: node12
+      assert_attribute(node1, node12, :parent)
+      assert node12.has_parent?
+      assert_attribute(node1, node12, :root)
+      assert_attributes([node1], node12, :ancestors, :ancestor_ids)
+      assert_attributes([], node12, :children, :child_ids)
+      assert_attributes([], node12, :descendants, :descendant_ids, false)
+      assert_attributes([], node12, :indirects, :indirect_ids, false)
+      assert_attributes([node11, node12], node12, :siblings, :sibling_ids, false)
+      refute node111.siblings?
+      assert_attributes([node12], node12, :subtree, :subtree_ids, false)
+      assert_attributes([node1, node12], node12, :path, nil, false)
+      assert_equal(1, node12.depth)
+
+      # root: node2
+      assert_attribute(nil, node2, :parent)
+      refute node2.has_parent?
+      assert_attribute(node2, node2, :root)
+      assert_attributes([], node2, :ancestors, :ancestor_ids)
+      assert_attributes([node21], node2, :children, :child_ids)
+      assert_attributes([node21], node2, :descendants, :descendant_ids, false)
+      assert_attributes([], node2, :indirects, :indirect_ids, false)
+      assert_attributes([node1, node2], node2, :siblings, :sibling_ids)
+      assert_attributes([node2, node21], node2, :subtree, :subtree_ids, false)
+      assert_attributes([node2], node2, :path, nil, false)
+      assert_equal(0, node2.depth)
+
+      # root: node21
+      assert_attribute(node2, node21, :parent)
+      assert node21.has_parent?
+      assert_attribute(node2, node21, :root)
+      assert_attributes([node2], node21, :ancestors, :ancestor_ids)
+      assert_attributes([], node21, :children, :child_ids)
+      assert_attributes([], node21, :descendants, :descendant_ids, false)
+      assert_attributes([], node21, :indirects, :indirect_ids, false)
+      assert_attributes([node21], node21, :siblings, :sibling_ids, false)
+      refute node111.siblings?
+      assert_attributes([node21], node21, :subtree, :subtree_ids, false)
+      assert_attributes([node2, node21], node21, :path, nil, false)
+      assert_equal(1, node21.depth)
+    end
+  end
+
+  private
+
+  def assert_attribute(value, node, attribute_name, attrid = nil)
+    if value.nil?
+      assert_nil node.send(attribute_name)
+      assert_nil node.send(attrid || "#{attribute_name}_id")
+    else
+      assert_equal value,     node.send(attribute_name)
+      assert_equal value&.id, node.send(attrid || "#{attribute_name}_id")
+    end
+  end
+
+  def assert_attributes(values, node, attribute_name, attrid = nil, attrQ = nil)
+    assert_equal values.map(&:id), node.send(attribute_name).order(:id).map(&:id)
+    assert_equal values.map(&:id), node.send(attrid || "#{attribute_name}_ids").sort
+    if values.empty? && attrQ != false
+      refute node.send(attrQ || "#{attribute_name}?")
+    elsif attrQ != false
+      assert node.send(attrQ || "#{attribute_name}?")
     end
   end
 end
