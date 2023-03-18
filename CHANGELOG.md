@@ -3,6 +3,13 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
+## Version [4.3.1] <sub><sup>2023-03-17</sub></sup>
+* Fix: added back fields that were removed in #589 [#637](https://github.com/stefankroes/ancestry/pull/637) (thx @znz)
+  - ancestor_ids_in_database
+  - ancestor_id_before_last_save
+  - parent_id_in_database
+  - parent_id_before_last_save
+
 ## Version [4.3.0] <sub><sup>2023-03-09</sub></sup>
 
 * Fix: materialized_path2 strategy [#597](https://github.com/stefankroes/ancestry/pull/597) (thx @kshnurov)
