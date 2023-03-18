@@ -96,6 +96,14 @@ module Ancestry
 
         # Validate depth column
         validates_numericality_of depth_cache_column, :greater_than_or_equal_to => 0, :only_integer => true, :allow_nil => false
+
+        scope :before_depth, lambda { |depth| where("#{depth_cache_column} < ?", depth) }
+        scope :to_depth,     lambda { |depth| where("#{depth_cache_column} <= ?", depth) }
+        scope :at_depth,     lambda { |depth| where("#{depth_cache_column} = ?", depth) }
+        scope :from_depth,   lambda { |depth| where("#{depth_cache_column} >= ?", depth) }
+        scope :after_depth,  lambda { |depth| where("#{depth_cache_column} > ?", depth) }
+      else
+        # TODO: pure sql implementation of these scopse around depth_sql (from strategy)
       end
 
       # Create counter cache column accessor and set to option or default
@@ -106,16 +114,6 @@ module Ancestry
         after_create :increase_parent_counter_cache, if: :has_parent?
         after_destroy :decrease_parent_counter_cache, if: :has_parent?
         after_update :update_parent_counter_cache
-      end
-
-      # Create named scopes for depth
-      {:before_depth => '<', :to_depth => '<=', :at_depth => '=', :from_depth => '>=', :after_depth => '>'}.each do |scope_name, operator|
-        scope scope_name, lambda { |depth|
-          raise Ancestry::AncestryException.new(I18n.t("ancestry.named_scope_depth_cache",
-                                                       :scope_name => scope_name
-                                                       )) unless options[:cache_depth]
-          where("#{depth_cache_column} #{operator} ?", depth)
-        }
       end
 
       if options[:touch]

@@ -10,7 +10,6 @@ en:
     option_must_be_hash: "Options for has_ancestry must be in a hash."
     unknown_option: "Unknown option for has_ancestry: %{key} => %{value}."
     unknown_format: "Unknown ancestry format: %{value}."
-    named_scope_depth_cache: "Named scope '%{scope_name}' is only available when depth caching is enabled."
 
     exclude_self: "%{class_name} cannot be a descendant of itself."
     cannot_delete_descendants: "Cannot delete record because it has descendants."

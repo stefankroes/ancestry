@@ -38,21 +38,11 @@ class DepthCachingTest < ActiveSupport::TestCase
 
   def test_depth_scopes_unavailable
     AncestryTestDatabase.with_model do |model|
-      assert_raise Ancestry::AncestryException do
-        model.before_depth(1)
-      end
-      assert_raise Ancestry::AncestryException do
-        model.to_depth(1)
-      end
-      assert_raise Ancestry::AncestryException do
-        model.at_depth(1)
-      end
-      assert_raise Ancestry::AncestryException do
-        model.from_depth(1)
-      end
-      assert_raise Ancestry::AncestryException do
-        model.after_depth(1)
-      end
+      refute model.respond_to?(:before_depth)
+      refute model.respond_to?(:to_depth)
+      refute model.respond_to?(:at_depth)
+      refute model.respond_to?(:from_depth)
+      refute model.respond_to?(:after_depth)
     end
   end
 
