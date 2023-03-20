@@ -36,7 +36,7 @@ module Ancestry
     def apply_orphan_strategy_destroy
       return if ancestry_callbacks_disabled? || new_record?
 
-      unscoped_descendants.each do |descendant|
+      unscoped_descendants.ordered_by_ancestry.reverse_order.each do |descendant|
         descendant.without_ancestry_callbacks do
           descendant.destroy
         end
