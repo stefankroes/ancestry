@@ -1,6 +1,39 @@
 require_relative '../environment'
 
 class MaterializedPathTest < ActiveSupport::TestCase
+  def test_ancestry_column_values
+    return if AncestryTestDatabase.materialized_path2?
+
+    AncestryTestDatabase.with_model do |model|
+      root = model.create!
+      node = model.new
+
+      # new node
+      assert_ancestry node, nil
+      assert_raises(Ancestry::AncestryException) { node.child_ancestry }
+
+      # saved
+      node.save!
+      assert_ancestry node, nil, child: "#{node.id}"
+
+      # changed
+      node.ancestor_ids = [root.id]
+      assert_ancestry node, "#{root.id}", db: nil, child: "#{node.id}"
+
+      # changed saved
+      node.save!
+      assert_ancestry node, "#{root.id}", child: "#{root.id}/#{node.id}"
+
+      # reloaded
+      node.reload
+      assert_ancestry node, "#{root.id}", child: "#{root.id}/#{node.id}"
+
+      # fresh node
+      node = model.find(node.id)
+      assert_ancestry node, "#{root.id}", child: "#{root.id}/#{node.id}"
+    end
+  end
+
   def test_ancestry_column_validation
     return if AncestryTestDatabase.materialized_path2?
 
@@ -64,6 +97,29 @@ class MaterializedPathTest < ActiveSupport::TestCase
         refute parent.sane_ancestor_ids?
         parent.save!
       end
+    end
+  end
+
+  private
+
+  def assert_ancestry(node, value, child: :skip, db: :value)
+    if value.nil?
+      assert_nil node.ancestry
+    else
+      assert_equal value, node.ancestry
+    end
+
+    db = value if db == :value
+    if db.nil?
+      assert_nil node.ancestry_in_database
+    else
+      assert_equal db, node.ancestry_in_database
+    end
+
+    if child.nil?
+      assert_nil node.child_ancestry
+    elsif child != :skip
+      assert_equal child, node.child_ancestry
     end
   end
 end
