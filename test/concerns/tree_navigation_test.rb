@@ -210,6 +210,53 @@ class TreeNavigationTest < ActiveSupport::TestCase
       assert_attributes node11, :descendants, [node111]
     end
   end
+
+  # didn't know best way to test before_save values were correct.
+  # hardcoding ids will break non-int id tests
+  # please create PR or issue if you have a better idea
+  def test_node_before_last_save
+    AncestryTestDatabase.with_model do |model|
+      skip "only written for integer keys" unless model.primary_key_is_an_integer?
+      model.delete_all
+
+      node1    = model.create!(:id => 1)
+      node11   = node1.children.create!(:id => 2)
+      node111  = node11.children.create!(:id => 3)
+      node111.children.create!(:id => 4)
+      node11.children.create!(:id => 5)
+      node2    = model.create!(:id => 6)
+
+      # loosing context in class_eval
+      # basically rewriting minit-test.
+      model.class_eval do
+        def update_descendants_with_new_ancestry
+          # only the top most node (node2 for us)
+          # should be updating the ancestry for dependents
+          if ancestry_callbacks_disabled?
+            raise "callback disabled for #{id}" if id == 2
+          else
+            raise "callback eabled for #{id}" if id != 2
+            # want to make sure we're pointing at the correct nodes
+            actual = unscoped_descendants_before_save.order(:id).map(&:id)
+            raise "unscoped_descendants_before_save was #{actual}" unless actual == [3, 4, 5]
+            actual = path_ids_before_last_save
+            raise "bad path_ids(before) is #{actual}" unless actual == [1, 2]
+            actual = path_ids
+            raise "bad path_ids is #{actual}" unless actual == [6, 2]
+            actual = parent_id_before_last_save
+            raise "bad parent_id(before) id #{actual}" unless actual == 1
+            actual = parent_id
+            raise "bad parent_id(before) id #{actual}" unless actual == 6
+            actual = ancestor_ids_before_last_save
+            raise "bad ancestor_ids(before) id #{actual}" unless actual == [1]
+            actual = ancestor_ids
+            raise "bad ancestor_ids(before) id #{actual}" unless actual == [6]
+          end
+          super
+        end
+      end
+
+      node11.update(:parent => node2)
     end
   end
 
