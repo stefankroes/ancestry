@@ -14,7 +14,7 @@ class TreeNavigationTest < ActiveSupport::TestCase
     indirects:   {attribute_ids: :indirect_ids},
     siblings:    {attribute_ids: :sibling_ids,   exists: :siblings?},
     subtree:     {attribute_ids: :subtree_ids},
-    path:        {attribute_ids: :path_ids},
+    path:        {attribute_ids: :path_ids, db: true},
   }
   # NOTE: has_ancestors? is an alias for parent? / ancestors? but not tested
 
