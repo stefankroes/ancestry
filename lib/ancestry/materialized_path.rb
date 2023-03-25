@@ -128,16 +128,8 @@ module Ancestry
         parse_ancestry_column(attribute_in_database(self.class.ancestry_column))
       end
 
-      def ancestor_ids_in_database
-        parse_ancestry_column(attribute_in_database(self.class.ancestry_column))
-      end
-
       def ancestor_ids_before_last_save
         parse_ancestry_column(attribute_before_last_save(self.class.ancestry_column))
-      end
-
-      def parent_id_in_database
-        parse_ancestry_column(attribute_in_database(self.class.ancestry_column)).last
       end
 
       def parent_id_in_database

@@ -6,9 +6,9 @@ class TreeNavigationTest < ActiveSupport::TestCase
   # down:   |children|descendants|indirects|
   # across: |siblings|subtree    |path     |
   ATTRIBUTE_MATRIX = {
-    root:        {attribute_id:  :root_id,       exists: :root?},
-    parent:      {attribute_id:  :parent_id,     exists: :parent?,    db: true},
-    ancestors:   {attribute_ids: :ancestor_ids,  exists: :ancestors?, db: true},
+    root:        {attribute_id:  :root_id},
+    parent:      {attribute_id:  :parent_id,     exists: :has_parent?, db: true},
+    ancestors:   {attribute_ids: :ancestor_ids,  exists: :ancestors?,  db: true},
     children:    {attribute_ids: :child_ids,     exists: :children?},
     descendants: {attribute_ids: :descendant_ids},
     indirects:   {attribute_ids: :indirect_ids},
@@ -40,6 +40,7 @@ class TreeNavigationTest < ActiveSupport::TestCase
       assert_attributes node1, :subtree, [node1, node11, node111, node12]
       assert_attributes node1, :path, [node1]
       assert_equal(0, node1.depth)
+      assert node1.root?
 
       # root: node11
       assert_attribute  node11, :parent, node1
@@ -52,6 +53,7 @@ class TreeNavigationTest < ActiveSupport::TestCase
       assert_attributes node11, :subtree, [node11, node111]
       assert_attributes node11, :path, [node1, node11]
       assert_equal(1, node11.depth)
+      refute node11.root?
 
       # root: node111
       assert_attribute node111, :parent, node11
@@ -64,6 +66,7 @@ class TreeNavigationTest < ActiveSupport::TestCase
       assert_attributes node111, :subtree, [node111]
       assert_attributes node111, :path, [node1, node11, node111]
       assert_equal(2, node111.depth)
+      refute node111.root?
 
       # root: node12
       assert_attribute node12, :parent, node1
@@ -76,6 +79,7 @@ class TreeNavigationTest < ActiveSupport::TestCase
       assert_attributes node12, :subtree, [node12]
       assert_attributes node12, :path, [node1, node12]
       assert_equal(1, node12.depth)
+      refute node12.root?
 
       # root: node2
       assert_attribute node2, :parent, nil
@@ -88,6 +92,7 @@ class TreeNavigationTest < ActiveSupport::TestCase
       assert_attributes node2, :subtree, [node2, node21]
       assert_attributes node2, :path, [node2]
       assert_equal(0, node2.depth)
+      assert node2.root?
 
       # root: node21
       assert_attribute node21, :parent, node2
@@ -100,6 +105,7 @@ class TreeNavigationTest < ActiveSupport::TestCase
       assert_attributes node21, :subtree, [node21]
       assert_attributes node21, :path, [node2, node21]
       assert_equal(1, node21.depth)
+      refute node21.root?
     end
   end
 
@@ -262,7 +268,7 @@ class TreeNavigationTest < ActiveSupport::TestCase
 
   private
 
-  def assert_attribute(node, attribute_name, value, db: :value)
+  def assert_attribute(node, attribute_name, value, db: :value, exists: :value)
     attribute_id = ATTRIBUTE_MATRIX[attribute_name][:attribute_id]
     if value.nil?
       assert_nil node.send(attribute_name)
@@ -280,6 +286,15 @@ class TreeNavigationTest < ActiveSupport::TestCase
       else
         assert_equal db.id, node.send(attribute_db_name)
       end
+    end
+
+    exists_name = ATTRIBUTE_MATRIX[attribute_name][:exists] or return
+
+    exists = value.present? if exists == :value
+    if exists
+      assert node.send(exists_name)
+    else
+      refute node.send(exists_name)
     end
   end
 
