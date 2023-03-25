@@ -94,9 +94,9 @@ module Ancestry
 
     private
 
-    def ancestry_validation_options
+    def ancestry_validation_options(ancestry_primary_key_format)
       {
-        format: { with: ancestry_format_regexp },
+        format: { with: ancestry_format_regexp(ancestry_primary_key_format) },
         allow_nil: ancestry_nil_allowed?
       }
     end
@@ -105,8 +105,8 @@ module Ancestry
       true
     end
 
-    def ancestry_format_regexp
-      /\A#{ancestry_primary_key_format}(#{Regexp.escape(ancestry_delimiter)}#{ancestry_primary_key_format})*\z/.freeze
+    def ancestry_format_regexp(primary_key_format)
+      /\A#{primary_key_format}(#{Regexp.escape(ancestry_delimiter)}#{primary_key_format})*\z/.freeze
     end
 
     module InstanceMethods

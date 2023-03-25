@@ -63,7 +63,7 @@ module Ancestry
 
     # Touch each of this record's ancestors (after save)
     def touch_ancestors_callback
-      if !ancestry_callbacks_disabled? && self.class.ancestry_base_class.touch_ancestors
+      if !ancestry_callbacks_disabled?
         # Touch each of the old *and* new ancestors
         unscoped_current_and_previous_ancestors.each do |ancestor|
           ancestor.without_ancestry_callbacks do
