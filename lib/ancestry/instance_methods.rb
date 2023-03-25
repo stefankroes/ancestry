@@ -133,6 +133,10 @@ module Ancestry
       ancestor_ids_before_last_save + [id]
     end
 
+    def path_ids_in_database
+      ancestor_ids_in_database + [id]
+    end
+
     def path depth_options = {}
       self.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.inpath_of(self)
     end
