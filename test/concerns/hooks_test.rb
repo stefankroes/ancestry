@@ -32,7 +32,7 @@ class ArrangementTest < ActiveSupport::TestCase
   end
 
   def test_update_descendants_with_changed_parent_value
-    return if Ancestry.default_update_strategy == :sql # sql stragery doesn't trigger callbacks
+    skip "no callbacks for sql update strategy" if Ancestry.default_update_strategy == :sql
 
     AncestryTestDatabase.with_model(
       extra_columns: { name: :string, name_path: :string }
@@ -73,7 +73,7 @@ class ArrangementTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model(:extra_columns => {:name => :string, :name_path => :string}) do |model|
       model.class_eval do
         after_save :after_hook
-        attr_reader :modified
+        attr_accessor :modified
 
         def after_hook
           @modified = ancestry_changed?
@@ -82,11 +82,13 @@ class ArrangementTest < ActiveSupport::TestCase
       end
 
       m1 = model.create!(:name => "parent")
-      m2 = model.create!(:parent => m1, :name => "child")
-      m2.parent = nil
-      m2.save!
-      assert_equal(AncestryTestDatabase.materialized_path2?, m1.modified)
-      assert_equal(true, m2.modified)
+      m2 = m1.children.create!(:name => "child")
+      m1.modified = m2.modified = nil
+
+      m2.update(parent: nil)
+
+      assert_nil m1.modified, "hook called on record not changed"
+      assert m2.modified
     end
   end
 
@@ -94,7 +96,7 @@ class ArrangementTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model(:extra_columns => {:name => :string, :name_path => :string}) do |model|
       model.class_eval do
         before_save :before_hook
-        attr_reader :modified
+        attr_accessor :modified
 
         def before_hook
           @modified = ancestry_changed?
@@ -103,11 +105,13 @@ class ArrangementTest < ActiveSupport::TestCase
       end
 
       m1 = model.create!(:name => "parent")
-      m2 = model.create!(:parent => m1, :name => "child")
-      m2.parent = nil
-      m2.save!
-      assert_equal(AncestryTestDatabase.materialized_path2?, m1.modified)
-      assert_equal(true, m2.modified)
+      m2 = m1.children.create!(:name => "child")
+      m1.modified = m2.modified = nil
+
+      m2.update!(parent: nil)
+
+      assert_nil m1.modified, "hook called on record not changed"
+      assert m2.modified
     end
   end
 
