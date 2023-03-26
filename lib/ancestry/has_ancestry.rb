@@ -9,8 +9,9 @@ module Ancestry
         end
       end
 
-      if options[:ancestry_format].present? && ![:materialized_path, :materialized_path2].include?( options[:ancestry_format] )
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_format", value: options[:ancestry_format]))
+      ancestry_format = options[:ancestry_format] || Ancestry.default_ancestry_format
+      if ![:materialized_path, :materialized_path2].include?(ancestry_format)
+        raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_format", value: ancestry_format))
       end
 
       orphan_strategy = options[:orphan_strategy] || :destroy
@@ -38,9 +39,6 @@ module Ancestry
 
       # Include dynamic class methods
       extend Ancestry::ClassMethods
-
-      cattr_accessor :ancestry_format
-      self.ancestry_format = options[:ancestry_format] || Ancestry.default_ancestry_format
 
       if ancestry_format == :materialized_path2
         extend Ancestry::MaterializedPath2
