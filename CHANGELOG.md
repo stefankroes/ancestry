@@ -3,7 +3,13 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
+## Version [4.3.2] <sub><sup>2023-03-25</sub></sup>
+
+* Fix: added back fields that were removed in #589 [#647](https://github.com/stefankroes/ancestry/pull/647) (thx @rastamhadi)
+  - path_ids_in_database
+
 ## Version [4.3.1] <sub><sup>2023-03-19</sub></sup>
+
 * Fix: added back fields that were removed in #589 [#637](https://github.com/stefankroes/ancestry/pull/637) (thx @znz)
   - ancestor_ids_in_database
   - parent_id_in_database
@@ -18,7 +24,22 @@ a nice looking [Changelog](http://keepachangelog.com).
 * Documented column collation and testing [#601](https://github.com/stefankroes/ancestry/pull/601) [#607](https://github.com/stefankroes/ancestry/pull/607) (thx @kshnurov)
 * Added initializer with default_ancestry_format [#612](https://github.com/stefankroes/ancestry/pull/612) [#613](https://github.com/stefankroes/ancestry/pull/613)
 * ruby 3.2 support [#596](https://github.com/stefankroes/ancestry/pull/596) (thx @petergoldstein)
-* arrange is 3x faster and uses 20-30x less memory [#415](https://github.com/stefankroes/ancestry/pull/415)
+* Reduce memory for sort_by_ancestry [#415](https://github.com/stefankroes/ancestry/pull/415)
+
+#### Notable features
+
+Default configuration values are provided for a few options: `update_strategy`, `ancestry_format`, and `primary_key_format`.
+These can be set in an initializer via `Ancestry.default_{ancestry_format} = value`
+
+A new `ancestry_format` of `:materialized_path2` formats the ancestry column with leading and trailing slashes.
+It shows promise to make the `ancestry` field more sql friendly.
+
+Both of these are better documented in [the readme](/README.md).
+
+#### Breaking changes
+
+- `ancestry_primary_key_format` is now specified or a single key not the whole regular expression.
+  We used to accept `/\A[0-9]+(/[0-9]+)*` or `'[0-9]'`, but now we only accept `'[0-9]'`.
 
 ## Version [4.2.0] <sub><sup>2022-06-09</sub></sup>
 
