@@ -51,12 +51,12 @@ module Ancestry
 
     def descendant_conditions(object)
       node = to_node(object)
-      descendants_by_ancestry( node.child_ancestry )
+      descendants_by_ancestry(node.child_ancestry)
     end
 
-    def descendant_before_save_conditions(object)
+    def descendant_before_last_save_conditions(object)
       node = to_node(object)
-      descendants_by_ancestry( node.child_ancestry_before_save )
+      descendants_by_ancestry(node.child_ancestry_before_last_save)
     end
 
     def subtree_of(object)
@@ -145,18 +145,24 @@ module Ancestry
         self.read_attribute(self.class.ancestry_column) == node.read_attribute(node.class.ancestry_column)
       end
 
-      # private (public so class methods can find it)
-      # The ancestry value for this record's children (before save)
-      # This is technically child_ancestry_was
+      # The ancestry value for this record's children
+      # This can also be thought of as the ancestry value for the path
+      # If this is a new record, it has no id, and it is not valid.
+      # NOTE: This could have been called child_ancestry_in_database
+      #       the child records were created from the version in the database
       def child_ancestry
-        # New records cannot have children
         raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
         [attribute_in_database(self.class.ancestry_column), id].compact.join(self.class.ancestry_delimiter)
       end
 
-      def child_ancestry_before_save
-        # New records cannot have children
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
+      # The ancestry value for this record's old children
+      # Currently used in an after_update via unscoped_descendants_before_last_save
+      # to find the old children and bring them along (or to )
+      # This is not valid in a new record's after_save.
+      def child_ancestry_before_last_save
+        if new_record? || respond_to?(:previously_new_record?) && previously_new_record?
+          raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record"))
+        end
         [attribute_before_last_save(self.class.ancestry_column), id].compact.join(self.class.ancestry_delimiter)
       end
 

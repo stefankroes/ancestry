@@ -11,7 +11,7 @@ module Ancestry
       # The only way the ancestry could be bad is via `update_attribute` with a bad value
       if !ancestry_callbacks_disabled? && sane_ancestor_ids?
         # ... for each descendant ...
-        unscoped_descendants_before_save.each do |descendant|
+        unscoped_descendants_before_last_save.each do |descendant|
           # ... replace old ancestry with new ancestry
           descendant.without_ancestry_callbacks do
             new_ancestor_ids = path_ids + (descendant.ancestor_ids - path_ids_before_last_save)
@@ -316,16 +316,17 @@ module Ancestry
       defined?(@disable_ancestry_callbacks) && @disable_ancestry_callbacks
     end
 
-  private
+    private
+
     def unscoped_descendants
       unscoped_where do |scope|
         scope.where self.class.ancestry_base_class.descendant_conditions(self)
       end
     end
 
-    def unscoped_descendants_before_save
+    def unscoped_descendants_before_last_save
       unscoped_where do |scope|
-        scope.where self.class.ancestry_base_class.descendant_before_save_conditions(self)
+        scope.where self.class.ancestry_base_class.descendant_before_last_save_conditions(self)
       end
     end
 

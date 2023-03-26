@@ -16,7 +16,7 @@ module Ancestry
           update_clause << "#{depth_cache_column} = length(regexp_replace(regexp_replace(ancestry, '^#{Regexp.escape(old_ancestry)}', '#{new_ancestry}'), '[^#{self.class.ancestry_delimiter}]', '', 'g')) #{self.class.ancestry_format == :materialized_path2 ? '-' : '+'} 1"
         end
 
-        unscoped_descendants_before_save.update_all update_clause.join(', ')
+        unscoped_descendants_before_last_save.update_all update_clause.join(', ')
       end
     end
   end

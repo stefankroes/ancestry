@@ -39,15 +39,17 @@ module Ancestry
     end
 
     module InstanceMethods
+      # Please see notes for MaterializedPath#child_ancestry
       def child_ancestry
-        # New records cannot have children
         raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
         "#{attribute_in_database(self.class.ancestry_column)}#{id}#{self.class.ancestry_delimiter}"
       end
 
-      def child_ancestry_before_save
-        # New records cannot have children
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
+      # Please see notes for MaterializedPath#child_ancestry_before_last_save
+      def child_ancestry_before_last_save
+        if new_record? || respond_to?(:previously_new_record?) && previously_new_record?
+          raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record"))
+        end
         "#{attribute_before_last_save(self.class.ancestry_column)}#{id}#{self.class.ancestry_delimiter}"
       end
 

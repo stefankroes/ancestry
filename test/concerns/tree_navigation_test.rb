@@ -243,8 +243,8 @@ class TreeNavigationTest < ActiveSupport::TestCase
           else
             raise "callback eabled for #{id}" if id != 2
             # want to make sure we're pointing at the correct nodes
-            actual = unscoped_descendants_before_save.order(:id).map(&:id)
-            raise "unscoped_descendants_before_save was #{actual}" unless actual == [3, 4, 5]
+            actual = unscoped_descendants_before_last_save.order(:id).map(&:id)
+            raise "unscoped_descendants_before_last_save was #{actual}" unless actual == [3, 4, 5]
             actual = path_ids_before_last_save
             raise "bad path_ids(before) is #{actual}" unless actual == [1, 2]
             actual = path_ids
