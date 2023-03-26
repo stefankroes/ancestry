@@ -80,7 +80,15 @@ module Ancestry
       if options[:cache_depth]
         # Create accessor for column name and set to option or default
         self.cattr_accessor :depth_cache_column
-        self.depth_cache_column = options[:depth_cache_column] || :ancestry_depth
+        self.depth_cache_column =
+          if options[:cache_depth] == true
+            options[:depth_cache_column]&.to_s || 'ancestry_depth'
+          else
+            options[:cache_depth].to_s
+          end
+        if options[:depth_cache_column]
+          ActiveSupport::Deprecation.warn("has_ancestry :depth_cache_column is deprecated. Use :cache_depth instead.")
+        end
 
         # Cache depth in depth cache column before save
         before_validation :cache_depth

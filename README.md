@@ -171,10 +171,9 @@ The `has_ancestry` method supports the following options:
                            :adopt     The orphan subtree is added to the parent of the deleted node
                                       If the deleted node is Root, then rootify the orphan subtree
     :cache_depth           Cache the depth of each node (See Depth Cache section)
-                           false (default)
-
-    :depth_cache_column    column name to store depth cache
-                           'ancestry_depth' (default)
+                           false   Do not cache depth (default)
+                           true    Cache depth in 'ancestry_depth'
+                           String  Cache depth in column referenced
     :primary_key_format    regular expression that matches the format of the primary key
                            '[0-9]+'           (default) integer ids
                            '[-A-Fa-f0-9]{36}'           UUIDs

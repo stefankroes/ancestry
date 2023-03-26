@@ -2,7 +2,7 @@ require_relative '../environment'
 
 class DepthCachingTest < ActiveSupport::TestCase
   def test_depth_caching
-    AncestryTestDatabase.with_model :depth => 3, :width => 3, :cache_depth => true, :depth_cache_column => :depth_cache do |_model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 3, :cache_depth => :depth_cache do |_model, roots|
       roots.each do |lvl0_node, lvl0_children|
         assert_equal 0, lvl0_node.depth_cache
         lvl0_children.each do |lvl1_node, lvl1_children|
@@ -16,7 +16,7 @@ class DepthCachingTest < ActiveSupport::TestCase
   end
 
   def test_depth_caching_after_subtree_movement
-    AncestryTestDatabase.with_model :depth => 6, :width => 1, :cache_depth => true, :depth_cache_column => :depth_cache do |model, _roots|
+    AncestryTestDatabase.with_model :depth => 6, :width => 1, :cache_depth => :depth_cache do |model, _roots|
       node = model.at_depth(3).first
       node.update(:parent => model.roots.first)
       assert_equal(1, node.depth_cache)
@@ -57,7 +57,7 @@ class DepthCachingTest < ActiveSupport::TestCase
   end
 
   def test_rebuild_depth_cache
-    AncestryTestDatabase.with_model :depth => 3, :width => 3, :cache_depth => true, :depth_cache_column => :depth_cache do |model, _roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 3, :cache_depth => :depth_cache do |model, _roots|
       model.connection.execute("update test_nodes set depth_cache = null;")
 
       # Assert cache was emptied correctly
