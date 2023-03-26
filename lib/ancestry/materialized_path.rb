@@ -92,6 +92,15 @@ module Ancestry
       nil
     end
 
+    def ancestry_depth_sql
+      @ancestry_depth_sql ||=
+        begin
+          tmp = %{(LENGTH(#{table_name}.#{ancestry_column}) - LENGTH(REPLACE(#{table_name}.#{ancestry_column},'#{ancestry_delimiter}','')))}
+          tmp = tmp + "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
+          "(CASE WHEN #{table_name}.#{ancestry_column} IS NULL THEN 0 ELSE 1 + #{tmp} END)"
+        end
+    end
+
     private
 
     def ancestry_validation_options(ancestry_primary_key_format)

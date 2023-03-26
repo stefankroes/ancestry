@@ -225,6 +225,10 @@ module Ancestry
       end
     end
 
+    def rebuild_depth_cache_sql!
+      update_all("#{depth_cache_column} = #{ancestry_depth_sql}")
+    end
+
     def unscoped_where
       yield ancestry_base_class.default_scoped.unscope(:where)
     end

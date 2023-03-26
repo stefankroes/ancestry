@@ -36,19 +36,19 @@ class DepthCachingTest < ActiveSupport::TestCase
     end
   end
 
-  def test_depth_scopes_unavailable
-    AncestryTestDatabase.with_model do |model|
-      refute model.respond_to?(:before_depth)
-      refute model.respond_to?(:to_depth)
-      refute model.respond_to?(:at_depth)
-      refute model.respond_to?(:from_depth)
-      refute model.respond_to?(:after_depth)
+  def test_depth_scopes_without_depth_cache
+    AncestryTestDatabase.with_model :depth => 4, :width => 2 do |model, _roots|
+      model.before_depth(2).all? { |node| assert node.depth < 2 }
+      model.to_depth(2).all?     { |node| assert node.depth <= 2 }
+      model.at_depth(2).all?     { |node| assert node.depth == 2 }
+      model.from_depth(2).all?   { |node| assert node.depth >= 2 }
+      model.after_depth(2).all?  { |node| assert node.depth > 2 }
     end
   end
 
   def test_rebuild_depth_cache
     AncestryTestDatabase.with_model :depth => 3, :width => 3, :cache_depth => :depth_cache do |model, _roots|
-      model.connection.execute("update test_nodes set depth_cache = null;")
+      model.update_all(:depth_cache => nil)
 
       # Assert cache was emptied correctly
       model.all.each do |test_node|
@@ -57,6 +57,27 @@ class DepthCachingTest < ActiveSupport::TestCase
 
       # Rebuild cache
       model.rebuild_depth_cache!
+
+      # Assert cache was rebuild correctly
+      model.all.each do |test_node|
+        assert_equal test_node.depth, test_node.depth_cache
+      end
+    end
+  end
+
+  def test_rebuild_depth_cache_with_sql
+    AncestryTestDatabase.with_model :depth => 3, :width => 3, :cache_depth => :depth_cache do |model, _roots|
+      model.update_all(:depth_cache => nil)
+
+      # Assert cache was emptied correctly
+      model.all.each do |test_node|
+        assert_nil test_node.depth_cache
+      end
+
+      # Rebuild cache
+      # require "byebug"
+      # byebug
+      model.rebuild_depth_cache_sql!
 
       # Assert cache was rebuild correctly
       model.all.each do |test_node|
