@@ -9,8 +9,9 @@ module Ancestry
         end
       end
 
-      if options[:ancestry_format].present? && ![:materialized_path, :materialized_path2].include?( options[:ancestry_format] )
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_format", value: options[:ancestry_format]))
+      ancestry_format = options[:ancestry_format] || Ancestry.default_ancestry_format
+      if ![:materialized_path, :materialized_path2].include?(ancestry_format)
+        raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_format", value: ancestry_format))
       end
 
       orphan_strategy = options[:orphan_strategy] || :destroy
@@ -38,9 +39,6 @@ module Ancestry
 
       # Include dynamic class methods
       extend Ancestry::ClassMethods
-
-      cattr_accessor :ancestry_format
-      self.ancestry_format = options[:ancestry_format] || Ancestry.default_ancestry_format
 
       if ancestry_format == :materialized_path2
         extend Ancestry::MaterializedPath2
@@ -80,7 +78,15 @@ module Ancestry
       if options[:cache_depth]
         # Create accessor for column name and set to option or default
         self.cattr_accessor :depth_cache_column
-        self.depth_cache_column = options[:depth_cache_column] || :ancestry_depth
+        self.depth_cache_column =
+          if options[:cache_depth] == true
+            options[:depth_cache_column]&.to_s || 'ancestry_depth'
+          else
+            options[:cache_depth].to_s
+          end
+        if options[:depth_cache_column]
+          ActiveSupport::Deprecation.warn("has_ancestry :depth_cache_column is deprecated. Use :cache_depth instead.")
+        end
 
         # Cache depth in depth cache column before save
         before_validation :cache_depth
@@ -88,6 +94,19 @@ module Ancestry
 
         # Validate depth column
         validates_numericality_of depth_cache_column, :greater_than_or_equal_to => 0, :only_integer => true, :allow_nil => false
+
+        scope :before_depth, lambda { |depth| where("#{depth_cache_column} < ?", depth) }
+        scope :to_depth,     lambda { |depth| where("#{depth_cache_column} <= ?", depth) }
+        scope :at_depth,     lambda { |depth| where("#{depth_cache_column} = ?", depth) }
+        scope :from_depth,   lambda { |depth| where("#{depth_cache_column} >= ?", depth) }
+        scope :after_depth,  lambda { |depth| where("#{depth_cache_column} > ?", depth) }
+      else
+        # this is not efficient, but it works
+        scope :before_depth, lambda { |depth| where("#{ancestry_depth_sql} < ?", depth) }
+        scope :to_depth,     lambda { |depth| where("#{ancestry_depth_sql} <= ?", depth) }
+        scope :at_depth,     lambda { |depth| where("#{ancestry_depth_sql} = ?", depth) }
+        scope :from_depth,   lambda { |depth| where("#{ancestry_depth_sql} >= ?", depth) }
+        scope :after_depth,  lambda { |depth| where("#{ancestry_depth_sql} > ?", depth) }
       end
 
       # Create counter cache column accessor and set to option or default
@@ -98,16 +117,6 @@ module Ancestry
         after_create :increase_parent_counter_cache, if: :has_parent?
         after_destroy :decrease_parent_counter_cache, if: :has_parent?
         after_update :update_parent_counter_cache
-      end
-
-      # Create named scopes for depth
-      {:before_depth => '<', :to_depth => '<=', :at_depth => '=', :from_depth => '>=', :after_depth => '>'}.each do |scope_name, operator|
-        scope scope_name, lambda { |depth|
-          raise Ancestry::AncestryException.new(I18n.t("ancestry.named_scope_depth_cache",
-                                                       :scope_name => scope_name
-                                                       )) unless options[:cache_depth]
-          where("#{depth_cache_column} #{operator} ?", depth)
-        }
       end
 
       if options[:touch]

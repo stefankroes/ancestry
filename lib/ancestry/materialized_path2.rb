@@ -28,6 +28,23 @@ module Ancestry
       ancestry_delimiter
     end
 
+    def ancestry_depth_sql
+      @ancestry_depth_sql ||=
+        begin
+          tmp = %{(LENGTH(#{table_name}.#{ancestry_column}) - LENGTH(REPLACE(#{table_name}.#{ancestry_column},'#{ancestry_delimiter}','')))}
+          tmp = tmp + "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
+          "(#{tmp} -1)"
+        end
+    end
+
+    def generate_ancestry(ancestor_ids)
+      if ancestor_ids.present? && ancestor_ids.any?
+        "#{ancestry_delimiter}#{ancestor_ids.join(ancestry_delimiter)}#{ancestry_delimiter}"
+      else
+        ancestry_root
+      end
+    end
+
     private
 
     def ancestry_nil_allowed?
@@ -51,14 +68,6 @@ module Ancestry
           raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record"))
         end
         "#{attribute_before_last_save(self.class.ancestry_column)}#{id}#{self.class.ancestry_delimiter}"
-      end
-
-      def generate_ancestry(ancestor_ids)
-        if ancestor_ids.present? && ancestor_ids.any?
-          "#{self.class.ancestry_delimiter}#{ancestor_ids.join(self.class.ancestry_delimiter)}#{self.class.ancestry_delimiter}"
-        else
-          self.class.ancestry_root
-        end
       end
     end
   end

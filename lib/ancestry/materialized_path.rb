@@ -92,6 +92,33 @@ module Ancestry
       nil
     end
 
+    def ancestry_depth_sql
+      @ancestry_depth_sql ||=
+        begin
+          tmp = %{(LENGTH(#{table_name}.#{ancestry_column}) - LENGTH(REPLACE(#{table_name}.#{ancestry_column},'#{ancestry_delimiter}','')))}
+          tmp = tmp + "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
+          "(CASE WHEN #{table_name}.#{ancestry_column} IS NULL THEN 0 ELSE 1 + #{tmp} END)"
+        end
+    end
+
+    def generate_ancestry(ancestor_ids)
+      if ancestor_ids.present? && ancestor_ids.any?
+        ancestor_ids.join(ancestry_delimiter)
+      else
+        ancestry_root
+      end
+    end
+
+    def parse_ancestry_column(obj)
+      return [] if obj.nil? || obj == ancestry_root
+      obj_ids = obj.split(ancestry_delimiter).delete_if(&:blank?)
+      primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
+    end
+
+    def ancestry_depth_change(old_value, new_value)
+      parse_ancestry_column(new_value).size - parse_ancestry_column(old_value).size
+    end
+
     private
 
     def ancestry_validation_options(ancestry_primary_key_format)
@@ -117,27 +144,27 @@ module Ancestry
       alias :has_parent? :ancestors?
 
       def ancestor_ids=(value)
-        write_attribute(self.class.ancestry_column, generate_ancestry(value))
+        write_attribute(self.class.ancestry_column, self.class.generate_ancestry(value))
       end
 
       def ancestor_ids
-        parse_ancestry_column(read_attribute(self.class.ancestry_column))
+        self.class.parse_ancestry_column(read_attribute(self.class.ancestry_column))
       end
 
       def ancestor_ids_in_database
-        parse_ancestry_column(attribute_in_database(self.class.ancestry_column))
+        self.class.parse_ancestry_column(attribute_in_database(self.class.ancestry_column))
       end
 
       def ancestor_ids_before_last_save
-        parse_ancestry_column(attribute_before_last_save(self.class.ancestry_column))
+        self.class.parse_ancestry_column(attribute_before_last_save(self.class.ancestry_column))
       end
 
       def parent_id_in_database
-        parse_ancestry_column(attribute_in_database(self.class.ancestry_column)).last
+        self.class.parse_ancestry_column(attribute_in_database(self.class.ancestry_column)).last
       end
 
       def parent_id_before_last_save
-        parse_ancestry_column(attribute_before_last_save(self.class.ancestry_column)).last
+        self.class.parse_ancestry_column(attribute_before_last_save(self.class.ancestry_column)).last
       end
 
       # optimization - better to go directly to column and avoid parsing
@@ -164,20 +191,6 @@ module Ancestry
           raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record"))
         end
         [attribute_before_last_save(self.class.ancestry_column), id].compact.join(self.class.ancestry_delimiter)
-      end
-
-      def parse_ancestry_column(obj)
-        return [] if obj.nil? || obj == self.class.ancestry_root
-        obj_ids = obj.split(self.class.ancestry_delimiter).delete_if(&:blank?)
-        self.class.primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
-      end
-
-      def generate_ancestry(ancestor_ids)
-        if ancestor_ids.present? && ancestor_ids.any?
-          ancestor_ids.join(self.class.ancestry_delimiter)
-        else
-          self.class.ancestry_root
-        end
       end
     end
   end

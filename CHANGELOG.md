@@ -5,6 +5,7 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 ## Version [HEAD] <sub><sup>Unreleased</sub></sup>
 
+* `build_cache_depth_sql!` is a single query. [#654](https://github.com/stefankroes/ancestry/pull/654)
 * Drop `ancestry_primary_key_format` [#649](https://github.com/stefankroes/ancestry/pull/649)
 * When destroying orphans, going from leafs up to node [#635](https://github.com/stefankroes/ancestry/pull/635) (thx @brendon)
 * Changed config setters to class readers [#633](https://github.com/stefankroes/ancestry/pull/633) (thx @kshurov)
@@ -12,20 +13,31 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 #### Notable features
 
+Depth scopes now work without `cache_depth`. But please only use this in background
+jobs. if you need to do this in the ui, use the depth_caching.
+
+`build_cache_depth_sql!` is quicker than `build_cache_depth!` (1 query instead of N+1 queries).
+
+#### Deprecations
+
+- Option `:depth_cache_column` is going away.
+  Please use a single key instead: `cache_depth: :depth_cach_column_name`.
+  `cache_depth: true` still defaults to `ancestry_depth`.
 
 #### Breaking Changes
 
 * Options are no longer set via class methods. Using `has_ancestry` is now the only way to enable these features.
-  * These are readable class accessors but are possibly going away
+  These are all not part of the public API.
+  * These are now class level read only accessors
     - `ancestry_base_class`         (introduced 1.1, removed by #633)
     - `ancestry_column`             (introduced 1.2, removed by #633)
     - `ancestry_delimiter`          (introduced 4.3.0, removed by #633)
+    - `depth_cache_column`          (introduced 4.3.0, removed by #654)
   * These no longer have any accessors
-    - `ancestry_format`             (introduced 4.3.0, removed by TODO)
+    - `ancestry_format`             (introduced 4.3.0, removed by #654)
     - `orphan_strategy`             (introduced 1.1, removed by #617)
     - `ancestry_primary_key_format` (introduced 4.3.0, removed by #649)
     - `touch_ancestors`             (introduced 2.1, removed by TODO)
-    - `depth_cache_column`          (introduced 4.3.0, removed by TODO)
 * These are seen as internal and may go away:
   - `apply_orphan_strategy` (TODO: use `orphan_strategy => none` and define `before_destory`)
 

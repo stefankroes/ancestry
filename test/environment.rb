@@ -121,7 +121,7 @@ class AncestryTestDatabase
 
     ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
       table.send(column_type, ancestry_column, **column_options(force_allow_nil: skip_ancestry))
-      table.integer options[:depth_cache_column] || :ancestry_depth if options[:cache_depth]
+      table.integer options[:cache_depth] == true ? :ancestry_depth : options[:cache_depth] if options[:cache_depth]
       if options[:counter_cache]
         counter_cache_column = options[:counter_cache] == true ? :children_count : options[:counter_cache]
         table.integer counter_cache_column
