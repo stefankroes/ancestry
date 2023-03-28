@@ -109,7 +109,7 @@ module Ancestry
 
       unless arranged
         presorted_nodes = nodes.sort do |a, b|
-          rank = (a.ancestry || ' ') <=> (b.ancestry || ' ')
+          rank = (a.public_send(ancestry_column) || ' ') <=> (b.public_send(ancestry_column) || ' ')
           rank = yield(a, b) if rank == 0 && block_given?
           rank
         end
