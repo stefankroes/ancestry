@@ -233,4 +233,17 @@ class SortByAncestryTest < ActiveSupport::TestCase
       end
     end
   end
+
+  def test_sort_by_ancestry_with_ancestry_column
+    AncestryTestDatabase.with_model :ancestry_column => :t1, :extra_columns => {:rank => :integer} do |model|
+      _, n2, n3, n4, n5, _ = build_ranked_tree(model)
+
+      records = model.sort_by_ancestry(model.all.ordered_by_ancestry_and(:rank).offset(1).take(4), &RANK_SORT)
+      if CORRECT
+        assert_equal [n3, n2, n4, n5].map(&:id), records.map(&:id)
+      else
+        assert_equal [n2, n4, n5, n3].map(&:id), records.map(&:id)
+      end
+    end
+  end
 end
