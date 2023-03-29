@@ -3,6 +3,10 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
+## Version [4.3.3] <sub><sup>2023-04-01</sub></sup>
+
+* Fix: sort_by_ancesty with custom ancestry_column [#656](https://github.com/stefankroes/ancestry/pull/656) (thx @mitsuru)
+
 ## Version [4.3.2] <sub><sup>2023-03-25</sub></sup>
 
 * Fix: added back fields that were removed in #589 [#647](https://github.com/stefankroes/ancestry/pull/647) (thx @rastamhadi)
