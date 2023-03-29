@@ -103,17 +103,18 @@ class MaterializedPathTest < ActiveSupport::TestCase
   private
 
   def assert_ancestry(node, value, child: :skip, db: :value)
+    column_name = node.class.ancestry_column
     if value.nil?
-      assert_nil node.ancestry
+      assert_nil node.send(column_name)
     else
-      assert_equal value, node.ancestry
+      assert_equal value, node.send(column_name)
     end
 
     db = value if db == :value
     if db.nil?
-      assert_nil node.ancestry_in_database
+      assert_nil node.send("#{column_name}_in_database")
     else
-      assert_equal db, node.ancestry_in_database
+      assert_equal db, node.send("#{column_name}_in_database")
     end
 
     if child.nil?

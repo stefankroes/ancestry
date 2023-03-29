@@ -2,7 +2,11 @@ require_relative '../environment'
 
 class HasAncestryTreeTest < ActiveSupport::TestCase
   def test_default_ancestry_column
-    AncestryTestDatabase.with_model do |model|
+    AncestryTestDatabase.with_model skip_ancestry: true, ancestry_column: :ancestry do |model|
+      model.class_eval do
+        # explicitly calling has_ancestry so we can be sure no args passed
+        has_ancestry
+      end
       assert_equal :ancestry, model.ancestry_column
     end
   end
