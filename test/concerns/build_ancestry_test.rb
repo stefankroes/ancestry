@@ -2,6 +2,8 @@ require_relative '../environment'
 
 class BuildAncestryTest < ActiveSupport::TestCase
   def test_build_ancestry_from_parent_ids
+    ancestry_column = AncestryTestDatabase.ancestry_column
+
     AncestryTestDatabase.with_model :skip_ancestry => true, :extra_columns => {:parent_id => :integer} do |model|
       [model.create!].each do |parent1|
         (Array.new(5) { model.create! :parent_id => parent1.id }).each do |parent2|
@@ -14,7 +16,7 @@ class BuildAncestryTest < ActiveSupport::TestCase
       # Assert all nodes where created
       assert_equal (0..3).map { |n| 5 ** n }.sum, model.count
 
-      model.has_ancestry
+      model.has_ancestry ancestry_column: ancestry_column
       model.build_ancestry_from_parent_ids!
 
       # Assert ancestry integrity
@@ -43,6 +45,8 @@ class BuildAncestryTest < ActiveSupport::TestCase
   end
 
   def test_build_ancestry_from_other_ids
+    ancestry_column = AncestryTestDatabase.ancestry_column
+
     AncestryTestDatabase.with_model :skip_ancestry => true, :extra_columns => {:misc_id => :integer} do |model|
       [model.create!].each do |parent1|
         (Array.new(5) { model.create! :misc_id => parent1.id }).each do |parent2|
@@ -55,7 +59,7 @@ class BuildAncestryTest < ActiveSupport::TestCase
       # Assert all nodes where created
       assert_equal (0..3).map { |n| 5 ** n }.sum, model.count
 
-      model.has_ancestry
+      model.has_ancestry ancestry_column: ancestry_column
       model.build_ancestry_from_parent_ids! :misc_id
 
       # Assert ancestry integrity

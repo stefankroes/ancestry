@@ -56,7 +56,7 @@ class AncestryTestDatabase
       Ancestry.default_update_strategy = ENV["UPDATE_STRATEGY"] == "sql" ? :sql : :ruby
       Ancestry.default_ancestry_format = ENV["FORMAT"].to_sym if ENV["FORMAT"].present?
 
-      puts "testing #{db_type} #{Ancestry.default_update_strategy == :sql ? "(sql) " : ""}(with #{column_type} column)"
+      puts "testing #{db_type} #{Ancestry.default_update_strategy == :sql ? "(sql) " : ""}(with #{column_type} #{ancestry_column})"
       puts "column format: #{Ancestry.default_ancestry_format} options: #{column_options.inspect}"
 
     rescue => err
@@ -71,7 +71,11 @@ class AncestryTestDatabase
   end
 
   def self.column_type
-    @column_type ||= ENV["COLUMN_TYPE"].presence || "string"
+    @column_type ||= ENV["ANCESTRY_COLUMN_TYPE"].presence || "string"
+  end
+
+  def self.ancestry_column
+    @ancestry_column ||= ENV["ANCESTRY_COLUMN"].presence || "ancestry"
   end
 
   def self.ancestry_collation
@@ -111,16 +115,16 @@ class AncestryTestDatabase
   def self.with_model options = {}
     depth                = options.delete(:depth) || 0
     width                = options.delete(:width) || 0
-    ancestry_column      = options[:ancestry_column] || :ancestry
     skip_ancestry        = options.delete(:skip_ancestry)
     extra_columns        = options.delete(:extra_columns)
     default_scope_params = options.delete(:default_scope_params)
 
+    options[:ancestry_column] ||= ancestry_column
     table_options={}
     table_options[:id] = options.delete(:id) if options.key?(:id)
 
     ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
-      table.send(column_type, ancestry_column, **column_options(force_allow_nil: skip_ancestry))
+      table.send(column_type, options[:ancestry_column], **column_options(force_allow_nil: skip_ancestry))
       table.integer options[:cache_depth] == true ? :ancestry_depth : options[:cache_depth] if options[:cache_depth]
       if options[:counter_cache]
         counter_cache_column = options[:counter_cache] == true ? :children_count : options[:counter_cache]
