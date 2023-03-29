@@ -68,6 +68,7 @@ jobs:
       MYSQL_PWD: password
       # for rails tests (from matrix)
       BUNDLE_GEMFILE: gemfiles/gemfile_${{ matrix.activerecord }}.gemfile
+      FORMAT: ${{ matrix.format }}
     steps:
       - name: checkout code
         uses: actions/checkout@v3
@@ -84,25 +85,39 @@ jobs:
         env:
           DB: sqlite3
         run: |
-          FORMAT=${{ matrix.format }} bundle exec rake
+          bundle exec rake
       - name: run pg tests
         env:
           DB: pg
         run: |
-          FORMAT=${{ matrix.format }} bundle exec rake
+          bundle exec rake
       - name: run pg tests (UPDATE_STRATEGY=sql)
         env:
           DB: pg
+          UPDATE_STRATEGY: sql
         run: |
-          FORMAT=${{ matrix.format }} UPDATE_STRATEGY=sql bundle exec rake
-
+          bundle exec rake
+      - name: run pg tests (ANCESTRY_COLUMN=ancestry_alt)
+        env:
+          DB: pg
+          ANCESTRY_COLUMN: ancestry_alt
+        run: |
+          bundle exec rake
+      - name: run pg tests (UPDATE_STRATEGY=sql ANCESTRY_COLUMN=ancestry_alt)
+        env:
+          DB: pg
+          ANCESTRY_COLUMN: ancestry_alt
+          UPDATE_STRATEGY: sql
+        run: |
+          bundle exec rake
       - name: run mysql tests
         env:
           DB: mysql2
         run: |
-          FORMAT=${{ matrix.format }} bundle exec rake
+          bundle exec rake
       - name: run mysql tests (ANCESTRY_COLUMN_TYPE=binary)
         env:
           DB: mysql2
+          ANCESTRY_COLUMN_TYPE: binary
         run: |
-          FORMAT=${{ matrix.format }} ANCESTRY_COLUMN_TYPE=binary bundle exec rake
+          bundle exec rake

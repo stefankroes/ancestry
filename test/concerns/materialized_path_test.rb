@@ -99,27 +99,4 @@ class MaterializedPathTest < ActiveSupport::TestCase
       end
     end
   end
-
-  private
-
-  def assert_ancestry(node, value, child: :skip, db: :value)
-    if value.nil?
-      assert_nil node.ancestry
-    else
-      assert_equal value, node.ancestry
-    end
-
-    db = value if db == :value
-    if db.nil?
-      assert_nil node.ancestry_in_database
-    else
-      assert_equal db, node.ancestry_in_database
-    end
-
-    if child.nil?
-      assert_nil node.child_ancestry
-    elsif child != :skip
-      assert_equal child, node.child_ancestry
-    end
-  end
 end
