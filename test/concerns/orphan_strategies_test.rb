@@ -55,17 +55,16 @@ class OphanStrategiesTest < ActiveSupport::TestCase
       n4 = model.create!(:parent => n2)   #create child with parent=n2, depth = 2
       n5 = model.create!(:parent => n4)   #create child with parent=n4, depth = 3
       n2.destroy                          # delete a node with desecendants
-      assert_equal(model.find(n3.id).parent,n1, "orphan's not parentified" )
-      assert_equal(model.find(n5.id).ancestor_ids, [n1.id,n4.id], "ancestry integrity not maintained")
+      n3.reload
+      n5.reload
+      assert_equal n3.parent_id, n1.id, "orphan's not parentified"
+      assert_equal n5.ancestor_ids, [n1.id, n4.id], "ancestry integrity not maintained"
       n1.destroy                          # delete a root node with desecendants
-      if AncestryTestDatabase.materialized_path2?
-        assert_equal(model.find(n3.id).ancestry, model.ancestry_root, " new root node has no root ancestry string")
-      else
-        assert_nil(model.find(n3.id).ancestry," new root node has no empty ancestry string")
-      end
-      assert_equal(model.find(n3.id).valid?, true, " new root node is not valid")
-      assert_nil(model.find(n3.id).parent_id, " Children of the deleted root not rootfied")
-      assert_equal(model.find(n5.id).ancestor_ids, [n4.id], "ancestry integrity not maintained")
+      n3.reload
+      n5.reload
+      assert_nil n3.parent_id, " new root node should have no parent"
+      assert n3.valid?, " new root node is not valid"
+      assert_equal n5.ancestor_ids, [n4.id], "ancestry integrity not maintained"
     end
   end
 

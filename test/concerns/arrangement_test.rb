@@ -129,29 +129,22 @@ class ArrangementTest < ActiveSupport::TestCase
 
   def test_arrange_serializable
     AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, _roots|
-      if AncestryTestDatabase.materialized_path2?
-        result = [{"ancestry"=>'/',
-            "id"=>4,
-            "children"=>
-            [{"ancestry"=>"/4/", "id"=>6, "children"=>[]},
-              {"ancestry"=>"/4/", "id"=>5, "children"=>[]}]},
-          {"ancestry"=>'/',
-            "id"=>1,
-            "children"=>
-            [{"ancestry"=>"/1/", "id"=>3, "children"=>[]},
-              {"ancestry"=>"/1/", "id"=>2, "children"=>[]}]}]
-      else
-        result = [{"ancestry"=>nil,
-            "id"=>4,
-            "children"=>
-            [{"ancestry"=>"4", "id"=>6, "children"=>[]},
-              {"ancestry"=>"4", "id"=>5, "children"=>[]}]},
-          {"ancestry"=>nil,
-            "id"=>1,
-            "children"=>
-            [{"ancestry"=>"1", "id"=>3, "children"=>[]},
-              {"ancestry"=>"1", "id"=>2, "children"=>[]}]}]
-      end
+      col = model.ancestry_column
+      # materialized path 2 has a slash at the beginning and end
+      fmt = AncestryTestDatabase.materialized_path2? ? -> (a) { a ? "/#{a}/" : "/" } : -> (a) {a}
+      result = [{
+        col=>fmt[nil], "id"=>4, "children"=> [{
+          col=>fmt["4"], "id"=>6, "children" => []
+        }, {
+          col=>fmt["4"], "id"=>5, "children" => []
+        }]
+      }, {
+        col=>fmt[nil], "id"=>1, "children"=> [{
+          col=>fmt["1"], "id"=>3, "children"=>[]
+        }, {
+          col=>fmt["1"], "id"=>2, "children"=>[]
+        }]
+      }]
 
       assert_equal model.arrange_serializable(order: "id desc"), result
     end
@@ -160,15 +153,18 @@ class ArrangementTest < ActiveSupport::TestCase
   def test_arrange_serializable_with_block
     AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, _roots|
       expected_result = [{
-          "id"=>4,
-          "children"=>
-           [{"id"=>6},
-            {"id"=>5}]},
-         {
-          "id"=>1,
-          "children"=>
-           [{"id"=>3},
-            {"id"=>2}]}]
+        "id"=>4, "children"=>[{
+          "id"=>6
+        }, {
+          "id"=>5
+        }]
+      }, {
+        "id"=>1, "children"=> [{
+          "id"=>3
+        }, {
+          "id"=>2
+        }]
+      }]
       result = model.arrange_serializable(order: "id desc") do |parent, children|
         out = {}
         out["id"] = parent.id
