@@ -40,16 +40,29 @@ module Ancestry
     # arranges array of nodes to a hierarchical hash
     #
     # @param nodes [Array[Node]] nodes to be arranged
+    # @param orphan_strategy [Symbol]  :rootify or :destroy (default: :rootify)
     # @returns Hash{Node => {Node => {}, Node => {}}}
     # If a node's parent is not included, the node will be included as if it is a top level node
-    def arrange_nodes(nodes)
+    def arrange_nodes(nodes, orphan_strategy: :rootify)
       node_ids = Set.new(nodes.map(&:id))
       index = Hash.new { |h, k| h[k] = {} }
 
       nodes.each_with_object({}) do |node, arranged|
-        children = index[node.id]
-        index[node.parent_id][node] = children
-        arranged[node] = children unless node_ids.include?(node.parent_id)
+        index[node.parent_id][node] = children = index[node.id]
+        if node.parent_id.nil?
+          arranged[node] = children
+        elsif !node_ids.include?(node.parent_id)
+          case orphan_strategy
+          when :destroy
+             # All children are destroyed as well (default)
+          when :adopt
+            raise ArgumentError, "Not Implemented"
+          when :rootify
+            arranged[node] = children
+          when :restrict
+            raise Ancestry::AncestryException, I18n.t("ancestry.cannot_delete_descendants")
+          end
+        end
       end
     end
 
