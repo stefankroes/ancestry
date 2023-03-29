@@ -11,8 +11,9 @@ end
 
 require 'active_support'
 require 'active_support/test_case'
+require 'test_helpers'
 ActiveSupport.test_order = :random if ActiveSupport.respond_to?(:test_order=)
-
+ActiveSupport::TestCase.include(TestHelpers)
 require 'active_record'
 require 'logger'
 
