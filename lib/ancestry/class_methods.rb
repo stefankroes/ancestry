@@ -225,6 +225,8 @@ module Ancestry
       end
     end
 
+    # NOTE: this is temporarily kept separate from rebuild_depth_cache!
+    # this will become the implementation of rebuild_depth_cache!
     def rebuild_depth_cache_sql!
       update_all("#{depth_cache_column} = #{ancestry_depth_sql}")
     end

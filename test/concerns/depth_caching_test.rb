@@ -75,8 +75,6 @@ class DepthCachingTest < ActiveSupport::TestCase
       end
 
       # Rebuild cache
-      # require "byebug"
-      # byebug
       model.rebuild_depth_cache_sql!
 
       # Assert cache was rebuild correctly
