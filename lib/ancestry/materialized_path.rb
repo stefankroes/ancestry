@@ -92,6 +92,14 @@ module Ancestry
       nil
     end
 
+    def child_ancestry_sql
+      %{
+        CASE WHEN #{table_name}.#{ancestry_column} IS NULL THEN CAST(#{table_name}.#{primary_key} AS CHAR)
+        ELSE      #{concat("#{table_name}.#{ancestry_column}", "'#{ancestry_delimiter}'", "CAST(#{table_name}.#{primary_key} AS CHAR)")}
+        END
+      }
+    end
+
     def ancestry_depth_sql
       @ancestry_depth_sql ||=
         begin
@@ -117,6 +125,14 @@ module Ancestry
 
     def ancestry_depth_change(old_value, new_value)
       parse_ancestry_column(new_value).size - parse_ancestry_column(old_value).size
+    end
+
+    def concat(*args)
+      if %w(sqlite sqlite3).include?(connection.adapter_name.downcase)
+        args.join('||')
+      else
+        %{CONCAT(#{args.join(', ')})}
+      end
     end
 
     private
