@@ -225,8 +225,33 @@ module Ancestry
       end
     end
 
+    # NOTE: this is temporarily kept separate from rebuild_depth_cache!
+    # this will become the implementation of rebuild_depth_cache!
     def rebuild_depth_cache_sql!
       update_all("#{depth_cache_column} = #{ancestry_depth_sql}")
+    end
+
+    def rebuild_counter_cache!
+     if %w(mysql mysql2).include?(connection.adapter_name.downcase)
+        connection.execute %{
+          UPDATE #{table_name} AS dest
+          LEFT JOIN (
+            SELECT #{table_name}.#{primary_key}, COUNT(*) AS child_count
+            FROM #{table_name}
+            JOIN #{table_name} children ON children.#{ancestry_column} = (#{child_ancestry_sql})
+            GROUP BY #{table_name}.#{primary_key}
+          ) src USING(#{primary_key})
+          SET dest.#{counter_cache_column} = src.child_count
+        }
+      else
+        update_all %{
+          #{counter_cache_column} = (
+            SELECT COUNT(*)
+            FROM #{table_name} children
+            WHERE children.#{ancestry_column} = (#{child_ancestry_sql})
+          )
+        }
+      end
     end
 
     def unscoped_where
