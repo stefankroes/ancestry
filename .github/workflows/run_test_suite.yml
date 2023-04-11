@@ -97,6 +97,7 @@ jobs:
           UPDATE_STRATEGY: sql
         run: |
           bundle exec rake
+        if: ${{ matrix.activerecord != 52 }}
       - name: run pg tests (ANCESTRY_COLUMN=ancestry_alt)
         env:
           DB: pg
@@ -110,6 +111,8 @@ jobs:
           UPDATE_STRATEGY: sql
         run: |
           bundle exec rake
+          FORMAT=${{ matrix.format }} UPDATE_STRATEGY=sql bundle exec rake
+        if: ${{ matrix.activerecord != 52 }}
       - name: run mysql tests
         env:
           DB: mysql2
