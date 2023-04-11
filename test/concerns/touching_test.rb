@@ -51,7 +51,6 @@ class TouchingTest < ActiveSupport::TestCase
   end
 
   def test_touch_propogates_multiple_levels
-    skip "no callbacks for sql update strategy" if Ancestry.default_update_strategy == :sql
     AncestryTestDatabase.with_model(:extra_columns => {:name => :string, :updated_at => :datetime}, :touch => true) do |model|
 
       way_back = Time.new(1984)

@@ -32,40 +32,54 @@ class ArrangementTest < ActiveSupport::TestCase
   end
 
   def test_update_descendants_with_changed_parent_value
-    skip "no callbacks for sql update strategy" if Ancestry.default_update_strategy == :sql
-
     AncestryTestDatabase.with_model(
       extra_columns: { name: :string, name_path: :string }
     ) do |model|
 
       model.class_eval do
         before_save :update_name_path
+        # this example will only work if the name field is unique across all levels
+        validates :name, :uniqueness => true
 
         def update_name_path
           self.name_path = [parent&.name_path, name].compact.join('/')
         end
+
+        def update_descendants_hook(descendants_clause, old_ancestry, new_ancestry)
+          super
+          # Using REPLACE since it is mysql(binary) and sqlite3 friendly.
+          #
+          # REGEXP_REPLACE supports an anchor, so it avoids partial matches like 11/21 matching 1/2
+          # Introducing leading slashes (e.g.: materialized_path2 or /name/name2/) avoids partial matches
+
+          # avoid SQL injection
+          quoted_before = ActiveRecord::Base.connection.quote(name_path_before_last_save)
+          quoted_after = ActiveRecord::Base.connection.quote(name_path)
+
+          descendants_clause["name_path"] = Arel.sql("REPLACE(name_path, #{quoted_before}, #{quoted_after})")
+        end
       end
 
-      m1 = model.create!( name: "parent" )
-      m2 = model.create( parent: m1, name: "child" )
-      m3 = model.create( parent: m2, name: "grandchild" )
-      m4 = model.create( parent: m3, name: "grandgrandchild" )
+      m1 = model.create!(name: "parent")
+      m2 = model.create(parent: m1, name: "child")
+      m3 = model.create(parent: m2, name: "grandchild")
+      m4 = model.create(parent: m3, name: "grandchild's grand")
       assert_equal([m1.id], m2.ancestor_ids)
       assert_equal("parent", m1.reload.name_path)
       assert_equal("parent/child", m2.reload.name_path)
       assert_equal("parent/child/grandchild", m3.reload.name_path)
-      assert_equal("parent/child/grandchild/grandgrandchild", m4.reload.name_path)
+      assert_equal("parent/child/grandchild/grandchild's grand", m4.reload.name_path)
 
-      m5 = model.create!( name: "changed" )
+      m5 = model.create!(name: "changed")
 
-      m2.update!( parent_id: m5.id )
+      m2.update!(parent_id: m5.id)
       assert_equal("changed", m5.reload.name_path)
       assert_equal([m5.id], m2.reload.ancestor_ids)
       assert_equal("changed/child", m2.reload.name_path)
       assert_equal([m5.id,m2.id], m3.reload.ancestor_ids)
       assert_equal("changed/child/grandchild", m3.reload.name_path)
       assert_equal([m5.id,m2.id,m3.id], m4.reload.ancestor_ids)
-      assert_equal("changed/child/grandchild/grandgrandchild", m4.reload.name_path)
+      assert_equal("changed/child/grandchild/grandchild's grand", m4.reload.name_path)
     end
   end
 

@@ -46,8 +46,10 @@ When using `STI` all classes are returned from the scopes unless you specify oth
 ## Supported Rails versions
 
 - Ancestry 2.x supports Rails 4.1 and earlier
-- Ancestry 3.x supports Rails 5.0 and 4.2
-- Ancestry 4.x only supports rails 5.2 and higher
+- Ancestry 3.x supports Rails 4.2 and 5.0
+- Ancestry 4.x supports Rails 5.2 through 7.0
+- Ancestry 5.0 supports Rails 6.0 and higher
+  Rails 5.2 with `update_strategy=ruby` is still being tested in 5.0.
 
 # Installation
 
