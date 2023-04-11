@@ -16,17 +16,21 @@ module Ancestry
           update_clause[column] = current_time
         end
 
-        if self.class.respond_to?(:depth_cache_column)
-          depth_cache_column = self.class.depth_cache_column
-          depth_change = self.class.ancestry_depth_change(old_ancestry, new_ancestry)
-
-          if depth_change != 0
-            update_clause[depth_cache_column] = Arel.sql("#{depth_cache_column} + #{depth_change}")
-          end
-        end
-
+        update_descendants_hook(update_clause, old_ancestry, new_ancestry)
         unscoped_descendants_before_last_save.update_all update_clause
       end
+    end
+
+    def update_descendants_hook(update_clause, old_ancestry, new_ancestry)
+      if self.class.respond_to?(:depth_cache_column)
+        depth_cache_column = self.class.depth_cache_column
+        depth_change = self.class.ancestry_depth_change(old_ancestry, new_ancestry)
+
+        if depth_change != 0
+          update_clause[depth_cache_column] = Arel.sql("#{depth_cache_column} + #{depth_change}")
+        end
+      end
+      update_clause
     end
   end
 end
