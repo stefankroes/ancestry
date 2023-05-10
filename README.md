@@ -88,7 +88,7 @@ class AddAncestryToTable < ActiveRecord::Migration[6.1]
 end
 ```
 
-There are additional options for the columns in [Ancestry Database Columnl](#ancestry-database-column) and
+There are additional options for the columns in [Ancestry Database Column](#ancestry-database-column) and
 an explanation for `opclass` and `collation`.
 
 ```bash
