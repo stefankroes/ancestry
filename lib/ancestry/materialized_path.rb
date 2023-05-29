@@ -94,8 +94,8 @@ module Ancestry
 
     def child_ancestry_sql
       %{
-        CASE WHEN #{table_name}.#{ancestry_column} IS NULL THEN CAST(#{table_name}.#{primary_key} AS CHAR)
-        ELSE      #{concat("#{table_name}.#{ancestry_column}", "'#{ancestry_delimiter}'", "CAST(#{table_name}.#{primary_key} AS CHAR)")}
+        CASE WHEN #{table_name}.#{ancestry_column} IS NULL THEN CAST(#{table_name}.#{primary_key} AS VARCHAR)
+        ELSE      #{concat("#{table_name}.#{ancestry_column}", "'#{ancestry_delimiter}'", "CAST(#{table_name}.#{primary_key} AS VARCHAR)")}
         END
       }
     end
