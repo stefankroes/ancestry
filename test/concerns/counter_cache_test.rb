@@ -88,16 +88,34 @@ class CounterCacheTest < ActiveSupport::TestCase
   end
 
   def test_setting_counter_cache
-    AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |model, roots|
+    AncestryTestDatabase.with_model :depth => 3, :width => 2, :counter_cache => true do |model, roots|
+      # ensure they are successfully built
+      roots.each do |lvl0_node, lvl0_children|
+        assert_equal 2, lvl0_node.reload.children_count
+        lvl0_children.each do |lvl1_node, lvl1_children|
+          assert_equal 2, lvl1_node.reload.children_count
+          lvl1_children.each do |lvl2_node, _lvl2_children|
+            assert_equal 0, lvl2_node.reload.children_count
+          end
+        end
+      end
+
       model.update_all(model.counter_cache_column => 0)
       # ensure they are successfully broken
       roots.each do |lvl0_node, _lvl0_children|
         assert_equal 0, lvl0_node.reload.children_count
       end
       model.rebuild_counter_cache!
+
       # ensure they are successfully built
-      roots.each do |lvl0_node, _lvl0_children|
+      roots.each do |lvl0_node, lvl0_children|
         assert_equal 2, lvl0_node.reload.children_count
+        lvl0_children.each do |lvl1_node, lvl1_children|
+          assert_equal 2, lvl1_node.reload.children_count
+          lvl1_children.each do |lvl2_node, _lvl2_children|
+            assert_equal 0, lvl2_node.reload.children_count
+          end
+        end
       end
     end
   end
