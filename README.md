@@ -77,7 +77,7 @@ $ rails g migration add_[ancestry]_to_[table] ancestry:string:index
 class AddAncestryToTable < ActiveRecord::Migration[6.1]
   def change
     change_table(:table) do |t|
-      # postgrel
+      # postgres
       t.string "ancestry", collation: 'C', null: false
       t.index "ancestry"
       # mysql
@@ -504,7 +504,7 @@ end
 # app/models/[model.rb]
 
 class [Model] < ActiveRecord::Base
-   has_ancestry depth_cache: true
+   has_ancestry cache_depth: true
 end
 ```
 
