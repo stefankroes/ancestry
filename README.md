@@ -164,33 +164,35 @@ The `has_ancestry` method supports the following options:
     :ancestry_column       Column name to store ancestry
                            'ancestry' (default)
     :ancestry_format       Format for ancestry column (see Ancestry Formats section):
-                           :materialized_path (default)     1/2/3, root nodes ancestry=nil
-                           :materialized_path2 (preferred) /1/2/3/, root nodes ancestry=/
-    :orphan_strategy       Instruct Ancestry what to do with children of a node that is destroyed:
+                           :materialized_path   1/2/3, root nodes ancestry=nil (default)
+                           :materialized_path2  /1/2/3/, root nodes ancestry=/ (preferred)
+    :orphan_strategy       How to handle children of a destroyed node:
                            :destroy   All children are destroyed as well (default)
                            :rootify   The children of the destroyed node become root nodes
                            :restrict  An AncestryException is raised if any children exist
                            :adopt     The orphan subtree is added to the parent of the deleted node
                                       If the deleted node is Root, then rootify the orphan subtree
-    :cache_depth           Cache the depth of each node (See Depth Cache section)
+                           :none      skip this logic. (add your own `before_destroy`)
+    :cache_depth           Cache the depth of each node: (See Depth Cache section)
                            false   Do not cache depth (default)
                            true    Cache depth in 'ancestry_depth'
-                           String  Cache depth in column referenced
-    :primary_key_format    regular expression that matches the format of the primary key
-                           '[0-9]+'           (default) integer ids
-                           '[-A-Fa-f0-9]{36}'           UUIDs
-    :touch                 Instruct Ancestry to touch the ancestors of a node when it changes
-                           false (default) don't invalide nested key-based caches
-    :counter_cache         Whether to create counter cache column accessor.
-                           false (default) don't store a counter cache
-                           true            store counter cache in `children_count`.
-                           String          name of column to store counter cache.
-    :update_strategy       Choose the strategy to update descendants nodes
-                           :ruby (default) All descendants are updated using the ruby algorithm.
-                                           This triggers update callbacks for each descendant node
-                           :sql            All descendants are updated using a single SQL statement.
-                                           This strategy does not trigger update callbacks for the descendants.
-                                           This strategy is available only for PostgreSql implementations
+                           String  Cache depth in the column referenced
+    :primary_key_format    Regular expression that matches the format of the primary key:
+                           '[0-9]+'            integer ids (default)
+                           '[-A-Fa-f0-9]{36}'  UUIDs
+    :touch                 Touch the ancestors of a node when it changes:
+                           false  don't invalide nested key-based caches (default)
+                           true   touch all ancestors of previous and new parents
+    :counter_cache         Create counter cache column accessor:
+                           false  don't store a counter cache (default)
+                           true   store counter cache in `children_count`.
+                           String name of column to store counter cache.
+    :update_strategy       How to update descendants nodes:
+                           :ruby  All descendants are updated using the ruby algorithm. (default)
+                                  This triggers update callbacks for each descendant node
+                           :sql   All descendants are updated using a single SQL statement.
+                                  This strategy does not trigger update callbacks for the descendants.
+                                  This strategy is available only for PostgreSql implementations
 
 Legacy configuration using `acts_as_tree` is still available. Ancestry defers to `acts_as_tree` if that gem is installed.
 

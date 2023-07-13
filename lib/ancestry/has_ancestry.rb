@@ -60,19 +60,13 @@ module Ancestry
       after_update :update_descendants_with_new_ancestry, if: :ancestry_changed?
 
       # Apply orphan strategy before destroy
-      case orphan_strategy
-      when :rootify
-        alias_method :apply_orphan_strategy, :apply_orphan_strategy_rootify
-      when :destroy
-        alias_method :apply_orphan_strategy, :apply_orphan_strategy_destroy
-      when :adopt
-        alias_method :apply_orphan_strategy, :apply_orphan_strategy_adopt
-      when :restrict
-        alias_method :apply_orphan_strategy, :apply_orphan_strategy_restrict
-      else
+      orphan_strategy_helper = "apply_orphan_strategy_#{orphan_strategy}"
+      if method_defined?(orphan_strategy_helper)
+        alias_method :apply_orphan_strategy, orphan_strategy_helper
+        before_destroy :apply_orphan_strategy
+      elsif orphan_strategy.to_s != "none"
         raise Ancestry::AncestryException.new(I18n.t("ancestry.invalid_orphan_strategy"))
       end
-      before_destroy :apply_orphan_strategy
 
       # Create ancestry column accessor and set to option or default
       if options[:cache_depth]
