@@ -85,6 +85,62 @@ class OphanStrategiesTest < ActiveSupport::TestCase
     end
   end
 
+  def test_apply_orphan_strategy_none
+    AncestryTestDatabase.with_model orphan_strategy: :none do |model, roots|
+      root  = model.create!
+      child = model.create!(:parent => root)
+      model.class_eval do
+        def apply_orphan_strategy
+          raise "this should not be called"
+        end
+      end
+      assert_difference 'model.count', -1 do
+        root.destroy
+      end
+      # this record should still exist
+      assert child.reload.root_id == root.id
+    end
+  end
+
+  def test_apply_orphan_strategy_custom
+    AncestryTestDatabase.with_model orphan_strategy: :none do |model|
+      model.class_eval do
+        before_destroy :apply_orphan_strategy_abc
+
+        def apply_orphan_strategy_abc
+          apply_orphan_strategy_destroy
+        end
+      end
+
+      root  = model.create!
+      3.times { root.children.create! }
+      model.create! # a node that is not affected
+      assert_difference 'model.count', -4 do
+        root.destroy
+      end
+    end
+  end
+
+  # Not supported. Keeping around to explore for future uses.
+  def test_apply_orphan_strategy_custom_unsupported
+    AncestryTestDatabase.with_model skip_ancestry: true do |model|
+      model.class_eval do
+        # needs to be defined before calling has_ancestry
+        def apply_orphan_strategy_abc
+          apply_orphan_strategy_destroy
+        end
+
+        has_ancestry orphan_strategy: :abc, ancestry_column: AncestryTestDatabase.ancestry_column
+      end
+      root  = model.create!
+      3.times { root.children.create! }
+      model.create! # a node that is not affected
+      assert_difference 'model.count', -4 do
+        root.destroy
+      end
+    end
+  end
+
   def test_basic_delete
     AncestryTestDatabase.with_model do |model|
       n1 = model.create!                  #create a root node

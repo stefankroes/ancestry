@@ -172,6 +172,7 @@ The `has_ancestry` method supports the following options:
                            :restrict  An AncestryException is raised if any children exist
                            :adopt     The orphan subtree is added to the parent of the deleted node
                                       If the deleted node is Root, then rootify the orphan subtree
+                           :none      skip this logic. (add your own `before_destroy`)
     :cache_depth           Cache the depth of each node: (See Depth Cache section)
                            false   Do not cache depth (default)
                            true    Cache depth in 'ancestry_depth'

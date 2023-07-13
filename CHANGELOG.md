@@ -5,6 +5,7 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 ## Version [HEAD] <sub><sup>Unreleased</sub></sup>
 
+* Introduce `orphan_strategy: :none` [#658](https://github.com/stefankroes/ancestry/pull/658)
 * Introduce `rebuild_counter_cache!` to reset counter caches. [#663](https://github.com/stefankroes/ancestry/pull/663) [#668](https://github.com/stefankroes/ancestry/pull/668) (thx @RongRongTeng)
 * Documentation fixes [#664](https://github.com/stefankroes/ancestry/pull/664) [#667](https://github.com/stefankroes/ancestry/pull/667) (thx @motokikando, @onerinas)
 * Introduce `build_cache_depth_sql!`, a sql alternative to `build_cache_depth` [#654](https://github.com/stefankroes/ancestry/pull/654)
@@ -41,7 +42,7 @@ jobs. If you need to do this in the ui, please use `cache_depth`.
     - `ancestry_primary_key_format` (introduced 4.3.0, removed by #649)
     - `touch_ancestors`             (introduced 2.1, removed by TODO)
 * These are seen as internal and may go away:
-  - `apply_orphan_strategy` (TODO: use `orphan_strategy => none` and define `before_destory`)
+  - `apply_orphan_strategy` Please use `orphan_strategy: :none` and a custom `before_destory` instead.
 
 ## Version [4.3.3] <sub><sup>2023-04-01</sub></sup>
 
