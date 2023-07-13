@@ -241,7 +241,7 @@ module Ancestry
             JOIN #{table_name} children ON children.#{ancestry_column} = (#{child_ancestry_sql})
             GROUP BY #{table_name}.#{primary_key}
           ) src USING(#{primary_key})
-          SET dest.#{counter_cache_column} = src.child_count
+          SET dest.#{counter_cache_column} = COALESCE(src.child_count, 0)
         }
       else
         update_all %{

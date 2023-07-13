@@ -79,10 +79,10 @@ class StiSupportTest < ActiveSupport::TestCase
       node5 = Subclass3.create! :parent => node4
 
       assert_equal 2, node1.reload.children_count
-      assert_nil node2.reload.children_count
+      assert_equal 0, node2.reload.children_count
       assert_equal 1, node3.reload.children_count
       assert_equal 1, node4.reload.children_count
-      assert_nil node5.reload.children_count
+      assert_equal 0, node5.reload.children_count
 
       Object.send :remove_const, 'Subclass3'
       Object.send :remove_const, 'Subclass4'
