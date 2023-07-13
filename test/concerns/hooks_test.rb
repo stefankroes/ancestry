@@ -39,7 +39,7 @@ class ArrangementTest < ActiveSupport::TestCase
       model.class_eval do
         before_save :update_name_path
         # this example will only work if the name field is unique across all levels
-        validates :name, :uniqueness => true
+        validates :name, :uniqueness => {case_sensitive: false}
 
         def update_name_path
           self.name_path = [parent&.name_path, name].compact.join('/')
