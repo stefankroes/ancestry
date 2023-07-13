@@ -29,7 +29,7 @@ module Ancestry
     end
 
     def child_ancestry_sql
-      concat("#{table_name}.#{ancestry_column}", "CAST(#{table_name}.#{primary_key} AS CHAR)", "'#{ancestry_delimiter}'")
+      concat("#{table_name}.#{ancestry_column}", "#{table_name}.#{primary_key}", "'#{ancestry_delimiter}'")
     end
 
     def ancestry_depth_sql

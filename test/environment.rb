@@ -129,7 +129,7 @@ class AncestryTestDatabase
       table.integer options[:cache_depth] == true ? :ancestry_depth : options[:cache_depth] if options[:cache_depth]
       if options[:counter_cache]
         counter_cache_column = options[:counter_cache] == true ? :children_count : options[:counter_cache]
-        table.integer counter_cache_column
+        table.integer counter_cache_column, default: 0, null: false
       end
 
       extra_columns.each do |name, type|

@@ -5,7 +5,9 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 ## Version [HEAD] <sub><sup>Unreleased</sub></sup>
 
-* `build_cache_depth_sql!` is a single query. [#654](https://github.com/stefankroes/ancestry/pull/654)
+* Introduce `rebuild_counter_cache!` to reset counter caches. [#663](https://github.com/stefankroes/ancestry/pull/663) [#668](https://github.com/stefankroes/ancestry/pull/668) (thx @RongRongTeng)
+* Documentation fixes [#664](https://github.com/stefankroes/ancestry/pull/664) [#667](https://github.com/stefankroes/ancestry/pull/667) (thx @motokikando, @onerinas)
+* Introduce `build_cache_depth_sql!`, a sql alternative to `build_cache_depth` [#654](https://github.com/stefankroes/ancestry/pull/654)
 * Drop `ancestry_primary_key_format` [#649](https://github.com/stefankroes/ancestry/pull/649)
 * When destroying orphans, going from leafs up to node [#635](https://github.com/stefankroes/ancestry/pull/635) (thx @brendon)
 * Changed config setters to class readers [#633](https://github.com/stefankroes/ancestry/pull/633) (thx @kshurov)
@@ -14,7 +16,7 @@ a nice looking [Changelog](http://keepachangelog.com).
 #### Notable features
 
 Depth scopes now work without `cache_depth`. But please only use this in background
-jobs. if you need to do this in the ui, use the depth_caching.
+jobs. If you need to do this in the ui, please use `cache_depth`.
 
 `build_cache_depth_sql!` is quicker than `build_cache_depth!` (1 query instead of N+1 queries).
 
@@ -351,6 +353,9 @@ Missed 2 commits (which are feature adds)
 
 
 [HEAD]: https://github.com/stefankroes/ancestry/compare/v4.3.0...HEAD
+[4.3.3]: https://github.com/stefankroes/ancestry/compare/v4.3.2...v4.3.3
+[4.3.2]: https://github.com/stefankroes/ancestry/compare/v4.3.1...v4.3.2
+[4.3.1]: https://github.com/stefankroes/ancestry/compare/v4.3.0...v4.3.1
 [4.3.0]: https://github.com/stefankroes/ancestry/compare/v4.2.0...v4.3.0
 [4.2.0]: https://github.com/stefankroes/ancestry/compare/v4.1.0...v4.2.0
 [4.1.0]: https://github.com/stefankroes/ancestry/compare/v4.0.0...v4.1.0
