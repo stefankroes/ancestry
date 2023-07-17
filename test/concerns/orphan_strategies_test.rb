@@ -24,6 +24,18 @@ class OphanStrategiesTest < ActiveSupport::TestCase
 
   def test_orphan_destroy_strategy
     AncestryTestDatabase.with_model orphan_strategy: :destroy, :depth => 3, :width => 3 do |model, roots|
+      model.class_eval do
+        # verify we are destroying leafs to child
+        # some implementations leverage the parent
+        before_destroy :verify_parent_exists
+
+        def verify_parent_exists
+          if has_parent? && !self.class.where(:id => parent_id).exists?
+            raise "issues with #{id} (ancestry #{ancestry || "root"})"
+          end
+        end
+      end
+
       root = roots.first.first
       assert_difference 'model.count', -root.subtree.size do
         root.destroy
@@ -68,6 +80,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
     end
   end
 
+  # DEPRECATED - please see test_apply_orphan_strategy_none for pattern instead
   def test_override_apply_orphan_strategy
     AncestryTestDatabase.with_model orphan_strategy: :destroy do |model, roots|
       root  = model.create!
