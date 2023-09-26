@@ -37,7 +37,7 @@ materialized path, closure tree table, adjacency lists, nested sets, and adjacen
 - Integrity restoration
 - Most queries use indexes on `id` or `ancestry` column. (e.g.: `LIKE '#{ancestry}/%'`)
 
-Since a Btree index has a limitaton of 2704 characters for the `ancestry` column,
+Since a Btree index has a limitation of 2704 characters for the `ancestry` column,
 the maximum depth of an ancestry tree is 900 items at most. If ids are 4 digits long,
 then the max depth is 540 items.
 
@@ -305,10 +305,10 @@ Sorry, using collation or index operator classes makes this a little complicated
 root of the issue is that in order to use indexes, the ancestry column needs to
 compare strings using ascii rules.
 
-It is well known that `LIKE '/1/2/%'` will use an index because the wildchard (i.e.: `%`)
+It is well known that `LIKE '/1/2/%'` will use an index because the wildcard (i.e.: `%`)
 is on the right hand side of the `LIKE`. While that is true for ascii strings, it is not
 necessarily true for unicode. Since ancestry only uses ascii characters, telling the database
-this constraint will optimize the `LIKE` statemens.
+this constraint will optimize the `LIKE` statements.
 
 ## Collation Sorting
 
@@ -329,7 +329,7 @@ remember to drop existing indexes on the `ancestry` column and recreate them.
 ## ancestry_format materialized_path and nulls
 
 If you are using the legacy `ancestry_format` of `:materialized_path`, then you need to the
-collum to allow `nulls`. Change the column create accordingly: `null: true`.
+column to allow `nulls`. Change the column create accordingly: `null: true`.
 
 Chances are, you can ignore this section as you most likely want to use `:materialized_path2`.
 
@@ -425,7 +425,7 @@ You can choose from 2 ancestry formats:
 ```
 
 If you are unsure, choose `:materialized_path2`. It allows a not NULL column,
-faster descenant queries, has one less `OR` statement in the queries, and
+faster descendant queries, has one less `OR` statement in the queries, and
 the path can be formed easily in a database query for added benefits.
 
 There is more discussion in [Internals](#internals) or [Migrating ancestry format](#migrate-ancestry-format)
@@ -491,7 +491,7 @@ To add depth_caching to an existing model:
 ## Add column
 
 ```ruby
-class AddDepthCachToTable < ActiveRecord::Migration[6.1]
+class AddDepthCacheToTable < ActiveRecord::Migration[6.1]
   def change
     change_table(:table) do |t|
       t.integer "ancestry_depth", default: 0
