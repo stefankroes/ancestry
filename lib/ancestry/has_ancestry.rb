@@ -84,19 +84,17 @@ module Ancestry
         # Validate depth column
         validates_numericality_of depth_cache_column, :greater_than_or_equal_to => 0, :only_integer => true, :allow_nil => false
 
-        scope :before_depth, lambda { |depth| where("#{depth_cache_column} < ?", depth) }
-        scope :to_depth,     lambda { |depth| where("#{depth_cache_column} <= ?", depth) }
-        scope :at_depth,     lambda { |depth| where("#{depth_cache_column} = ?", depth) }
-        scope :from_depth,   lambda { |depth| where("#{depth_cache_column} >= ?", depth) }
-        scope :after_depth,  lambda { |depth| where("#{depth_cache_column} > ?", depth) }
+        depth_cache_sql = depth_cache_column
       else
         # this is not efficient, but it works
-        scope :before_depth, lambda { |depth| where("#{ancestry_depth_sql} < ?", depth) }
-        scope :to_depth,     lambda { |depth| where("#{ancestry_depth_sql} <= ?", depth) }
-        scope :at_depth,     lambda { |depth| where("#{ancestry_depth_sql} = ?", depth) }
-        scope :from_depth,   lambda { |depth| where("#{ancestry_depth_sql} >= ?", depth) }
-        scope :after_depth,  lambda { |depth| where("#{ancestry_depth_sql} > ?", depth) }
+        depth_cache_sql = ancestry_depth_sql
       end
+
+      scope :before_depth, lambda { |depth| where("#{depth_cache_sql} < ?", depth) }
+      scope :to_depth,     lambda { |depth| where("#{depth_cache_sql} <= ?", depth) }
+      scope :at_depth,     lambda { |depth| where("#{depth_cache_sql} = ?", depth) }
+      scope :from_depth,   lambda { |depth| where("#{depth_cache_sql} >= ?", depth) }
+      scope :after_depth,  lambda { |depth| where("#{depth_cache_sql} > ?", depth) }
 
       # Create counter cache column accessor and set to option or default
       if options[:counter_cache]
