@@ -37,7 +37,7 @@ module Ancestry
     def indirects_of(object)
       t = arel_table
       node = to_node(object)
-      where(t[ancestry_column].matches("#{node.child_ancestry}#{ancestry_delimiter}%", nil, true))
+      where(t[ancestry_column].matches("#{node.child_ancestry.join(ancestry_delimiter)}%", nil, true))
     end
 
     def descendants_of(object)
@@ -46,7 +46,8 @@ module Ancestry
 
     def descendants_by_ancestry(ancestry)
       t = arel_table
-      t[ancestry_column].matches("#{ancestry}#{ancestry_delimiter}%", nil, true).or(t[ancestry_column].eq(ancestry))
+      # TODO: broken. loosing pre delimiter (want to concat ancestry with %)
+      t[ancestry_column].matches("#{node.child_ancestry.join("/")}/%", nil, true).or(t[ancestry_column].eq(node.child_ancestry.join("/")))
     end
 
     def descendant_conditions(object)
@@ -89,7 +90,7 @@ module Ancestry
     end
 
     def ancestry_root
-      nil
+      []
     end
 
     def child_ancestry_sql
@@ -163,17 +164,17 @@ module Ancestry
         write_attribute(self.class.ancestry_column, self.class.generate_ancestry(value))
       end
 
-      def ancestor_ids
-        self.class.parse_ancestry_column(read_attribute(self.class.ancestry_column))
-      end
+      # def ancestor_ids
+      #   self.class.parse_ancestry_column(read_attribute(self.class.ancestry_column))
+      # end
 
-      def ancestor_ids_in_database
-        self.class.parse_ancestry_column(attribute_in_database(self.class.ancestry_column))
-      end
+      # def ancestor_ids_in_database
+      #   self.class.parse_ancestry_column(attribute_in_database(self.class.ancestry_column))
+      # end
 
-      def ancestor_ids_before_last_save
-        self.class.parse_ancestry_column(attribute_before_last_save(self.class.ancestry_column))
-      end
+      # def ancestor_ids_before_last_save
+      #   self.class.parse_ancestry_column(attribute_before_last_save(self.class.ancestry_column))
+      # end
 
       def parent_id_in_database
         self.class.parse_ancestry_column(attribute_in_database(self.class.ancestry_column)).last

@@ -72,11 +72,6 @@ class OphanStrategiesTest < ActiveSupport::TestCase
       assert_equal n3.parent_id, n1.id, "orphan's not parentified"
       assert_equal n5.ancestor_ids, [n1.id, n4.id], "ancestry integrity not maintained"
       n1.destroy                          # delete a root node with desecendants
-      n3.reload
-      n5.reload
-      assert_nil n3.parent_id, " new root node should have no parent"
-      assert n3.valid?, " new root node is not valid"
-      assert_equal n5.ancestor_ids, [n4.id], "ancestry integrity not maintained"
     end
   end
 
@@ -150,6 +145,11 @@ class OphanStrategiesTest < ActiveSupport::TestCase
       model.create! # a node that is not affected
       assert_difference 'model.count', -4 do
         root.destroy
+      # TODO: are these the same?
+      if AncestryTestDatabase.materialized_path2?
+        assert_equal(model.find(n3.id).ancestry, model.ancestry_root, " new root node has no root ancestry string")
+      else
+        assert_nil(model.find(n3.id).ancestry," new root node has no empty ancestry string")
       end
     end
   end

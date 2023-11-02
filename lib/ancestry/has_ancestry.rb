@@ -40,6 +40,7 @@ module Ancestry
       # Include dynamic class methods
       extend Ancestry::ClassMethods
 
+      # array?
       if ancestry_format == :materialized_path2
         extend Ancestry::MaterializedPath2
       else
@@ -50,11 +51,14 @@ module Ancestry
 
       validates self.ancestry_column, ancestry_validation_options(primary_key_format)
 
+      pi = "a" !~ primary_key_format # want to know primary_key_is_an_integer? without accessing the database
+
+      attribute ancestry_column, :materialized_path_string, :casting => pi ? :to_i : :to_s, :delimiter => ancestry_delimiter
+      validates ancestry_column, :array_pattern => {:id => true, :pattern => primary_key_format, :integer => pi}
+      alias_attribute :ancestor_ids, ancestry_column
+
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
       include Ancestry::MaterializedPathPg if update_strategy == :sql
-
-      # Validate that the ancestor ids don't include own id
-      validate :ancestry_exclude_self
 
       # Update descendants with new ancestry after update
       after_update :update_descendants_with_new_ancestry, if: :ancestry_changed?

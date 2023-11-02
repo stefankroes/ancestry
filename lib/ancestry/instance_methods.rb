@@ -1,10 +1,5 @@
 module Ancestry
   module InstanceMethods
-    # Validate that the ancestors don't include itself
-    def ancestry_exclude_self
-      errors.add(:base, I18n.t("ancestry.exclude_self", class_name: self.class.name.humanize)) if ancestor_ids.include? self.id
-    end
-
     # Update descendants with new ancestry (after update)
     def update_descendants_with_new_ancestry
       # If enabled and the new ancestry is sane ...
@@ -98,6 +93,10 @@ module Ancestry
       end
 
       parent_id && increase_parent_counter_cache
+    end
+
+    def parent_id_before_last_save
+      ancestor_ids_before_last_save.last
     end
 
     # Ancestors

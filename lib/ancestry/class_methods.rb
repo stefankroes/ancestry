@@ -93,6 +93,9 @@ module Ancestry
 
     # Pseudo-preordered array of nodes.  Children will always follow parents,
     # This is deterministic unless the parents are missing *and* a sort block is specified
+    # for ordering nodes within a rank provide block, eg. Node.sort_by_ancestry(Node.all) {|a, b| a.rank <=> b.rank}.
+    EMPTY_ANCESTRY=[0].freeze
+    # TODO: use ancestor_ids over ancestry
     def sort_by_ancestry(nodes, &block)
       arranged = nodes if nodes.is_a?(Hash)
 
@@ -256,15 +259,6 @@ module Ancestry
 
     def unscoped_where
       yield ancestry_base_class.default_scoped.unscope(:where)
-    end
-
-    ANCESTRY_UNCAST_TYPES = [:string, :uuid, :text].freeze
-    def primary_key_is_an_integer?
-      if defined?(@primary_key_is_an_integer)
-        @primary_key_is_an_integer
-      else
-        @primary_key_is_an_integer = !ANCESTRY_UNCAST_TYPES.include?(type_for_attribute(primary_key).type)
-      end
     end
   end
 end
