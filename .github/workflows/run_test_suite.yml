@@ -42,7 +42,7 @@ jobs:
         # - https://www.ruby-lang.org/en/downloads/branches/
         # - https://guides.rubyonrails.org/maintenance_policy.html
         format: [materialized_path, materialized_path2]
-        activerecord: [70]
+        activerecord: [70, 71]
         ruby: [3.1, 3.2]
         # additional tests
         include:
