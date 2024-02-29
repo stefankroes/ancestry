@@ -19,6 +19,9 @@ class CounterCacheTest < ActiveSupport::TestCase
     end
   end
 
+  # is this a real use case?
+  # test with disable callbacks?
+  # would like to get those rails internal variables out of this code base
   def test_counter_cache_when_reduplicate_destroying
     AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |_model, roots|
       parent = roots.first.first
