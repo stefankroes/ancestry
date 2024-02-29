@@ -70,38 +70,40 @@ module Ancestry
 
       # Create ancestry column accessor and set to option or default
       if options[:cache_depth]
-        # Create accessor for column name and set to option or default
-        self.cattr_accessor :depth_cache_column
-        self.depth_cache_column =
-          if options[:cache_depth] == true
-            options[:depth_cache_column]&.to_s || 'ancestry_depth'
-          else
-            options[:cache_depth].to_s
+        if options[:cache_depth] == :virtual
+          # NOTE: not setting self.depth_cache_column so the code does not try to update the column
+          depth_cache_sql = options[:depth_cache_column]&.to_s || 'ancestry_depth'
+        else
+          # Create accessor for column name and set to option or default
+          self.cattr_accessor :depth_cache_column
+          self.depth_cache_column =
+            if options[:cache_depth] == true
+              options[:depth_cache_column]&.to_s || 'ancestry_depth'
+            else
+              options[:cache_depth].to_s
+            end
+          if options[:depth_cache_column]
+            ActiveSupport::Deprecation.warn("has_ancestry :depth_cache_column is deprecated. Use :cache_depth instead.")
           end
-        if options[:depth_cache_column]
-          ActiveSupport::Deprecation.warn("has_ancestry :depth_cache_column is deprecated. Use :cache_depth instead.")
+
+          # Cache depth in depth cache column before save
+          before_validation :cache_depth
+          before_save :cache_depth
+
+          # Validate depth column
+          validates_numericality_of depth_cache_column, :greater_than_or_equal_to => 0, :only_integer => true, :allow_nil => false
+          depth_cache_sql = depth_cache_column
         end
-
-        # Cache depth in depth cache column before save
-        before_validation :cache_depth
-        before_save :cache_depth
-
-        # Validate depth column
-        validates_numericality_of depth_cache_column, :greater_than_or_equal_to => 0, :only_integer => true, :allow_nil => false
-
-        scope :before_depth, lambda { |depth| where("#{depth_cache_column} < ?", depth) }
-        scope :to_depth,     lambda { |depth| where("#{depth_cache_column} <= ?", depth) }
-        scope :at_depth,     lambda { |depth| where("#{depth_cache_column} = ?", depth) }
-        scope :from_depth,   lambda { |depth| where("#{depth_cache_column} >= ?", depth) }
-        scope :after_depth,  lambda { |depth| where("#{depth_cache_column} > ?", depth) }
       else
         # this is not efficient, but it works
-        scope :before_depth, lambda { |depth| where("#{ancestry_depth_sql} < ?", depth) }
-        scope :to_depth,     lambda { |depth| where("#{ancestry_depth_sql} <= ?", depth) }
-        scope :at_depth,     lambda { |depth| where("#{ancestry_depth_sql} = ?", depth) }
-        scope :from_depth,   lambda { |depth| where("#{ancestry_depth_sql} >= ?", depth) }
-        scope :after_depth,  lambda { |depth| where("#{ancestry_depth_sql} > ?", depth) }
+        depth_cache_sql = ancestry_depth_sql
       end
+
+      scope :before_depth, lambda { |depth| where("#{depth_cache_sql} < ?", depth) }
+      scope :to_depth,     lambda { |depth| where("#{depth_cache_sql} <= ?", depth) }
+      scope :at_depth,     lambda { |depth| where("#{depth_cache_sql} = ?", depth) }
+      scope :from_depth,   lambda { |depth| where("#{depth_cache_sql} >= ?", depth) }
+      scope :after_depth,  lambda { |depth| where("#{depth_cache_sql} > ?", depth) }
 
       # Create counter cache column accessor and set to option or default
       if options[:counter_cache]
