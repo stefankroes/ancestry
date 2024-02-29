@@ -373,11 +373,11 @@ You may be able to alter the database to gain some readability:
 ALTER DATABASE dbname SET bytea_output to 'escape';
 ```
 
-## Mysql Storage options
+## MySQL Storage options
 
 ### ascii field collation
 
-The currently suggested way to create a postgres field is using `'C'` collation:
+The currently suggested way to create a MySQL field is using `'utf8mb4_bin'` collation:
 
 ```ruby
 t.string "ancestry", collation: 'utf8mb4_bin', null: false
@@ -402,7 +402,7 @@ t.index  "ancestry"
 
 ### ascii character set
 
-Mysql supports per column character sets. Using a character set of `ascii` will
+MySQL supports per column character sets. Using a character set of `ascii` will
 set this up.
 
 ```SQL
@@ -462,7 +462,7 @@ Model.check_ancestry_integrity!
 ```
 
 It is time to run your code. Most tree methods should work fine with ancestry
-and hopefully your tests only require a few minor tweaks to get up and runnnig.
+and hopefully your tests only require a few minor tweaks to get up and running.
 
 Once you are happy with how your app is running, remove the old `parent_id` column:
 
