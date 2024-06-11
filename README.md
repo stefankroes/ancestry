@@ -151,7 +151,7 @@ The yellow nodes are those returned by the method.
 | includes self                 |self..indirects                                      |root..self                       |
 |`sibling_ids`                  |`subtree_ids`                                        |`path_ids`                       |
 |`has_siblings?`                |                                                     |                                 |
-|`sibling_of?(node)`            |                                                     |                                 |
+|`sibling_of?(node)`            |`in_subtree_of?`                                     |                                 |
 
 When using `STI` all classes are returned from the scopes unless you specify otherwise using `where(:type => "ChildClass")`.
 
