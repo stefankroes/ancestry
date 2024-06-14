@@ -303,6 +303,10 @@ module Ancestry
       subtree(depth_options).pluck(self.class.primary_key)
     end
 
+    def in_subtree_of?(node)
+      id == node.id || descendant_of?(node)
+    end
+
     # Callback disabling
 
     def without_ancestry_callbacks
