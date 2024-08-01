@@ -181,7 +181,7 @@ The `has_ancestry` method supports the following options:
                            '[0-9]+'            integer ids (default)
                            '[-A-Fa-f0-9]{36}'  UUIDs
     :touch                 Touch the ancestors of a node when it changes:
-                           false  don't invalide nested key-based caches (default)
+                           false  don't invalid nested key-based caches (default)
                            true   touch all ancestors of previous and new parents
     :counter_cache         Create counter cache column accessor:
                            false  don't store a counter cache (default)
