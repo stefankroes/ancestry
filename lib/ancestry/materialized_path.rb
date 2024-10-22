@@ -101,12 +101,7 @@ module Ancestry
     end
 
     def ancestry_depth_sql
-      @ancestry_depth_sql ||=
-        begin
-          tmp = %{(LENGTH(#{table_name}.#{ancestry_column}) - LENGTH(REPLACE(#{table_name}.#{ancestry_column},'#{ancestry_delimiter}','')))}
-          tmp = tmp + "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
-          "(CASE WHEN #{table_name}.#{ancestry_column} IS NULL THEN 0 ELSE 1 + #{tmp} END)"
-        end
+      @ancestry_depth_sql ||= MaterializedPath.construct_depth_sql(table_name, ancestry_column, ancestry_delimiter)
     end
 
     def generate_ancestry(ancestor_ids)
@@ -133,6 +128,12 @@ module Ancestry
       else
         %{CONCAT(#{args.join(', ')})}
       end
+    end
+
+    def self.construct_depth_sql(table_name, ancestry_column, ancestry_delimiter)
+      tmp = %{(LENGTH(#{table_name}.#{ancestry_column}) - LENGTH(REPLACE(#{table_name}.#{ancestry_column},'#{ancestry_delimiter}','')))}
+      tmp = tmp + "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
+      "(CASE WHEN #{table_name}.#{ancestry_column} IS NULL THEN 0 ELSE 1 + #{tmp} END)"
     end
 
     private
