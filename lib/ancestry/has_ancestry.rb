@@ -64,7 +64,11 @@ module Ancestry
       end
 
       # Create ancestry column accessor and set to option or default
-      if options[:cache_depth]
+      
+      if options[:cache_depth] == :virtual
+        # NOTE: not setting self.depth_cache_column so the code does not try to update the column
+        depth_cache_sql = options[:depth_cache_column]&.to_s || 'ancestry_depth'
+      elsif options[:cache_depth]
         # Create accessor for column name and set to option or default
         self.cattr_accessor :depth_cache_column
         self.depth_cache_column =
