@@ -39,12 +39,7 @@ module Ancestry
 
       # Include dynamic class methods
       extend Ancestry::ClassMethods
-
-      if ancestry_format == :materialized_path2
-        extend Ancestry::MaterializedPath2
-      else
-        extend Ancestry::MaterializedPath
-      end
+      extend Ancestry::HasAncestry.ancestry_format_module(ancestry_format)
 
       attribute self.ancestry_column, default: self.ancestry_root
 
@@ -123,6 +118,15 @@ module Ancestry
     def acts_as_tree(*args)
       return super if defined?(super)
       has_ancestry(*args)
+    end
+
+    def self.ancestry_format_module(ancestry_format)
+      ancestry_format ||= Ancestry.default_ancestry_format
+      if ancestry_format == :materialized_path2
+        Ancestry::MaterializedPath2
+      else
+        Ancestry::MaterializedPath
+      end
     end
   end
 end
