@@ -1,0 +1,77 @@
+AllCops:
+  NewCops: enable
+  SuggestExtensions: false
+  TargetRubyVersion: 3.3
+
+Gemspec/DevelopmentDependencies:
+  Enabled: false
+Layout/HashAlignment:
+  Enabled: false
+Layout/LineLength:
+  Enabled: false
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: no_space
+Layout/SpaceAroundOperators:
+    EnforcedStyleForExponentOperator: space
+
+Metrics/AbcSize:
+  Enabled: false
+Metrics/BlockLength:
+  Enabled: false
+Metrics/ClassLength:
+  Enabled: false
+Metrics/CyclomaticComplexity:
+  Enabled: false
+Metrics/MethodLength:
+  Enabled: false
+Metrics/ModuleLength:
+  Enabled: false
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Naming/PredicateName:
+  Enabled: false
+Naming/VariableNumber:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+Style/ExpandPathArguments:
+  Enabled: false
+Style/GuardClause:
+  Enabled: false
+Style/HashSyntax:
+  Enabled: false
+Style/IfUnlessModifier:
+  Enabled: false
+Style/Lambda:
+  Enabled: false
+Style/MultilineIfModifier:
+  Enabled: false
+Style/NegatedIf:
+  Enabled: false
+Style/Next:
+  Enabled: false
+Style/NumericPredicate:
+  Enabled: false
+Style/ParallelAssignment:
+  Enabled: false
+Style/PercentLiteralDelimiters:
+  Enabled: false
+Style/StringLiterals:
+  Enabled: false
+Style/StringLiteralsInInterpolation:
+  Enabled: false
+Style/SymbolArray:
+  Enabled: false
+
+# specs
+
+Layout/ExtraSpacing:
+  Exclude: [ "test/**/*" ]
+Style/TrailingUnderscoreVariable:
+  Exclude: [ "test/**/*" ]
+Layout/SpaceBeforeFirstArg:
+  Exclude: [ "test/**/*" ]
+Layout/SpaceAroundOperators:
+  Exclude: [ "test/**/*" ]
