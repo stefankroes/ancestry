@@ -126,7 +126,20 @@ class AncestryTestDatabase
 
     ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
       table.send(column_type, options[:ancestry_column], **column_options(force_allow_nil: skip_ancestry))
-      table.integer options[:cache_depth] == true ? :ancestry_depth : options[:cache_depth] if options[:cache_depth]
+      case options[:cache_depth]
+      when true
+        table.integer :ancestry_depth
+      when :virtual
+        # sorry, this duplicates has_ancestry a little
+        path_module = Ancestry::HasAncestry.ancestry_format_module(options[:ancestry_format])
+        ancestry_depth_sql = path_module.construct_depth_sql("test_nodes", options[:ancestry_column], '/')
+
+        table.virtual :ancestry_depth, type: :integer, as: ancestry_depth_sql, stored: true
+      when nil, false
+        # no column
+      else
+        table.integer options[:cache_depth]
+      end
       if options[:counter_cache]
         counter_cache_column = options[:counter_cache] == true ? :children_count : options[:counter_cache]
         table.integer counter_cache_column, default: 0, null: false
