@@ -9,15 +9,15 @@ class TreeNavigationTest < ActiveSupport::TestCase
   # across: |siblings|subtree    |path     |
   ATTRIBUTE_MATRIX = {
     root:        {attribute_id:  :root_id},
-    parent:      {attribute_id:  :parent_id,     exists: :has_parent?, db: true},
-    ancestors:   {attribute_ids: :ancestor_ids,  exists: :ancestors?,  db: true},
-    children:    {attribute_ids: :child_ids,     exists: :children?},
+    parent:      {attribute_id:  :parent_id,    exists: :has_parent?, db: true},
+    ancestors:   {attribute_ids: :ancestor_ids, exists: :ancestors?,  db: true},
+    children:    {attribute_ids: :child_ids,    exists: :children?},
     descendants: {attribute_ids: :descendant_ids},
     indirects:   {attribute_ids: :indirect_ids},
-    siblings:    {attribute_ids: :sibling_ids,   exists: :siblings?},
+    siblings:    {attribute_ids: :sibling_ids,  exists: :siblings?},
     subtree:     {attribute_ids: :subtree_ids},
-    path:        {attribute_ids: :path_ids, db: true},
-  }
+    path:        {attribute_ids: :path_ids, db: true}
+  }.freeze
   # NOTE: has_ancestors? is an alias for parent? / ancestors? but not tested
 
   # class level getters are in test/concerns/scopes_test.rb
@@ -196,7 +196,8 @@ class TreeNavigationTest < ActiveSupport::TestCase
 
       # in database (again - but in a different hierarchy)
       node11.save!
-      node1.reload ; node2.reload
+      node1.reload
+      node2.reload
       # are these necessary?
       # do we want this to work without?
 
@@ -244,6 +245,7 @@ class TreeNavigationTest < ActiveSupport::TestCase
             raise "callback disabled for #{id}" if id == 2
           else
             raise "callback eabled for #{id}" if id != 2
+
             # want to make sure we're pointing at the correct nodes
             actual = unscoped_descendants_before_last_save.order(:id).map(&:id)
             raise "unscoped_descendants_before_last_save was #{actual}" unless actual == [3, 4, 5]
@@ -316,7 +318,7 @@ class TreeNavigationTest < ActiveSupport::TestCase
   # @param value [Array] expected output
   # @param attribute_name [Symbol] attribute to test
   # @param exists [true|false] test the exists "attribute? (default values.present?)
-  # @param db [Array[AR]]  value that should be reflected _in_database (default: use values) 
+  # @param db [Array[AR]]  value that should be reflected _in_database (default: use values)
   #                        skips if not supported in matrix
   def assert_attributes(node, attribute_name, values, db: :values, exists: :values)
     attribute_ids = ATTRIBUTE_MATRIX[attribute_name][:attribute_ids]

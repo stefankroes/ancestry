@@ -12,7 +12,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
   end
 
   def test_orphan_rootify_strategy
-    AncestryTestDatabase.with_model orphan_strategy: :rootify, :depth => 3, :width => 3 do |model, roots|
+    AncestryTestDatabase.with_model orphan_strategy: :rootify, :depth => 3, :width => 3 do |_model, roots|
       root = roots.first.first
       children = root.children.to_a
       root.destroy
@@ -50,7 +50,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
   end
 
   def test_orphan_restrict_strategy
-    AncestryTestDatabase.with_model orphan_strategy: :restrict, :depth => 3, :width => 3 do |model, roots|
+    AncestryTestDatabase.with_model orphan_strategy: :restrict, :depth => 3, :width => 3 do |_model, roots|
       root = roots.first.first
       assert_raise Ancestry::AncestryException do
         root.destroy
@@ -63,11 +63,11 @@ class OphanStrategiesTest < ActiveSupport::TestCase
 
   def test_orphan_adopt_strategy
     AncestryTestDatabase.with_model orphan_strategy: :adopt do |model|
-      n1 = model.create!                  #create a root node
-      n2 = model.create!(:parent => n1)   #create child with parent=root
-      n3 = model.create!(:parent => n2)   #create child with parent=n2, depth = 2
-      n4 = model.create!(:parent => n2)   #create child with parent=n2, depth = 2
-      n5 = model.create!(:parent => n4)   #create child with parent=n4, depth = 3
+      n1 = model.create!                  # create a root node
+      n2 = model.create!(:parent => n1)   # create child with parent=root
+      n3 = model.create!(:parent => n2)   # create child with parent=n2, depth = 2
+      n4 = model.create!(:parent => n2)   # create child with parent=n2, depth = 2
+      n5 = model.create!(:parent => n4)   # create child with parent=n4, depth = 3
       n2.destroy                          # delete a node with desecendants
       n3.reload
       n5.reload
@@ -84,7 +84,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
 
   # DEPRECATED - please see test_apply_orphan_strategy_none for pattern instead
   def test_override_apply_orphan_strategy
-    AncestryTestDatabase.with_model orphan_strategy: :destroy do |model, roots|
+    AncestryTestDatabase.with_model orphan_strategy: :destroy do |model, _roots|
       root  = model.create!
       child = model.create!(:parent => root)
       model.class_eval do
@@ -101,7 +101,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
   end
 
   def test_apply_orphan_strategy_none
-    AncestryTestDatabase.with_model orphan_strategy: :none do |model, roots|
+    AncestryTestDatabase.with_model orphan_strategy: :none do |model, _roots|
       root  = model.create!
       child = model.create!(:parent => root)
       model.class_eval do
@@ -127,7 +127,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
         end
       end
 
-      root  = model.create!
+      root = model.create!
       3.times { root.children.create! }
       model.create! # a node that is not affected
       assert_difference 'model.count', -4 do
@@ -147,7 +147,7 @@ class OphanStrategiesTest < ActiveSupport::TestCase
 
         has_ancestry orphan_strategy: :abc, ancestry_column: AncestryTestDatabase.ancestry_column
       end
-      root  = model.create!
+      root = model.create!
       3.times { root.children.create! }
       model.create! # a node that is not affected
       assert_difference 'model.count', -4 do
@@ -158,17 +158,17 @@ class OphanStrategiesTest < ActiveSupport::TestCase
 
   def test_basic_delete
     AncestryTestDatabase.with_model do |model|
-      n1 = model.create!                  #create a root node
-      n2 = model.create!(:parent => n1)   #create child with parent=root
+      n1 = model.create!                      # create a root node
+      n2 = model.create!(:parent => n1)       # create child with parent=root
       n2.destroy!
-      model.find(n1.id)                   # parent should exist
+      model.find(n1.id)                       # parent should exist
 
-      n1 = model.create!                  #create a root node
-      n2 = model.create!(:parent => n1)   #create child with parent=root
+      n1 = model.create!                      # create a root node
+      n2 = model.create!(:parent => n1)       # create child with parent=root
       n1.destroy!
       assert_nil(model.find_by(:id => n2.id)) # child should not exist
 
-      n1 = model.create!                  #create a root node
+      n1 = model.create!                      # create a root node
       n1.destroy!
     end
   end

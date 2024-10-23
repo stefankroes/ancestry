@@ -62,7 +62,7 @@ class AncestryTestDatabase
 
       puts "testing #{db_type} #{Ancestry.default_update_strategy == :sql ? "(sql) " : ""}(with #{column_type} #{ancestry_column})"
       puts "column format: #{Ancestry.default_ancestry_format} options: #{column_options.inspect}"
-    rescue => e
+    rescue StandardError => e
       if ENV["CI"]
         raise
       else

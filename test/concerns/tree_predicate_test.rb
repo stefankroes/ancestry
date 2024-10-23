@@ -21,7 +21,7 @@ class TreePredicateTest < ActiveSupport::TestCase
         # Children assertions
         assert root.has_children?
         assert !root.is_childless?
-        assert children.map { |n| n.is_childless? }.all?
+        assert children.map(&:is_childless?).all?
         assert children.map { |n| !root.child_of?(n) }.all?
         assert children.map { |n| n.child_of?(root) }.all?
         # Siblings assertions

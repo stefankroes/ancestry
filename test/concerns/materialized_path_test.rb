@@ -16,23 +16,23 @@ class MaterializedPathTest < ActiveSupport::TestCase
 
       # saved
       node.save!
-      assert_ancestry node, nil, child: "#{node.id}"
+      assert_ancestry node, nil, child: node.id.to_s
 
       # changed
       node.ancestor_ids = [root.id]
-      assert_ancestry node, "#{root.id}", db: nil, child: "#{node.id}"
+      assert_ancestry node, root.id.to_s, db: nil, child: node.id.to_s
 
       # changed saved
       node.save!
-      assert_ancestry node, "#{root.id}", child: "#{root.id}/#{node.id}"
+      assert_ancestry node, root.id.to_s, child: "#{root.id}/#{node.id}"
 
       # reloaded
       node.reload
-      assert_ancestry node, "#{root.id}", child: "#{root.id}/#{node.id}"
+      assert_ancestry node, root.id.to_s, child: "#{root.id}/#{node.id}"
 
       # fresh node
       node = model.find(node.id)
-      assert_ancestry node, "#{root.id}", child: "#{root.id}/#{node.id}"
+      assert_ancestry node, root.id.to_s, child: "#{root.id}/#{node.id}"
     end
   end
 

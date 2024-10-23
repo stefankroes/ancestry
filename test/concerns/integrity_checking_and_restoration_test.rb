@@ -51,7 +51,7 @@ class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
     end
   end
 
-  def assert_integrity_restoration model
+  def assert_integrity_restoration(model)
     assert_raise Ancestry::AncestryIntegrityException do
       model.check_ancestry_integrity!
     end
@@ -59,8 +59,8 @@ class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
     assert_nothing_raised do
       model.check_ancestry_integrity!
     end
-    assert model.all.any? {|node| node.has_parent? }, "Expected some nodes not to be roots"
-    assert_equal model.count, model.roots.collect {|node| node.descendants.count + 1 }.sum
+    assert model.all.any?(&:has_parent?), "Expected some nodes not to be roots"
+    assert_equal model.count, model.roots.collect { |node| node.descendants.count + 1 }.sum
   end
 
   def test_integrity_restoration

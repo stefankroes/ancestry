@@ -8,7 +8,7 @@ class ArrangementTest < ActiveSupport::TestCase
   end
 
   def middle_node(model)
-    root_node(model).children.sort_by(&:id).first
+    root_node(model).children.min_by(&:id)
   end
 
   def leaf_node(model)
@@ -25,7 +25,7 @@ class ArrangementTest < ActiveSupport::TestCase
       assert_equal size_at_depth[1], children.size
       assert_equal node.children.sort_by(&:id), children.keys.sort_by(&:id)
 
-      assert_tree(children, size_at_depth[1..-1])
+      assert_tree(children, size_at_depth[1..])
     end
   end
 
@@ -41,7 +41,7 @@ class ArrangementTest < ActiveSupport::TestCase
     arranged_nodes.each do |node, children|
       assert_equal expected_ids[0], node.id
 
-      assert_tree_path(children, expected_ids[1..-1])
+      assert_tree_path(children, expected_ids[1..])
     end
   end
 
@@ -133,20 +133,25 @@ class ArrangementTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, _roots|
       col = model.ancestry_column
       # materialized path 2 has a slash at the beginning and end
-      fmt = AncestryTestDatabase.materialized_path2? ? -> (a) { a ? "/#{a}/" : "/" } : -> (a) {a}
-      result = [{
-        col=>fmt[nil], "id"=>4, "children"=> [{
-          col=>fmt["4"], "id"=>6, "children" => []
+      fmt =
+        if AncestryTestDatabase.materialized_path2?
+          ->(a) { a ? "/#{a}/" : "/" }
+        else
+          ->(a) { a }
+        end
+      result = [
+        {
+          col => fmt[nil], "id" => 4, "children" => [
+            {col => fmt["4"], "id" => 6, "children" => []},
+            {col => fmt["4"], "id" => 5, "children" => []}
+          ]
         }, {
-          col=>fmt["4"], "id"=>5, "children" => []
-        }]
-      }, {
-        col=>fmt[nil], "id"=>1, "children"=> [{
-          col=>fmt["1"], "id"=>3, "children"=>[]
-        }, {
-          col=>fmt["1"], "id"=>2, "children"=>[]
-        }]
-      }]
+          col => fmt[nil], "id" => 1, "children" => [
+            {col => fmt["1"], "id" => 3, "children" => []},
+            {col => fmt["1"], "id" => 2, "children" => []}
+          ]
+        }
+      ]
 
       assert_equal model.arrange_serializable(order: "id desc"), result
     end
@@ -154,19 +159,19 @@ class ArrangementTest < ActiveSupport::TestCase
 
   def test_arrange_serializable_with_block
     AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, _roots|
-      expected_result = [{
-        "id"=>4, "children"=>[{
-          "id"=>6
+      expected_result = [
+        {
+          "id" => 4, "children" => [
+            {"id" => 6},
+            {"id" => 5}
+          ]
         }, {
-          "id"=>5
-        }]
-      }, {
-        "id"=>1, "children"=> [{
-          "id"=>3
-        }, {
-          "id"=>2
-        }]
-      }]
+          "id" => 1, "children" => [
+            {"id" => 3},
+            {"id" => 2}
+          ]
+        }
+      ]
       result = model.arrange_serializable(order: "id desc") do |parent, children|
         out = {}
         out["id"] = parent.id

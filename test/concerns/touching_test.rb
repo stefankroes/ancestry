@@ -8,7 +8,6 @@ class TouchingTest < ActiveSupport::TestCase
       :extra_columns => {:name => :string, :updated_at => :datetime},
       :touch => false
     ) do |model|
-
       wayback = Time.new(1984)
       recently = Time.now - 1.minute
 
@@ -27,7 +26,6 @@ class TouchingTest < ActiveSupport::TestCase
       :extra_columns => {:updated_at => :datetime},
       :touch => true
     ) do |model|
-
       way_back = Time.new(1984)
       recently = Time.now - 1.minute
 
@@ -54,7 +52,6 @@ class TouchingTest < ActiveSupport::TestCase
 
   def test_touch_propogates_multiple_levels
     AncestryTestDatabase.with_model(:extra_columns => {:name => :string, :updated_at => :datetime}, :touch => true) do |model|
-
       way_back = Time.new(1984)
       recently = Time.now - 1.minute
 
@@ -84,7 +81,6 @@ class TouchingTest < ActiveSupport::TestCase
       :extra_columns => {:updated_at => :datetime},
       :touch => true
     ) do |model|
-
       way_back = Time.new(1984)
       recently = Time.now - 1.minute
 
@@ -107,7 +103,6 @@ class TouchingTest < ActiveSupport::TestCase
       :extra_columns => {:updated_at => :datetime},
       :touch => true
     ) do |model|
-
       way_back = Time.new(1984)
       recently = Time.now - 1.minute
 

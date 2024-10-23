@@ -9,7 +9,6 @@ class ArrangementTest < ActiveSupport::TestCase
       :orphan_strategy => :adopt,
       :extra_columns => {:name => :string, :name_path => :string}
     ) do |model|
-
       model.class_eval do
         before_save :before_save_hook
 
@@ -35,9 +34,8 @@ class ArrangementTest < ActiveSupport::TestCase
 
   def test_update_descendants_with_changed_parent_value
     AncestryTestDatabase.with_model(
-      extra_columns: { name: :string, name_path: :string }
+      extra_columns: {name: :string, name_path: :string}
     ) do |model|
-
       model.class_eval do
         before_save :update_name_path
         # this example will only work if the name field is unique across all levels
@@ -78,9 +76,9 @@ class ArrangementTest < ActiveSupport::TestCase
       assert_equal("changed", m5.reload.name_path)
       assert_equal([m5.id], m2.reload.ancestor_ids)
       assert_equal("changed/child", m2.reload.name_path)
-      assert_equal([m5.id,m2.id], m3.reload.ancestor_ids)
+      assert_equal([m5.id, m2.id], m3.reload.ancestor_ids)
       assert_equal("changed/child/grandchild", m3.reload.name_path)
-      assert_equal([m5.id,m2.id,m3.id], m4.reload.ancestor_ids)
+      assert_equal([m5.id, m2.id, m3.id], m4.reload.ancestor_ids)
       assert_equal("changed/child/grandchild/grandchild's grand", m4.reload.name_path)
     end
   end
@@ -134,15 +132,16 @@ class ArrangementTest < ActiveSupport::TestCase
   # see f94b22ba https://github.com/stefankroes/ancestry/pull/263
   def test_node_creation_in_after_commit
     AncestryTestDatabase.with_model do |model|
-      children=[]
+      children = []
       model.instance_eval do
         attr_accessor :idx
-        self.after_commit do
-          children << self.children.create!(:idx => self.idx - 1) if self.idx > 0
+
+        after_commit do
+          children << self.children.create!(:idx => idx - 1) if idx > 0
         end
       end
       model.create!(:idx => 3)
-      assert_equal [1,2,3], children.first.ancestor_ids
+      assert_equal [1, 2, 3], children.first.ancestor_ids
     end
   end
 end
