@@ -135,7 +135,7 @@ module Ancestry
 
     def self.construct_depth_sql(table_name, ancestry_column, ancestry_delimiter)
       tmp = %{(LENGTH(#{table_name}.#{ancestry_column}) - LENGTH(REPLACE(#{table_name}.#{ancestry_column},'#{ancestry_delimiter}','')))}
-      tmp = tmp + "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
+      tmp += "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
       "(CASE WHEN #{table_name}.#{ancestry_column} IS NULL THEN 0 ELSE 1 + #{tmp} END)"
     end
 
@@ -161,7 +161,7 @@ module Ancestry
       def ancestors?
         read_attribute(self.class.ancestry_column) != self.class.ancestry_root
       end
-      alias :has_parent? :ancestors?
+      alias has_parent? ancestors?
 
       def ancestor_ids=(value)
         write_attribute(self.class.ancestry_column, self.class.generate_ancestry(value))

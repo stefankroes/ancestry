@@ -80,13 +80,13 @@ module Ancestry
     end
 
     def tree_view(column, data = nil)
-      data = arrange unless data
+      data ||= arrange
       data.each do |parent, children|
         if parent.depth == 0
           puts parent[column]
         else
           num = parent.depth - 1
-          indent = "   "*num
+          indent = "   " * num
           puts " #{"|" if parent.depth > 1}#{indent}|_ #{parent[column]}"
         end
         tree_view(column, children) if children

@@ -4,11 +4,13 @@ module Ancestry
   module HasAncestry
     def has_ancestry(options = {})
       # Check options
-      raise Ancestry::AncestryException.new(I18n.t("ancestry.option_must_be_hash")) unless options.is_a? Hash
-      options.each do |key, value|
-        unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format].include? key
-          raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_option", key: key.inspect, value: value.inspect))
-        end
+      unless options.is_a? Hash
+        raise Ancestry::AncestryException, I18n.t("ancestry.option_must_be_hash")
+      end
+
+      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format]
+      if (key = extra_keys.first)
+        raise Ancestry::AncestryException, I18n.t("ancestry.unknown_option", key: key.inspect, value: options[key].inspect)
       end
 
       ancestry_format = options[:ancestry_format] || Ancestry.default_ancestry_format

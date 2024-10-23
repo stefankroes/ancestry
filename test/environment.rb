@@ -26,7 +26,7 @@ class AncestryTestDatabase
   def self.setup
     # Silence I18n and Activerecord logging
     I18n.enforce_available_locales = false if I18n.respond_to? :enforce_available_locales=
-    ActiveRecord::Base.logger = Logger.new(STDERR)
+    ActiveRecord::Base.logger = Logger.new($stderr)
     ActiveRecord::Base.logger.level = Logger::Severity::UNKNOWN
 
     # Assume Travis CI database config if no custom one exists
@@ -37,14 +37,15 @@ class AncestryTestDatabase
                end
 
     # Setup database connection
-    all_config = if YAML.respond_to?(:safe_load_file)
-      YAML.safe_load_file(filename, aliases: true)
-    else
-      YAML.load_file(filename)
-    end
+    all_config =
+      if YAML.respond_to?(:safe_load_file)
+        YAML.safe_load_file(filename, aliases: true)
+      else
+        YAML.load_file(filename)
+      end
     config = all_config[db_type]
     if config.blank?
-      $stderr.puts "","","ERROR: Could not find '#{db_type}' in #{filename}"
+      $stderr.puts "", "", "ERROR: Could not find '#{db_type}' in #{filename}"
       $stderr.puts "Pick from: #{all_config.keys.join(", ")}", "", ""
       exit(1)
     end
@@ -103,12 +104,12 @@ class AncestryTestDatabase
       if column_type == "string"
         {
           :collation => ancestry_collation == "default" ? nil : ancestry_collation,
-          :null  => materialized_path2? ? false : true
+          :null  => !materialized_path2?
         }
       else
         {
           :limit => 3000,
-          :null  => materialized_path2? ? false : true
+          :null  => !materialized_path2?
         }
       end
     force_allow_nil ? @column_options.merge(:null => true) : @column_options
@@ -146,13 +147,13 @@ class AncestryTestDatabase
         table.integer counter_cache_column, default: 0, null: false
       end
 
-      extra_columns.each do |name, type|
+      extra_columns&.each do |name, type|
         table.send type, name
-      end unless extra_columns.nil?
+      end
     end
 
     testmethod = caller[0][/`.*'/][1..-2]
-    model_name = testmethod.camelize + "TestNode"
+    model_name = "#{testmethod.camelize}TestNode"
 
     begin
       model = Class.new(ActiveRecord::Base)
