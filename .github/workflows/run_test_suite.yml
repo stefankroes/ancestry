@@ -46,10 +46,6 @@ jobs:
         ruby: [3.2, 3.3]
         # additional tests
         include:
-          # EOL 6/2022 (ruby >= 2.2.2, <2.7)
-          - format: materialized_path2
-            activerecord: 52
-            ruby: 2.6
           # EOL 2023
           - format: materialized_path2
             activerecord: 60
@@ -108,7 +104,6 @@ jobs:
           UPDATE_STRATEGY: sql
         run: |
           bundle exec rake
-        if: ${{ matrix.activerecord != 52 }}
       - name: run pg tests (ANCESTRY_COLUMN=ancestry_alt)
         env:
           DB: pg
@@ -123,7 +118,6 @@ jobs:
         run: |
           bundle exec rake
           FORMAT=${{ matrix.format }} UPDATE_STRATEGY=sql bundle exec rake
-        if: ${{ matrix.activerecord != 52 }}
       - name: run mysql tests
         env:
           DB: mysql2
