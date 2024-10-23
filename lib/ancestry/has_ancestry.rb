@@ -13,7 +13,7 @@ module Ancestry
 
       ancestry_format = options[:ancestry_format] || Ancestry.default_ancestry_format
       if ![:materialized_path, :materialized_path2].include?(ancestry_format)
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_format", value: ancestry_format))
+        raise Ancestry::AncestryException, I18n.t("ancestry.unknown_format", value: ancestry_format)
       end
 
       orphan_strategy = options[:orphan_strategy] || :destroy
@@ -62,7 +62,7 @@ module Ancestry
         alias_method :apply_orphan_strategy, orphan_strategy_helper
         before_destroy :apply_orphan_strategy
       elsif orphan_strategy.to_s != "none"
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.invalid_orphan_strategy"))
+        raise Ancestry::AncestryException, I18n.t("ancestry.invalid_orphan_strategy")
       end
 
       # Create ancestry column accessor and set to option or default

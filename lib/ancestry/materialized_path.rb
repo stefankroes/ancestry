@@ -197,7 +197,8 @@ module Ancestry
       # NOTE: This could have been called child_ancestry_in_database
       #       the child records were created from the version in the database
       def child_ancestry
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
+        raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")) if new_record?
+
         [attribute_in_database(self.class.ancestry_column), id].compact.join(self.class.ancestry_delimiter)
       end
 
@@ -207,7 +208,7 @@ module Ancestry
       # This is not valid in a new record's after_save.
       def child_ancestry_before_last_save
         if new_record? || respond_to?(:previously_new_record?) && previously_new_record?
-          raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record"))
+          raise Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")
         end
         [attribute_before_last_save(self.class.ancestry_column), id].compact.join(self.class.ancestry_delimiter)
       end

@@ -4,7 +4,7 @@ module Ancestry
   module InstanceMethods
     # Validate that the ancestors don't include itself
     def ancestry_exclude_self
-      errors.add(:base, I18n.t("ancestry.exclude_self", class_name: self.class.name.humanize)) if ancestor_ids.include? self.id
+      errors.add(:base, I18n.t("ancestry.exclude_self", class_name: self.class.name.humanize)) if ancestor_ids.include?(id)
     end
 
     # Update descendants with new ancestry (after update)
@@ -60,7 +60,7 @@ module Ancestry
     def apply_orphan_strategy_restrict
       return if ancestry_callbacks_disabled? || new_record?
 
-      raise Ancestry::AncestryException.new(I18n.t("ancestry.cannot_delete_descendants")) unless is_childless?
+      raise(Ancestry::AncestryException, I18n.t("ancestry.cannot_delete_descendants")) unless is_childless?
     end
 
     # Touch each of this record's ancestors (after save)

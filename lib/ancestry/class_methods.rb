@@ -18,7 +18,7 @@ module Ancestry
         if [:before_depth, :to_depth, :at_depth, :from_depth, :after_depth].include? scope_name
           scope.send scope_name, depth + relative_depth
         else
-          raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_depth_option", scope_name: scope_name))
+          raise Ancestry::AncestryException, I18n.t("ancestry.unknown_depth_option", scope_name: scope_name)
         end
       end
     end
@@ -216,7 +216,7 @@ module Ancestry
 
     # Rebuild depth cache if it got corrupted or if depth caching was just turned on
     def rebuild_depth_cache!
-      raise Ancestry::AncestryException.new(I18n.t("ancestry.cannot_rebuild_depth_cache")) unless respond_to? :depth_cache_column
+      raise(Ancestry::AncestryException, I18n.t("ancestry.cannot_rebuild_depth_cache")) unless respond_to?(:depth_cache_column)
 
       ancestry_base_class.transaction do
         unscoped_where do |scope|
