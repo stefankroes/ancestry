@@ -1,32 +1,36 @@
+# frozen_string_literal: true
+
 module Ancestry
   module HasAncestry
-    def has_ancestry options = {}
+    def has_ancestry(options = {})
       # Check options
-      raise Ancestry::AncestryException.new(I18n.t("ancestry.option_must_be_hash")) unless options.is_a? Hash
-      options.each do |key, value|
-        unless [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format].include? key
-          raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_option", key: key.inspect, value: value.inspect))
-        end
+      unless options.is_a? Hash
+        raise Ancestry::AncestryException, I18n.t("ancestry.option_must_be_hash")
+      end
+
+      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format]
+      if (key = extra_keys.first)
+        raise Ancestry::AncestryException, I18n.t("ancestry.unknown_option", key: key.inspect, value: options[key].inspect)
       end
 
       ancestry_format = options[:ancestry_format] || Ancestry.default_ancestry_format
       if ![:materialized_path, :materialized_path2].include?(ancestry_format)
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_format", value: ancestry_format))
+        raise Ancestry::AncestryException, I18n.t("ancestry.unknown_format", value: ancestry_format)
       end
 
       orphan_strategy = options[:orphan_strategy] || :destroy
 
       # Create ancestry column accessor and set to option or default
-      self.class_variable_set('@@ancestry_column', options[:ancestry_column] || :ancestry)
+      class_variable_set('@@ancestry_column', options[:ancestry_column] || :ancestry)
       cattr_reader :ancestry_column, instance_reader: false
 
       primary_key_format = options[:primary_key_format].presence || Ancestry.default_primary_key_format
 
-      self.class_variable_set('@@ancestry_delimiter', '/')
+      class_variable_set('@@ancestry_delimiter', '/')
       cattr_reader :ancestry_delimiter, instance_reader: false
 
       # Save self as base class (for STI)
-      self.class_variable_set('@@ancestry_base_class', self)
+      class_variable_set('@@ancestry_base_class', self)
       cattr_reader :ancestry_base_class, instance_reader: false
 
       # Touch ancestors after updating
@@ -41,9 +45,9 @@ module Ancestry
       extend Ancestry::ClassMethods
       extend Ancestry::HasAncestry.ancestry_format_module(ancestry_format)
 
-      attribute self.ancestry_column, default: self.ancestry_root
+      attribute ancestry_column, default: ancestry_root
 
-      validates self.ancestry_column, ancestry_validation_options(primary_key_format)
+      validates ancestry_column, ancestry_validation_options(primary_key_format)
 
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
       include Ancestry::MaterializedPathPg if update_strategy == :sql
@@ -60,7 +64,7 @@ module Ancestry
         alias_method :apply_orphan_strategy, orphan_strategy_helper
         before_destroy :apply_orphan_strategy
       elsif orphan_strategy.to_s != "none"
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.invalid_orphan_strategy"))
+        raise Ancestry::AncestryException, I18n.t("ancestry.invalid_orphan_strategy")
       end
 
       # Create ancestry column accessor and set to option or default
@@ -70,7 +74,7 @@ module Ancestry
         depth_cache_sql = options[:depth_cache_column]&.to_s || 'ancestry_depth'
       elsif options[:cache_depth]
         # Create accessor for column name and set to option or default
-        self.cattr_accessor :depth_cache_column
+        cattr_accessor :depth_cache_column
         self.depth_cache_column =
           if options[:cache_depth] == true
             options[:depth_cache_column]&.to_s || 'ancestry_depth'
@@ -119,6 +123,7 @@ module Ancestry
 
     def acts_as_tree(*args)
       return super if defined?(super)
+
       has_ancestry(*args)
     end
 

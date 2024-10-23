@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative '../environment'
 
 # all class nodes used to look up objects belong here
@@ -64,7 +66,7 @@ class ScopesTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model(:width => 1, :depth => 3) do |model, _roots|
       child = model.last
       assert child
-      assert_nothing_raised do #IrreversibleOrderError
+      assert_nothing_raised do # IrreversibleOrderError
         assert child.ancestors.last
       end
     end
@@ -104,9 +106,9 @@ class ScopesTest < ActiveSupport::TestCase
       model.class_eval do
         define_method :after_create_callback do
           # We don't want to be in the #children scope here when creating the child
-          self.parent
+          parent
           self.parent_id = record.id if record
-          self.root
+          root
         end
       end
 

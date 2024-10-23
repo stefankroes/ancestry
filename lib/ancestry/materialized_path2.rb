@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Ancestry
   # store ancestry as /grandparent_id/parent_id/
   # root: a=/,id=1    children=#{a}#{id}/% == /1/%
@@ -47,7 +49,7 @@ module Ancestry
     # module method
     def self.construct_depth_sql(table_name, ancestry_column, ancestry_delimiter)
       tmp = %{(LENGTH(#{table_name}.#{ancestry_column}) - LENGTH(REPLACE(#{table_name}.#{ancestry_column},'#{ancestry_delimiter}','')))}
-      tmp = tmp + "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
+      tmp += "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
       "(#{tmp} -1)"
     end
 
@@ -64,15 +66,17 @@ module Ancestry
     module InstanceMethods
       # Please see notes for MaterializedPath#child_ancestry
       def child_ancestry
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
+        raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")) if new_record?
+
         "#{attribute_in_database(self.class.ancestry_column)}#{id}#{self.class.ancestry_delimiter}"
       end
 
       # Please see notes for MaterializedPath#child_ancestry_before_last_save
       def child_ancestry_before_last_save
-        if new_record? || respond_to?(:previously_new_record?) && previously_new_record?
-          raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record"))
+        if new_record? || (respond_to?(:previously_new_record?) && previously_new_record?)
+          raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record"))
         end
+
         "#{attribute_before_last_save(self.class.ancestry_column)}#{id}#{self.class.ancestry_delimiter}"
       end
     end

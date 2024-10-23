@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 module Ancestry
   module InstanceMethods
     # Validate that the ancestors don't include itself
     def ancestry_exclude_self
-      errors.add(:base, I18n.t("ancestry.exclude_self", class_name: self.class.name.humanize)) if ancestor_ids.include? self.id
+      errors.add(:base, I18n.t("ancestry.exclude_self", class_name: self.class.name.humanize)) if ancestor_ids.include?(id)
     end
 
     # Update descendants with new ancestry (after update)
@@ -49,7 +51,7 @@ module Ancestry
 
       descendants.each do |descendant|
         descendant.without_ancestry_callbacks do
-          descendant.update_attribute :ancestor_ids, (descendant.ancestor_ids.delete_if { |x| x == self.id })
+          descendant.update_attribute :ancestor_ids, (descendant.ancestor_ids.delete_if { |x| x == id })
         end
       end
     end
@@ -58,7 +60,7 @@ module Ancestry
     def apply_orphan_strategy_restrict
       return if ancestry_callbacks_disabled? || new_record?
 
-      raise Ancestry::AncestryException.new(I18n.t("ancestry.cannot_delete_descendants")) unless is_childless?
+      raise(Ancestry::AncestryException, I18n.t("ancestry.cannot_delete_descendants")) unless is_childless?
     end
 
     # Touch each of this record's ancestors (after save)
@@ -93,7 +95,7 @@ module Ancestry
     def update_parent_counter_cache
       return unless saved_change_to_attribute?(self.class.ancestry_column)
 
-      if parent_id_was = parent_id_before_last_save
+      if (parent_id_was = parent_id_before_last_save)
         self.class.ancestry_base_class.decrement_counter counter_cache_column, parent_id_was
       end
 
@@ -105,13 +107,13 @@ module Ancestry
     def has_parent?
       ancestor_ids.present?
     end
-    alias :ancestors? :has_parent?
+    alias ancestors? has_parent?
 
     def ancestry_changed?
       column = self.class.ancestry_column.to_s
-        # These methods return nil if there are no changes.
-        # This was fixed in a refactoring in rails 6.0: https://github.com/rails/rails/pull/35933
-        !!(will_save_change_to_attribute?(column) || saved_change_to_attribute?(column))
+      # These methods return nil if there are no changes.
+      # This was fixed in a refactoring in rails 6.0: https://github.com/rails/rails/pull/35933
+      !!(will_save_change_to_attribute?(column) || saved_change_to_attribute?(column))
     end
 
     def sane_ancestor_ids?
@@ -131,8 +133,9 @@ module Ancestry
       self.validation_context = current_context
     end
 
-    def ancestors depth_options = {}
+    def ancestors(depth_options = {})
       return self.class.ancestry_base_class.none unless has_parent?
+
       self.class.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.ancestors_of(self)
     end
 
@@ -148,7 +151,7 @@ module Ancestry
       ancestor_ids_in_database + [id]
     end
 
-    def path depth_options = {}
+    def path(depth_options = {})
       self.class.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.inpath_of(self)
     end
 
@@ -161,25 +164,25 @@ module Ancestry
     end
 
     def ancestor_of?(node)
-      node.ancestor_ids.include?(self.id)
+      node.ancestor_ids.include?(id)
     end
 
     # Parent
 
     # currently parent= does not work in after save callbacks
     # assuming that parent hasn't changed
-    def parent= parent
+    def parent=(parent)
       self.ancestor_ids = parent ? parent.path_ids : []
     end
 
-    def parent_id= new_parent_id
+    def parent_id=(new_parent_id)
       self.parent = new_parent_id.present? ? unscoped_find(new_parent_id) : nil
     end
 
     def parent_id
       ancestor_ids.last if has_parent?
     end
-    alias :parent_id? :ancestors?
+    alias parent_id? ancestors?
 
     def parent
       if has_parent?
@@ -190,7 +193,7 @@ module Ancestry
     end
 
     def parent_of?(node)
-      self.id == node.parent_id
+      id == node.parent_id
     end
 
     # Root
@@ -210,10 +213,10 @@ module Ancestry
     def is_root?
       !has_parent?
     end
-    alias :root? :is_root?
+    alias root? is_root?
 
     def root_of?(node)
-      self.id == node.root_id
+      id == node.root_id
     end
 
     # Children
@@ -227,7 +230,7 @@ module Ancestry
     end
 
     def has_children?
-      self.children.exists?
+      children.exists?
     end
     alias_method :children?, :has_children?
 
@@ -237,7 +240,7 @@ module Ancestry
     alias_method :childless?, :is_childless?
 
     def child_of?(node)
-      self.parent_id == node.id
+      parent_id == node.id
     end
 
     # Siblings
@@ -252,7 +255,7 @@ module Ancestry
     end
 
     def has_siblings?
-      self.siblings.count > 1
+      siblings.count > 1
     end
     alias_method :siblings?, :has_siblings?
 
@@ -262,16 +265,16 @@ module Ancestry
     alias_method :only_child?, :is_only_child?
 
     def sibling_of?(node)
-      self.ancestor_ids == node.ancestor_ids
+      ancestor_ids == node.ancestor_ids
     end
 
     # Descendants
 
-    def descendants depth_options = {}
+    def descendants(depth_options = {})
       self.class.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).descendants_of(self)
     end
 
-    def descendant_ids depth_options = {}
+    def descendant_ids(depth_options = {})
       descendants(depth_options).pluck(self.class.primary_key)
     end
 
@@ -281,11 +284,11 @@ module Ancestry
 
     # Indirects
 
-    def indirects depth_options = {}
+    def indirects(depth_options = {})
       self.class.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).indirects_of(self)
     end
 
-    def indirect_ids depth_options = {}
+    def indirect_ids(depth_options = {})
       indirects(depth_options).pluck(self.class.primary_key)
     end
 
@@ -295,11 +298,11 @@ module Ancestry
 
     # Subtree
 
-    def subtree depth_options = {}
+    def subtree(depth_options = {})
       self.class.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).subtree_of(self)
     end
 
-    def subtree_ids depth_options = {}
+    def subtree_ids(depth_options = {})
       subtree(depth_options).pluck(self.class.primary_key)
     end
 
@@ -324,33 +327,31 @@ module Ancestry
 
     def unscoped_descendants
       unscoped_where do |scope|
-        scope.where self.class.ancestry_base_class.descendant_conditions(self)
+        scope.where(self.class.ancestry_base_class.descendant_conditions(self))
       end
     end
 
     def unscoped_descendants_before_last_save
       unscoped_where do |scope|
-        scope.where self.class.ancestry_base_class.descendant_before_last_save_conditions(self)
+        scope.where(self.class.ancestry_base_class.descendant_before_last_save_conditions(self))
       end
     end
 
     # works with after save context (hence before_last_save)
     def unscoped_current_and_previous_ancestors
       unscoped_where do |scope|
-        scope.where scope.primary_key => (ancestor_ids + ancestor_ids_before_last_save).uniq
+        scope.where(scope.primary_key => (ancestor_ids + ancestor_ids_before_last_save).uniq)
       end
     end
 
-    def unscoped_find id
+    def unscoped_find(id)
       unscoped_where do |scope|
-        scope.find id
+        scope.find(id)
       end
     end
 
-    def unscoped_where
-      self.class.ancestry_base_class.unscoped_where do |scope|
-        yield scope
-      end
+    def unscoped_where(&block)
+      self.class.ancestry_base_class.unscoped_where(&block)
     end
   end
 end

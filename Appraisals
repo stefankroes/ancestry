@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # on a mac using:
 # bundle config --global build.mysql2 "--with-mysql-dir=$(brew --prefix mysql)"
 

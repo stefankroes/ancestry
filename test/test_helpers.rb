@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module TestHelpers
   def assert_ancestry(node, value, child: :skip, db: :value)
     column_name = node.class.ancestry_column

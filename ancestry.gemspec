@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 lib = File.expand_path('../lib/', __FILE__)
-$:.unshift lib unless $:.include?(lib)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'ancestry/version'
 
 Gem::Specification.new do |s|
@@ -22,6 +24,7 @@ EOF
     "changelog_uri" => "https://github.com/stefankroes/ancestry/blob/master/CHANGELOG.md",
     "source_code_uri" => "https://github.com/stefankroes/ancestry/",
     "bug_tracker_uri" => "https://github.com/stefankroes/ancestry/issues",
+    "rubygems_mfa_required" => "true"
   }
   s.version = Ancestry::VERSION
 
@@ -30,19 +33,19 @@ EOF
   s.homepage = 'https://github.com/stefankroes/ancestry'
   s.license  = 'MIT'
 
-  s.files = Dir[ 
+  s.files = Dir[
     "{lib}/**/*",
     'CHANGELOG.md',
     'MIT-LICENSE',
     'README.md'
   ]
   s.require_paths = ["lib"]
-  
-  s.required_ruby_version     = '>= 2.5'
+
+  s.required_ruby_version = '>= 2.5'
   s.add_runtime_dependency 'activerecord', '>= 5.2.6'
   s.add_development_dependency 'appraisal'
   s.add_development_dependency 'minitest'
-  s.add_development_dependency 'rake',      '~> 13.0'
+  s.add_development_dependency 'rake', '~> 13.0'
   s.add_development_dependency 'simplecov'
   s.add_development_dependency 'yard'
 end

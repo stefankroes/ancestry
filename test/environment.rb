@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rubygems'
 require 'bundler/setup'
 
@@ -24,7 +26,7 @@ class AncestryTestDatabase
   def self.setup
     # Silence I18n and Activerecord logging
     I18n.enforce_available_locales = false if I18n.respond_to? :enforce_available_locales=
-    ActiveRecord::Base.logger = Logger.new(STDERR)
+    ActiveRecord::Base.logger = Logger.new($stderr)
     ActiveRecord::Base.logger.level = Logger::Severity::UNKNOWN
 
     # Assume Travis CI database config if no custom one exists
@@ -35,14 +37,15 @@ class AncestryTestDatabase
                end
 
     # Setup database connection
-    all_config = if YAML.respond_to?(:safe_load_file)
-      YAML.safe_load_file(filename, aliases: true)
-    else
-      YAML.load_file(filename)
-    end
+    all_config =
+      if YAML.respond_to?(:safe_load_file)
+        YAML.safe_load_file(filename, aliases: true)
+      else
+        YAML.load_file(filename)
+      end
     config = all_config[db_type]
     if config.blank?
-      $stderr.puts "","","ERROR: Could not find '#{db_type}' in #{filename}"
+      $stderr.puts "", "", "ERROR: Could not find '#{db_type}' in #{filename}"
       $stderr.puts "Pick from: #{all_config.keys.join(", ")}", "", ""
       exit(1)
     end
@@ -59,13 +62,12 @@ class AncestryTestDatabase
 
       puts "testing #{db_type} #{Ancestry.default_update_strategy == :sql ? "(sql) " : ""}(with #{column_type} #{ancestry_column})"
       puts "column format: #{Ancestry.default_ancestry_format} options: #{column_options.inspect}"
-
-    rescue => err
+    rescue StandardError => e
       if ENV["CI"]
         raise
       else
         puts "\nSkipping tests for '#{db_type}'"
-        puts "  #{err}\n\n"
+        puts "  #{e}\n\n"
         exit 0
       end
     end
@@ -102,18 +104,18 @@ class AncestryTestDatabase
       if column_type == "string"
         {
           :collation => ancestry_collation == "default" ? nil : ancestry_collation,
-          :null  => materialized_path2? ? false : true
+          :null  => !materialized_path2?
         }
       else
         {
           :limit => 3000,
-          :null  => materialized_path2? ? false : true
+          :null  => !materialized_path2?
         }
       end
     force_allow_nil ? @column_options.merge(:null => true) : @column_options
   end
 
-  def self.with_model options = {}
+  def self.with_model(options = {})
     depth                = options.delete(:depth) || 0
     width                = options.delete(:width) || 0
     skip_ancestry        = options.delete(:skip_ancestry)
@@ -121,7 +123,7 @@ class AncestryTestDatabase
     default_scope_params = options.delete(:default_scope_params)
 
     options[:ancestry_column] ||= ancestry_column
-    table_options={}
+    table_options = {}
     table_options[:id] = options.delete(:id) if options.key?(:id)
 
     ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
@@ -145,13 +147,13 @@ class AncestryTestDatabase
         table.integer counter_cache_column, default: 0, null: false
       end
 
-      extra_columns.each do |name, type|
+      extra_columns&.each do |name, type|
         table.send type, name
-      end unless extra_columns.nil?
+      end
     end
 
     testmethod = caller[0][/`.*'/][1..-2]
-    model_name = testmethod.camelize + "TestNode"
+    model_name = "#{testmethod.camelize}TestNode"
 
     begin
       model = Class.new(ActiveRecord::Base)
@@ -177,13 +179,15 @@ class AncestryTestDatabase
     end
   end
 
-  def self.create_test_nodes model, depth, width, parent = nil
-    unless depth == 0
+  def self.create_test_nodes(model, depth, width, parent = nil)
+    if depth == 0
+      []
+    else
       Array.new width do
         node = model.create!(:parent => parent)
         [node, create_test_nodes(model, depth - 1, width, node)]
       end
-    else; []; end
+    end
   end
 
   def self.postgres?
@@ -192,9 +196,9 @@ class AncestryTestDatabase
 
   def self.materialized_path2?
     return @materialized_path2 if defined?(@materialized_path2)
+
     @materialized_path2 = (ENV["FORMAT"] == "materialized_path2")
   end
-  private
 
   def self.db_type
     ENV["DB"].presence || "sqlite3"

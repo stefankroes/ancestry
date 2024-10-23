@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Ancestry
   # store ancestry as grandparent_id/parent_id
   # root a=nil,id=1   children=id,id/%      == 1, 1/%
@@ -114,6 +116,7 @@ module Ancestry
 
     def parse_ancestry_column(obj)
       return [] if obj.nil? || obj == ancestry_root
+
       obj_ids = obj.split(ancestry_delimiter).delete_if(&:blank?)
       primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
     end
@@ -132,7 +135,7 @@ module Ancestry
 
     def self.construct_depth_sql(table_name, ancestry_column, ancestry_delimiter)
       tmp = %{(LENGTH(#{table_name}.#{ancestry_column}) - LENGTH(REPLACE(#{table_name}.#{ancestry_column},'#{ancestry_delimiter}','')))}
-      tmp = tmp + "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
+      tmp += "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
       "(CASE WHEN #{table_name}.#{ancestry_column} IS NULL THEN 0 ELSE 1 + #{tmp} END)"
     end
 
@@ -140,7 +143,7 @@ module Ancestry
 
     def ancestry_validation_options(ancestry_primary_key_format)
       {
-        format: { with: ancestry_format_regexp(ancestry_primary_key_format) },
+        format: {with: ancestry_format_regexp(ancestry_primary_key_format)},
         allow_nil: ancestry_nil_allowed?
       }
     end
@@ -158,7 +161,7 @@ module Ancestry
       def ancestors?
         read_attribute(self.class.ancestry_column) != self.class.ancestry_root
       end
-      alias :has_parent? :ancestors?
+      alias has_parent? ancestors?
 
       def ancestor_ids=(value)
         write_attribute(self.class.ancestry_column, self.class.generate_ancestry(value))
@@ -186,7 +189,7 @@ module Ancestry
 
       # optimization - better to go directly to column and avoid parsing
       def sibling_of?(node)
-        self.read_attribute(self.class.ancestry_column) == node.read_attribute(node.class.ancestry_column)
+        read_attribute(self.class.ancestry_column) == node.read_attribute(node.class.ancestry_column)
       end
 
       # The ancestry value for this record's children
@@ -195,7 +198,8 @@ module Ancestry
       # NOTE: This could have been called child_ancestry_in_database
       #       the child records were created from the version in the database
       def child_ancestry
-        raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record")) if new_record?
+        raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")) if new_record?
+
         [attribute_in_database(self.class.ancestry_column), id].compact.join(self.class.ancestry_delimiter)
       end
 
@@ -204,9 +208,10 @@ module Ancestry
       # to find the old children and bring them along (or to )
       # This is not valid in a new record's after_save.
       def child_ancestry_before_last_save
-        if new_record? || respond_to?(:previously_new_record?) && previously_new_record?
-          raise Ancestry::AncestryException.new(I18n.t("ancestry.no_child_for_new_record"))
+        if new_record? || (respond_to?(:previously_new_record?) && previously_new_record?)
+          raise Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")
         end
+
         [attribute_before_last_save(self.class.ancestry_column), id].compact.join(self.class.ancestry_delimiter)
       end
     end

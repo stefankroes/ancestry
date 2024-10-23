@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'ancestry/version'
 require_relative 'ancestry/class_methods'
 require_relative 'ancestry/instance_methods'
@@ -8,7 +10,7 @@ require_relative 'ancestry/materialized_path2'
 require_relative 'ancestry/materialized_path_pg'
 
 I18n.load_path += Dir[File.join(File.expand_path(File.dirname(__FILE__)),
-                                 'ancestry', 'locales', '*.{rb,yml}').to_s]
+                                'ancestry', 'locales', '*.{rb,yml}').to_s]
 
 module Ancestry
   @@default_update_strategy = :ruby

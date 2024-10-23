@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative '../environment'
 
 class SortByAncestryTest < ActiveSupport::TestCase
@@ -5,7 +7,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
   # This highlights where/why a non-correct sorting order is returned
   CORRECT = (ENV["CORRECT"] == "true")
 
-  RANK_SORT = -> (a, b) { a.rank <=> b.rank }
+  RANK_SORT = ->(a, b) { a.rank <=> b.rank }
 
   # tree is of the form:
   #   - n1
@@ -17,7 +19,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
   # @returns [Array<model>] list of nodes
   def build_tree(model)
     # inflate the node id to test id wrap around edge cases
-    ENV["NODES"].to_i.times { model.create!.destroy } if ENV["NODES"]
+    ENV["NODES"]&.to_i&.times { model.create!.destroy }
 
     n1 = model.create!
     n2 = model.create!(:parent => n1)
@@ -57,7 +59,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
   end
 
   # TODO: thinking about dropping this one
-  # only keep if we can find a 
+  # only keep if we can find a way to sort in the db
   def test_sort_by_ancestry_no_parents_same_level
     AncestryTestDatabase.with_model do |model|
       _, _, n3, n4, n5, _ = build_tree(model)
@@ -116,7 +118,7 @@ class SortByAncestryTest < ActiveSupport::TestCase
   def build_ranked_tree(model)
     # inflate the node id to test id wrap around edge cases
     # NODES=4..9 seem like edge cases
-    ENV["NODES"].to_i.times { model.create!.destroy } if ENV["NODES"]
+    ENV["NODES"]&.to_i&.times { model.create!.destroy }
 
     n1 = model.create!(:rank => 0)
     n2 = model.create!(:rank => 1)

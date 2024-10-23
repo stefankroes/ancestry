@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative '../environment'
 
 class StiSupportTest < ActiveSupport::TestCase
@@ -65,7 +67,7 @@ class StiSupportTest < ActiveSupport::TestCase
 
   def test_sti_support_for_counter_cache
     AncestryTestDatabase.with_model :counter_cache => true, :extra_columns => {:type => :string} do |model|
-      # NOTE had to use subclasses other than Subclass1/Subclass2 from above
+      # NOTE: had to use subclasses other than Subclass1/Subclass2 from above
       # due to (I think) Rails caching those STI classes and that not getting
       # reset between specs
 

@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 module Ancestry
   module ClassMethods
     # Fetch tree node if necessary
-    def to_node object
+    def to_node(object)
       if object.is_a?(ancestry_base_class)
         object
       else
@@ -10,13 +12,13 @@ module Ancestry
     end
 
     # Scope on relative depth options
-    def scope_depth depth_options, depth
+    def scope_depth(depth_options, depth)
       depth_options.inject(ancestry_base_class) do |scope, option|
         scope_name, relative_depth = option
         if [:before_depth, :to_depth, :at_depth, :from_depth, :after_depth].include? scope_name
           scope.send scope_name, depth + relative_depth
         else
-          raise Ancestry::AncestryException.new(I18n.t("ancestry.unknown_depth_option", scope_name: scope_name))
+          raise Ancestry::AncestryException, I18n.t("ancestry.unknown_depth_option", scope_name: scope_name)
         end
       end
     end
@@ -27,11 +29,11 @@ module Ancestry
     # To order your hashes pass the order to the arrange method instead of to the scope
 
     # Get all nodes and sort them into an empty hash
-    def arrange options = {}
+    def arrange(options = {})
       if (order = options.delete(:order))
-        arrange_nodes ancestry_base_class.order(order).where(options)
+        arrange_nodes(ancestry_base_class.order(order).where(options))
       else
-        arrange_nodes ancestry_base_class.where(options)
+        arrange_nodes(ancestry_base_class.where(options))
       end
     end
 
@@ -63,10 +65,10 @@ module Ancestry
       nodes
     end
 
-     # Arrangement to nested array for serialization
-     # You can also supply your own serialization logic using blocks
-     # also allows you to pass the order just as you can pass it to the arrange method
-    def arrange_serializable options={}, nodes=nil, &block
+    # Arrangement to nested array for serialization
+    # You can also supply your own serialization logic using blocks
+    # also allows you to pass the order just as you can pass it to the arrange method
+    def arrange_serializable(options = {}, nodes = nil, &block)
       nodes = arrange(options) if nodes.nil?
       nodes.map do |parent, children|
         if block_given?
@@ -78,13 +80,13 @@ module Ancestry
     end
 
     def tree_view(column, data = nil)
-      data = arrange unless data
+      data ||= arrange
       data.each do |parent, children|
         if parent.depth == 0
           puts parent[column]
         else
           num = parent.depth - 1
-          indent = "   "*num
+          indent = "   " * num
           puts " #{"|" if parent.depth > 1}#{indent}|_ #{parent[column]}"
         end
         tree_view(column, children) if children
@@ -93,7 +95,7 @@ module Ancestry
 
     # Pseudo-preordered array of nodes.  Children will always follow parents,
     # This is deterministic unless the parents are missing *and* a sort block is specified
-    def sort_by_ancestry(nodes, &block)
+    def sort_by_ancestry(nodes)
       arranged = nodes if nodes.is_a?(Hash)
 
       unless arranged
@@ -113,47 +115,42 @@ module Ancestry
     # compromised tree integrity is unlikely without explicitly setting cyclic parents or invalid ancestry and circumventing validation
     # just in case, raise an AncestryIntegrityException if issues are detected
     # specify :report => :list to return an array of exceptions or :report => :echo to echo any error messages
-    def check_ancestry_integrity! options = {}
+    def check_ancestry_integrity!(options = {})
       parents = {}
       exceptions = [] if options[:report] == :list
 
       unscoped_where do |scope|
         # For each node ...
         scope.find_each do |node|
-          begin
-            # ... check validity of ancestry column
-            if !node.sane_ancestor_ids?
-              raise Ancestry::AncestryIntegrityException.new(I18n.t("ancestry.invalid_ancestry_column",
-                                                                    :node_id => node.id,
-                                                                    :ancestry_column => "#{node.read_attribute node.class.ancestry_column}"
-                                                                    ))
+          # ... check validity of ancestry column
+          if !node.sane_ancestor_ids?
+            raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.invalid_ancestry_column",
+                                                               :node_id => node.id,
+                                                               :ancestry_column => node.read_attribute(node.class.ancestry_column))
+          end
+          # ... check that all ancestors exist
+          node.ancestor_ids.each do |ancestor_id|
+            unless exists?(ancestor_id)
+              raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.reference_nonexistent_node",
+                                                                 :node_id => node.id,
+                                                                 :ancestor_id => ancestor_id)
             end
-            # ... check that all ancestors exist
-            node.ancestor_ids.each do |ancestor_id|
-              unless exists? ancestor_id
-                raise Ancestry::AncestryIntegrityException.new(I18n.t("ancestry.reference_nonexistent_node",
-                                                                      :node_id => node.id,
-                                                                      :ancestor_id => ancestor_id
-                                                                      ))
-              end
+          end
+          # ... check that all node parents are consistent with values observed earlier
+          node.path_ids.zip([nil] + node.path_ids).each do |node_id, parent_id|
+            parents[node_id] = parent_id unless parents.key?(node_id)
+            unless parents[node_id] == parent_id
+              raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.conflicting_parent_id",
+                                                                 :node_id => node_id,
+                                                                 :parent_id => parent_id || 'nil',
+                                                                 :expected => parents[node_id] || 'nil')
             end
-            # ... check that all node parents are consistent with values observed earlier
-            node.path_ids.zip([nil] + node.path_ids).each do |node_id, parent_id|
-              parents[node_id] = parent_id unless parents.has_key? node_id
-              unless parents[node_id] == parent_id
-                raise Ancestry::AncestryIntegrityException.new(I18n.t("ancestry.conflicting_parent_id",
-                                                                      :node_id => node_id,
-                                                                      :parent_id => parent_id || 'nil',
-                                                                      :expected => parents[node_id] || 'nil'
-                                                                      ))
-              end
-            end
-          rescue Ancestry::AncestryIntegrityException => integrity_exception
-            case options[:report]
-              when :list then exceptions << integrity_exception
-              when :echo then puts integrity_exception
-              else raise integrity_exception
-            end
+          end
+        rescue Ancestry::AncestryIntegrityException => e
+          case options[:report]
+          when :list then exceptions << e
+          when :echo then puts e
+          else raise e
           end
         end
       end
@@ -201,7 +198,7 @@ module Ancestry
     end
 
     # Build ancestry from parent ids for migration purposes
-    def build_ancestry_from_parent_ids! column=:parent_id, parent_id = nil, ancestor_ids = []
+    def build_ancestry_from_parent_ids!(column = :parent_id, parent_id = nil, ancestor_ids = [])
       unscoped_where do |scope|
         scope.where(column => parent_id).find_each do |node|
           node.without_ancestry_callbacks do
@@ -214,7 +211,7 @@ module Ancestry
 
     # Rebuild depth cache if it got corrupted or if depth caching was just turned on
     def rebuild_depth_cache!
-      raise Ancestry::AncestryException.new(I18n.t("ancestry.cannot_rebuild_depth_cache")) unless respond_to? :depth_cache_column
+      raise(Ancestry::AncestryException, I18n.t("ancestry.cannot_rebuild_depth_cache")) unless respond_to?(:depth_cache_column)
 
       ancestry_base_class.transaction do
         unscoped_where do |scope|
@@ -232,7 +229,7 @@ module Ancestry
     end
 
     def rebuild_counter_cache!
-     if %w(mysql mysql2).include?(connection.adapter_name.downcase)
+      if %w(mysql mysql2).include?(connection.adapter_name.downcase)
         connection.execute %{
           UPDATE #{table_name} AS dest
           LEFT JOIN (
