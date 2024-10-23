@@ -225,6 +225,7 @@ class TreeNavigationTest < ActiveSupport::TestCase
   # please create PR or issue if you have a better idea
   def test_node_before_last_save
     AncestryTestDatabase.with_model do |model|
+      assert true, "this runs for integer primary keys"
       skip "only written for integer keys" unless model.primary_key_is_an_integer?
       model.delete_all
 
