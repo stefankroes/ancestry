@@ -189,7 +189,7 @@ module Ancestry
 
       # optimization - better to go directly to column and avoid parsing
       def sibling_of?(node)
-        self.read_attribute(self.class.ancestry_column) == node.read_attribute(node.class.ancestry_column)
+        read_attribute(self.class.ancestry_column) == node.read_attribute(node.class.ancestry_column)
       end
 
       # The ancestry value for this record's children

@@ -122,40 +122,35 @@ module Ancestry
       unscoped_where do |scope|
         # For each node ...
         scope.find_each do |node|
-          begin
-            # ... check validity of ancestry column
-            if !node.sane_ancestor_ids?
-              raise Ancestry::AncestryIntegrityException.new(I18n.t("ancestry.invalid_ancestry_column",
-                                                                    :node_id => node.id,
-                                                                    :ancestry_column => "#{node.read_attribute node.class.ancestry_column}"
-                                                                    ))
+          # ... check validity of ancestry column
+          if !node.sane_ancestor_ids?
+            raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.invalid_ancestry_column",
+                                                               :node_id => node.id,
+                                                               :ancestry_column => node.read_attribute(node.class.ancestry_column))
+          end
+          # ... check that all ancestors exist
+          node.ancestor_ids.each do |ancestor_id|
+            unless exists?(ancestor_id)
+              raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.reference_nonexistent_node",
+                                                                 :node_id => node.id,
+                                                                 :ancestor_id => ancestor_id)
             end
-            # ... check that all ancestors exist
-            node.ancestor_ids.each do |ancestor_id|
-              unless exists? ancestor_id
-                raise Ancestry::AncestryIntegrityException.new(I18n.t("ancestry.reference_nonexistent_node",
-                                                                      :node_id => node.id,
-                                                                      :ancestor_id => ancestor_id
-                                                                      ))
-              end
+          end
+          # ... check that all node parents are consistent with values observed earlier
+          node.path_ids.zip([nil] + node.path_ids).each do |node_id, parent_id|
+            parents[node_id] = parent_id unless parents.key?(node_id)
+            unless parents[node_id] == parent_id
+              raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.conflicting_parent_id",
+                                                                 :node_id => node_id,
+                                                                 :parent_id => parent_id || 'nil',
+                                                                 :expected => parents[node_id] || 'nil')
             end
-            # ... check that all node parents are consistent with values observed earlier
-            node.path_ids.zip([nil] + node.path_ids).each do |node_id, parent_id|
-              parents[node_id] = parent_id unless parents.has_key? node_id
-              unless parents[node_id] == parent_id
-                raise Ancestry::AncestryIntegrityException.new(I18n.t("ancestry.conflicting_parent_id",
-                                                                      :node_id => node_id,
-                                                                      :parent_id => parent_id || 'nil',
-                                                                      :expected => parents[node_id] || 'nil'
-                                                                      ))
-              end
-            end
-          rescue Ancestry::AncestryIntegrityException => integrity_exception
-            case options[:report]
-              when :list then exceptions << integrity_exception
-              when :echo then puts integrity_exception
-              else raise integrity_exception
-            end
+          end
+        rescue Ancestry::AncestryIntegrityException => e
+          case options[:report]
+          when :list then exceptions << e
+          when :echo then puts e
+          else raise e
           end
         end
       end
@@ -234,7 +229,7 @@ module Ancestry
     end
 
     def rebuild_counter_cache!
-     if %w(mysql mysql2).include?(connection.adapter_name.downcase)
+      if %w(mysql mysql2).include?(connection.adapter_name.downcase)
         connection.execute %{
           UPDATE #{table_name} AS dest
           LEFT JOIN (
