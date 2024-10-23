@@ -3,7 +3,7 @@
 module Ancestry
   module ClassMethods
     # Fetch tree node if necessary
-    def to_node object
+    def to_node(object)
       if object.is_a?(ancestry_base_class)
         object
       else
@@ -12,7 +12,7 @@ module Ancestry
     end
 
     # Scope on relative depth options
-    def scope_depth depth_options, depth
+    def scope_depth(depth_options, depth)
       depth_options.inject(ancestry_base_class) do |scope, option|
         scope_name, relative_depth = option
         if [:before_depth, :to_depth, :at_depth, :from_depth, :after_depth].include? scope_name
@@ -29,11 +29,11 @@ module Ancestry
     # To order your hashes pass the order to the arrange method instead of to the scope
 
     # Get all nodes and sort them into an empty hash
-    def arrange options = {}
+    def arrange(options = {})
       if (order = options.delete(:order))
-        arrange_nodes ancestry_base_class.order(order).where(options)
+        arrange_nodes(ancestry_base_class.order(order).where(options))
       else
-        arrange_nodes ancestry_base_class.where(options)
+        arrange_nodes(ancestry_base_class.where(options))
       end
     end
 
@@ -65,10 +65,10 @@ module Ancestry
       nodes
     end
 
-     # Arrangement to nested array for serialization
-     # You can also supply your own serialization logic using blocks
-     # also allows you to pass the order just as you can pass it to the arrange method
-    def arrange_serializable options={}, nodes=nil, &block
+    # Arrangement to nested array for serialization
+    # You can also supply your own serialization logic using blocks
+    # also allows you to pass the order just as you can pass it to the arrange method
+    def arrange_serializable(options = {}, nodes = nil, &block)
       nodes = arrange(options) if nodes.nil?
       nodes.map do |parent, children|
         if block_given?
@@ -95,7 +95,7 @@ module Ancestry
 
     # Pseudo-preordered array of nodes.  Children will always follow parents,
     # This is deterministic unless the parents are missing *and* a sort block is specified
-    def sort_by_ancestry(nodes, &block)
+    def sort_by_ancestry(nodes)
       arranged = nodes if nodes.is_a?(Hash)
 
       unless arranged
@@ -115,7 +115,7 @@ module Ancestry
     # compromised tree integrity is unlikely without explicitly setting cyclic parents or invalid ancestry and circumventing validation
     # just in case, raise an AncestryIntegrityException if issues are detected
     # specify :report => :list to return an array of exceptions or :report => :echo to echo any error messages
-    def check_ancestry_integrity! options = {}
+    def check_ancestry_integrity!(options = {})
       parents = {}
       exceptions = [] if options[:report] == :list
 
@@ -203,7 +203,7 @@ module Ancestry
     end
 
     # Build ancestry from parent ids for migration purposes
-    def build_ancestry_from_parent_ids! column=:parent_id, parent_id = nil, ancestor_ids = []
+    def build_ancestry_from_parent_ids!(column = :parent_id, parent_id = nil, ancestor_ids = [])
       unscoped_where do |scope|
         scope.where(column => parent_id).find_each do |node|
           node.without_ancestry_callbacks do

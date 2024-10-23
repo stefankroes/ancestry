@@ -116,6 +116,7 @@ module Ancestry
 
     def parse_ancestry_column(obj)
       return [] if obj.nil? || obj == ancestry_root
+
       obj_ids = obj.split(ancestry_delimiter).delete_if(&:blank?)
       primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
     end
@@ -142,7 +143,7 @@ module Ancestry
 
     def ancestry_validation_options(ancestry_primary_key_format)
       {
-        format: { with: ancestry_format_regexp(ancestry_primary_key_format) },
+        format: {with: ancestry_format_regexp(ancestry_primary_key_format)},
         allow_nil: ancestry_nil_allowed?
       }
     end
@@ -207,9 +208,10 @@ module Ancestry
       # to find the old children and bring them along (or to )
       # This is not valid in a new record's after_save.
       def child_ancestry_before_last_save
-        if new_record? || respond_to?(:previously_new_record?) && previously_new_record?
+        if new_record? || (respond_to?(:previously_new_record?) && previously_new_record?)
           raise Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")
         end
+
         [attribute_before_last_save(self.class.ancestry_column), id].compact.join(self.class.ancestry_delimiter)
       end
     end

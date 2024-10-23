@@ -2,7 +2,7 @@
 
 module Ancestry
   module HasAncestry
-    def has_ancestry options = {}
+    def has_ancestry(options = {})
       # Check options
       raise Ancestry::AncestryException.new(I18n.t("ancestry.option_must_be_hash")) unless options.is_a? Hash
       options.each do |key, value|

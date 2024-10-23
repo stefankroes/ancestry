@@ -61,13 +61,12 @@ class AncestryTestDatabase
 
       puts "testing #{db_type} #{Ancestry.default_update_strategy == :sql ? "(sql) " : ""}(with #{column_type} #{ancestry_column})"
       puts "column format: #{Ancestry.default_ancestry_format} options: #{column_options.inspect}"
-
-    rescue => err
+    rescue => e
       if ENV["CI"]
         raise
       else
         puts "\nSkipping tests for '#{db_type}'"
-        puts "  #{err}\n\n"
+        puts "  #{e}\n\n"
         exit 0
       end
     end
@@ -115,7 +114,7 @@ class AncestryTestDatabase
     force_allow_nil ? @column_options.merge(:null => true) : @column_options
   end
 
-  def self.with_model options = {}
+  def self.with_model(options = {})
     depth                = options.delete(:depth) || 0
     width                = options.delete(:width) || 0
     skip_ancestry        = options.delete(:skip_ancestry)
@@ -123,7 +122,7 @@ class AncestryTestDatabase
     default_scope_params = options.delete(:default_scope_params)
 
     options[:ancestry_column] ||= ancestry_column
-    table_options={}
+    table_options = {}
     table_options[:id] = options.delete(:id) if options.key?(:id)
 
     ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
@@ -179,13 +178,15 @@ class AncestryTestDatabase
     end
   end
 
-  def self.create_test_nodes model, depth, width, parent = nil
-    unless depth == 0
+  def self.create_test_nodes(model, depth, width, parent = nil)
+    if depth == 0
+      []
+    else
       Array.new width do
         node = model.create!(:parent => parent)
         [node, create_test_nodes(model, depth - 1, width, node)]
       end
-    else; []; end
+    end
   end
 
   def self.postgres?
@@ -194,10 +195,9 @@ class AncestryTestDatabase
 
   def self.materialized_path2?
     return @materialized_path2 if defined?(@materialized_path2)
+
     @materialized_path2 = (ENV["FORMAT"] == "materialized_path2")
   end
-
-  private
 
   def self.db_type
     ENV["DB"].presence || "sqlite3"

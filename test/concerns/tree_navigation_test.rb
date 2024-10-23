@@ -247,16 +247,22 @@ class TreeNavigationTest < ActiveSupport::TestCase
             # want to make sure we're pointing at the correct nodes
             actual = unscoped_descendants_before_last_save.order(:id).map(&:id)
             raise "unscoped_descendants_before_last_save was #{actual}" unless actual == [3, 4, 5]
+
             actual = path_ids_before_last_save
             raise "bad path_ids(before) is #{actual}" unless actual == [1, 2]
+
             actual = path_ids
             raise "bad path_ids is #{actual}" unless actual == [6, 2]
+
             actual = parent_id_before_last_save
             raise "bad parent_id(before) id #{actual}" unless actual == 1
+
             actual = parent_id
             raise "bad parent_id(before) id #{actual}" unless actual == 6
+
             actual = ancestor_ids_before_last_save
             raise "bad ancestor_ids(before) id #{actual}" unless actual == [1]
+
             actual = ancestor_ids
             raise "bad ancestor_ids(before) id #{actual}" unless actual == [6]
           end
