@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Ancestry
   module ClassMethods
     # Fetch tree node if necessary

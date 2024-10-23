@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Ancestry
   module InstanceMethods
     # Validate that the ancestors don't include itself

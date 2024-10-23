@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Ancestry
   module MaterializedPathPg
     # Update descendants with new ancestry (after update)

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'ancestry/version'
 require_relative 'ancestry/class_methods'
 require_relative 'ancestry/instance_methods'

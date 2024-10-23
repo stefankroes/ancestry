@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative '../environment'
 
 # all class nodes used to look up objects belong here

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rubygems'
 require 'bundler/setup'
 
@@ -194,6 +196,7 @@ class AncestryTestDatabase
     return @materialized_path2 if defined?(@materialized_path2)
     @materialized_path2 = (ENV["FORMAT"] == "materialized_path2")
   end
+
   private
 
   def self.db_type

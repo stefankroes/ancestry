@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Ancestry
   module HasAncestry
     def has_ancestry options = {}

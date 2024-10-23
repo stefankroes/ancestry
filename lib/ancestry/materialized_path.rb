@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Ancestry
   # store ancestry as grandparent_id/parent_id
   # root a=nil,id=1   children=id,id/%      == 1, 1/%

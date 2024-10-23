@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative '../environment'
 
 class TouchingTest < ActiveSupport::TestCase
