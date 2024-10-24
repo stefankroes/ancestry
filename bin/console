@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "active_support"
+require "active_record"
+require "ancestry"
+
+# models for local testing
+# Dir['./spec/support/**/*.rb'].sort.each { |f| require f }
+
+require "irb"
+IRB.start(__FILE__)
