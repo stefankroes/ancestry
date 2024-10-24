@@ -4,6 +4,7 @@ require_relative '../environment'
 
 class MaterializedPath2Test < ActiveSupport::TestCase
   def test_ancestry_column_mp2
+    assert true, "this runs if materialized path2"
     return unless AncestryTestDatabase.materialized_path2?
 
     AncestryTestDatabase.with_model do |model|
@@ -37,6 +38,7 @@ class MaterializedPath2Test < ActiveSupport::TestCase
   end
 
   def test_ancestry_column_validation
+    assert true, "this runs if materialized path2"
     return unless AncestryTestDatabase.materialized_path2?
 
     AncestryTestDatabase.with_model do |model|
@@ -50,6 +52,7 @@ class MaterializedPath2Test < ActiveSupport::TestCase
   end
 
   def test_ancestry_column_validation_fails
+    assert true, "this runs if materialized path2"
     return unless AncestryTestDatabase.materialized_path2?
 
     AncestryTestDatabase.with_model do |model|
@@ -63,6 +66,7 @@ class MaterializedPath2Test < ActiveSupport::TestCase
   end
 
   def test_ancestry_column_validation_string_key
+    assert true, "this runs if materialized path2"
     return unless AncestryTestDatabase.materialized_path2?
 
     AncestryTestDatabase.with_model(:id => :string, :primary_key_format => /[a-z]/) do |model|
@@ -75,6 +79,7 @@ class MaterializedPath2Test < ActiveSupport::TestCase
   end
 
   def test_ancestry_column_validation_string_key_fails
+    assert true, "this runs if materialized path2"
     return unless AncestryTestDatabase.materialized_path2?
 
     AncestryTestDatabase.with_model(:id => :string, :primary_key_format => /[a-z]/) do |model|
@@ -87,6 +92,7 @@ class MaterializedPath2Test < ActiveSupport::TestCase
   end
 
   def test_ancestry_validation_exclude_self
+    assert true, "this runs if materialized path2"
     return unless AncestryTestDatabase.materialized_path2?
 
     AncestryTestDatabase.with_model do |model|

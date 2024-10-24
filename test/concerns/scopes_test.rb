@@ -121,8 +121,8 @@ class ScopesTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model(:extra_columns => {:name => :string}) do |model|
       root = model.create
       record = root.children.create
-      # this should not throw an exception
       record.reload.parent.children.find_or_create_by! :name => 'abc'
+      assert true, "this should not throw an exception"
     end
   end
 end

@@ -13,5 +13,6 @@ class DbTest < ActiveSupport::TestCase
     end
 
     c.send(:has_ancestry)
+    assert true, "this should not connect to the database"
   end
 end
