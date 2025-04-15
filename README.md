@@ -297,6 +297,79 @@ trees do not support ordering within a rank, the order of siblings is
 dependant upon their original array order.)
 
 
+# Eager Loading
+
+Ancestry provides advanced eager loading capabilities to improve performance when working with tree structures. These methods help you avoid N+1 query problems by loading entire tree structures in just a few database queries.
+
+## Loading Tree Relationships Efficiently
+
+The following methods are available for eager loading:
+
+```ruby
+# Load a complete tree with parent-child relationships in a single query
+TreeNode.with_tree
+
+# Load nodes with all their ancestors
+TreeNode.with_ancestors
+
+# Load nodes with all their descendants
+TreeNode.with_descendants
+
+# Load nodes with just their children
+TreeNode.with_children
+
+# Load nodes with just their parents
+TreeNode.with_parent
+
+# Load nodes with their siblings
+TreeNode.with_siblings
+
+# Load nodes with their indirect descendants (not direct children)
+TreeNode.with_indirects
+
+# Load nodes with their entire subtree (self + descendants)
+TreeNode.with_subtree
+```
+
+## Combining with Other Eager Loading
+
+You can combine Ancestry's eager loading with ActiveRecord's standard eager loading:
+
+```ruby
+# Load categories with their ancestors and associated products
+Category.with_ancestors.includes(:products)
+
+# Load a complete organization chart with associated user data
+Department.with_tree.includes(:manager, :employees)
+```
+
+## Performance Benefits
+
+Eager loading significantly improves performance in the following scenarios:
+
+1. **Rendering hierarchical menus or navigation**: Load the entire tree structure in one query
+2. **Displaying category trees**: Efficiently load and display all categories and subcategories
+3. **Organization charts**: Render complete org charts without additional queries
+4. **Nested comment systems**: Load threaded comments efficiently
+
+## Example Usage
+
+```ruby
+# Load a complete tree and display it hierarchically
+tree_nodes = TreeNode.with_tree.arrange
+
+# Access relationships without triggering additional queries
+node = TreeNode.with_descendants.find(id)
+node.children    # No additional query - uses cached data
+node.descendants # Still no additional query
+
+# Efficiently build a hierarchical menu
+menu_items = MenuItem.with_tree
+menu_items.each do |item|
+  # Access item.children without additional queries
+end
+```
+
 # Ancestry Database Column
 
 ## Collation Indexes

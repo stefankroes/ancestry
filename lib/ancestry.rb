@@ -8,6 +8,8 @@ require_relative 'ancestry/has_ancestry'
 require_relative 'ancestry/materialized_path'
 require_relative 'ancestry/materialized_path2'
 require_relative 'ancestry/materialized_path_pg'
+require_relative 'ancestry/eager_loading'
+require_relative 'ancestry/instance_methods_eager'
 
 I18n.load_path += Dir[File.join(File.expand_path(File.dirname(__FILE__)),
                                 'ancestry', 'locales', '*.{rb,yml}').to_s]

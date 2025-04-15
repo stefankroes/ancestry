@@ -40,9 +40,11 @@ module Ancestry
 
       # Include instance methods
       include Ancestry::InstanceMethods
+      include Ancestry::InstanceMethodsEager
 
       # Include dynamic class methods
       extend Ancestry::ClassMethods
+      extend Ancestry::EagerLoading
       extend Ancestry::HasAncestry.ancestry_format_module(ancestry_format)
 
       attribute ancestry_column, default: ancestry_root
