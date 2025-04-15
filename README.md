@@ -352,6 +352,41 @@ Eager loading significantly improves performance in the following scenarios:
 3. **Organization charts**: Render complete org charts without additional queries
 4. **Nested comment systems**: Load threaded comments efficiently
 
+## Automatic Preloading
+
+For even greater convenience, you can enable automatic preloading of tree relationships by adding the `preload: true` option to your model definition:
+
+```ruby
+class Category < ApplicationRecord
+  has_ancestry preload: true
+end
+```
+
+With this option enabled, all queries against the model will automatically preload the entire tree structure without requiring explicit calls to the eager loading methods:
+
+```ruby
+# This automatically loads the entire tree structure
+category = Category.find(123)
+
+# These won't trigger additional database queries
+category.children    # No database query
+category.ancestors   # No database query
+category.parent      # No database query
+category.descendants # No database query
+```
+
+### Benefits of Automatic Preloading
+
+- **Simplified Code**: No need to remember to call eager loading methods
+- **Eliminates N+1 Queries**: Automatically ensures efficient tree traversal
+- **Seamless Integration**: Works with existing code without requiring changes
+
+### Considerations
+
+- For very large trees, automatic preloading might load more data than necessary for specific operations
+- Increases memory usage since entire tree structures are loaded upfront
+- Recommended for medium-sized trees or when frequently traversing tree relationships
+
 ## Example Usage
 
 ```ruby

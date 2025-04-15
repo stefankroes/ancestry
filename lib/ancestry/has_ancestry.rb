@@ -8,7 +8,7 @@ module Ancestry
         raise Ancestry::AncestryException, I18n.t("ancestry.option_must_be_hash")
       end
 
-      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format]
+      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format, :preload]
       if (key = extra_keys.first)
         raise Ancestry::AncestryException, I18n.t("ancestry.unknown_option", key: key.inspect, value: options[key].inspect)
       end
@@ -32,6 +32,10 @@ module Ancestry
       # Save self as base class (for STI)
       class_variable_set('@@ancestry_base_class', self)
       cattr_reader :ancestry_base_class, instance_reader: false
+      
+      # Set up automatic preloading of tree relationships
+      class_variable_set('@@ancestry_preload', !!options[:preload])
+      cattr_reader :ancestry_preload, instance_reader: false
 
       # Touch ancestors after updating
       # days are limited. need to handle touch in pg case
@@ -46,6 +50,11 @@ module Ancestry
       extend Ancestry::ClassMethods
       extend Ancestry::EagerLoading
       extend Ancestry::HasAncestry.ancestry_format_module(ancestry_format)
+      
+      # Include preloader if enabled
+      if options[:preload]
+        include Ancestry::Preloader
+      end
 
       attribute ancestry_column, default: ancestry_root
 
