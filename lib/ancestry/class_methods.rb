@@ -7,7 +7,7 @@ module Ancestry
       if object.is_a?(ancestry_base_class)
         object
       else
-        unscoped_where { |scope| scope.find(object.try(primary_key) || object) }
+        unscoped_where { |scope| scope.find(object.try(ancestry_identifier_column) || object) }
       end
     end
 
@@ -43,11 +43,11 @@ module Ancestry
     # @returns Hash{Node => {Node => {}, Node => {}}}
     # If a node's parent is not included, the node will be included as if it is a top level node
     def arrange_nodes(nodes)
-      node_ids = Set.new(nodes.map(&:id))
+      node_ids = Set.new(nodes.map(&:ancestry_identifier_column))
       index = Hash.new { |h, k| h[k] = {} }
 
       nodes.each_with_object({}) do |node, arranged|
-        children = index[node.id]
+        children = index[node.ancestry_identifier_column]
         index[node.parent_id][node] = children
         arranged[node] = children unless node_ids.include?(node.parent_id)
       end
@@ -125,25 +125,25 @@ module Ancestry
           # ... check validity of ancestry column
           if !node.sane_ancestor_ids?
             raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.invalid_ancestry_column",
-                                                               :node_id => node.id,
+                                                               :node_id => node.ancestry_identifier_column,
                                                                :ancestry_column => node.read_attribute(node.class.ancestry_column))
           end
           # ... check that all ancestors exist
           node.ancestor_ids.each do |ancestor_id|
             unless exists?(ancestor_id)
               raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.reference_nonexistent_node",
-                                                                 :node_id => node.id,
+                                                                 :node_id => node.ancestry_identifier_column,
                                                                  :ancestor_id => ancestor_id)
             end
           end
           # ... check that all node parents are consistent with values observed earlier
-          node.path_ids.zip([nil] + node.path_ids).each do |node_id, parent_id|
-            parents[node_id] = parent_id unless parents.key?(node_id)
-            unless parents[node_id] == parent_id
+          node.path_ids.zip([nil] + node.path_ids).each do |node_identifier, parent_identifier|
+            parents[node_identifier] = parent_identifier unless parents.key?(node_identifier)
+            unless parents[node_identifier] == parent_identifier
               raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.conflicting_parent_id",
-                                                                 :node_id => node_id,
-                                                                 :parent_id => parent_id || 'nil',
-                                                                 :expected => parents[node_id] || 'nil')
+                                                                 :node_id => node_identifier,
+                                                                 :parent_id => parent_identifier || 'nil',
+                                                                 :expected => parents[node_identifier] || 'nil')
             end
           end
         rescue Ancestry::AncestryIntegrityException => e
@@ -172,25 +172,25 @@ module Ancestry
               end
             end
             # ... save parent id of this node in parent_ids array if it exists
-            parent_ids[node.id] = node.parent_id if exists? node.parent_id
+            parent_ids[node.ancestry_identifier_column] = node.parent_id if exists? node.parent_id
 
             # Reset parent id in array to nil if it introduces a cycle
-            parent_id = parent_ids[node.id]
-            until parent_id.nil? || parent_id == node.id
-              parent_id = parent_ids[parent_id]
+            parent_identifier = parent_ids[node.ancestry_identifier_column]
+            until parent_identifier.nil? || parent_identifier == node.ancestry_identifier_column
+              parent_identifier = parent_ids[parent_identifier]
             end
-            parent_ids[node.id] = nil if parent_id == node.id
+            parent_ids[node.ancestry_identifier_column] = nil if parent_identifier == node.ancestry_identifier_column
           end
 
           # For each node ...
           scope.find_each do |node|
             # ... rebuild ancestry from parent_ids array
-            ancestor_ids, parent_id = [], parent_ids[node.id]
-            until parent_id.nil?
-              ancestor_ids, parent_id = [parent_id] + ancestor_ids, parent_ids[parent_id]
+            ancestor_identifiers, parent_identifier = [], parent_ids[node.ancestry_identifier_column]
+            until parent_identifier.nil?
+              ancestor_identifiers, parent_identifier = [parent_identifier] + ancestor_identifiers, parent_ids[parent_identifier]
             end
             node.without_ancestry_callbacks do
-              node.update_attribute :ancestor_ids, ancestor_ids
+              node.update_attribute :ancestor_ids, ancestor_identifiers
             end
           end
         end
@@ -204,7 +204,7 @@ module Ancestry
           node.without_ancestry_callbacks do
             node.update_attribute :ancestor_ids, ancestor_ids
           end
-          build_ancestry_from_parent_ids! column, node.id, ancestor_ids + [node.id]
+          build_ancestry_from_parent_ids! column, node.ancestry_identifier_column, ancestor_ids + [node.ancestry_identifier_column]
         end
       end
     end
@@ -233,11 +233,11 @@ module Ancestry
         connection.execute %{
           UPDATE #{table_name} AS dest
           LEFT JOIN (
-            SELECT #{table_name}.#{primary_key}, COUNT(*) AS child_count
+            SELECT #{table_name}.#{ancestry_identifier_column}, COUNT(*) AS child_count
             FROM #{table_name}
             JOIN #{table_name} children ON children.#{ancestry_column} = (#{child_ancestry_sql})
-            GROUP BY #{table_name}.#{primary_key}
-          ) src USING(#{primary_key})
+            GROUP BY #{table_name}.#{ancestry_identifier_column}
+          ) src USING(#{ancestry_identifier_column})
           SET dest.#{counter_cache_column} = COALESCE(src.child_count, 0)
         }
       else
@@ -262,6 +262,11 @@ module Ancestry
       else
         @primary_key_is_an_integer = !ANCESTRY_UNCAST_TYPES.include?(type_for_attribute(primary_key).type)
       end
+    end
+
+    # alias for primary_key
+    def ancestry_identifier_column
+      primary_key
     end
   end
 end
