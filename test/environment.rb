@@ -125,7 +125,10 @@ class AncestryTestDatabase
     options[:ancestry_column] ||= ancestry_column
     table_options = {}
     table_options[:id] = options.delete(:id) if options.key?(:id)
-
+    
+    # Drop the table if it exists to avoid 'table already exists' errors
+    ActiveRecord::Base.connection.drop_table 'test_nodes', if_exists: true
+    
     ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
       table.send(column_type, options[:ancestry_column], **column_options(force_allow_nil: skip_ancestry))
       case options[:cache_depth]
@@ -152,7 +155,13 @@ class AncestryTestDatabase
       end
     end
 
-    testmethod = caller[0][/`.*'/][1..-2]
+    # Extract test method name more safely to avoid nil errors
+    caller_info = caller[0]
+    testmethod = if caller_info && (match = caller_info.match(/`([^']*)'/))
+                  match[1]
+                else
+                  'unknown_test'
+                end
     model_name = "#{testmethod.camelize}TestNode"
 
     begin

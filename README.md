@@ -297,6 +297,114 @@ trees do not support ordering within a rank, the order of siblings is
 dependant upon their original array order.)
 
 
+# Eager Loading
+
+Ancestry provides advanced eager loading capabilities to improve performance when working with tree structures. These methods help you avoid N+1 query problems by loading entire tree structures in just a few database queries.
+
+## Loading Tree Relationships Efficiently
+
+The following methods are available for eager loading:
+
+```ruby
+# Load a complete tree with parent-child relationships in a single query
+TreeNode.with_tree
+
+# Load nodes with all their ancestors
+TreeNode.with_ancestors
+
+# Load nodes with all their descendants
+TreeNode.with_descendants
+
+# Load nodes with just their children
+TreeNode.with_children
+
+# Load nodes with just their parents
+TreeNode.with_parent
+
+# Load nodes with their siblings
+TreeNode.with_siblings
+
+# Load nodes with their indirect descendants (not direct children)
+TreeNode.with_indirects
+
+# Load nodes with their entire subtree (self + descendants)
+TreeNode.with_subtree
+```
+
+## Combining with Other Eager Loading
+
+You can combine Ancestry's eager loading with ActiveRecord's standard eager loading:
+
+```ruby
+# Load categories with their ancestors and associated products
+Category.with_ancestors.includes(:products)
+
+# Load a complete organization chart with associated user data
+Department.with_tree.includes(:manager, :employees)
+```
+
+## Performance Benefits
+
+Eager loading significantly improves performance in the following scenarios:
+
+1. **Rendering hierarchical menus or navigation**: Load the entire tree structure in one query
+2. **Displaying category trees**: Efficiently load and display all categories and subcategories
+3. **Organization charts**: Render complete org charts without additional queries
+4. **Nested comment systems**: Load threaded comments efficiently
+
+## Automatic Preloading
+
+For even greater convenience, you can enable automatic preloading of tree relationships by adding the `preload: true` option to your model definition:
+
+```ruby
+class Category < ApplicationRecord
+  has_ancestry preload: true
+end
+```
+
+With this option enabled, all queries against the model will automatically preload the entire tree structure without requiring explicit calls to the eager loading methods:
+
+```ruby
+# This automatically loads the entire tree structure
+category = Category.find(123)
+
+# These won't trigger additional database queries
+category.children    # No database query
+category.ancestors   # No database query
+category.parent      # No database query
+category.descendants # No database query
+```
+
+### Benefits of Automatic Preloading
+
+- **Simplified Code**: No need to remember to call eager loading methods
+- **Eliminates N+1 Queries**: Automatically ensures efficient tree traversal
+- **Seamless Integration**: Works with existing code without requiring changes
+
+### Considerations
+
+- For very large trees, automatic preloading might load more data than necessary for specific operations
+- Increases memory usage since entire tree structures are loaded upfront
+- Recommended for medium-sized trees or when frequently traversing tree relationships
+
+## Example Usage
+
+```ruby
+# Load a complete tree and display it hierarchically
+tree_nodes = TreeNode.with_tree.arrange
+
+# Access relationships without triggering additional queries
+node = TreeNode.with_descendants.find(id)
+node.children    # No additional query - uses cached data
+node.descendants # Still no additional query
+
+# Efficiently build a hierarchical menu
+menu_items = MenuItem.with_tree
+menu_items.each do |item|
+  # Access item.children without additional queries
+end
+```
+
 # Ancestry Database Column
 
 ## Collation Indexes

@@ -3,9 +3,15 @@
 module Ancestry
   module ClassMethods
     # Fetch tree node if necessary
+    # Supports single objects or arrays for batch loading
     def to_node(object)
       if object.is_a?(ancestry_base_class)
         object
+      elsif object.is_a?(Array)
+        # Batch load multiple nodes at once to avoid N+1 queries
+        ids = object.map { |obj| obj.try(primary_key) || obj }
+        nodes = unscoped_where { |scope| scope.where(primary_key => ids) }
+        object.map { |obj| nodes.find { |n| n.id.to_s == (obj.try(primary_key) || obj).to_s } }
       else
         unscoped_where { |scope| scope.find(object.try(primary_key) || object) }
       end
@@ -29,11 +35,26 @@ module Ancestry
     # To order your hashes pass the order to the arrange method instead of to the scope
 
     # Get all nodes and sort them into an empty hash
+    # Supports eager loading of associations
     def arrange(options = {})
+      scope = ancestry_base_class
+      
+      if (includes_param = options.delete(:includes))
+        scope = scope.includes(includes_param)
+      end
+      
+      if (preload_param = options.delete(:preload))
+        scope = scope.preload(preload_param)
+      end
+      
+      if (eager_load_param = options.delete(:eager_load))
+        scope = scope.eager_load(eager_load_param)
+      end
+      
       if (order = options.delete(:order))
-        arrange_nodes(ancestry_base_class.order(order).where(options))
+        arrange_nodes(scope.order(order).where(options))
       else
-        arrange_nodes(ancestry_base_class.where(options))
+        arrange_nodes(scope.where(options))
       end
     end
 
@@ -43,14 +64,83 @@ module Ancestry
     # @returns Hash{Node => {Node => {}, Node => {}}}
     # If a node's parent is not included, the node will be included as if it is a top level node
     def arrange_nodes(nodes)
-      node_ids = Set.new(nodes.map(&:id))
-      index = Hash.new { |h, k| h[k] = {} }
-
-      nodes.each_with_object({}) do |node, arranged|
-        children = index[node.id]
-        index[node.parent_id][node] = children
-        arranged[node] = children unless node_ids.include?(node.parent_id)
+      return {} if nodes.blank?
+      
+      # Check if nodes are eager loaded
+      if nodes.first.instance_variable_defined?(:@_eager_loaded_children) && 
+         nodes.first.instance_variable_defined?(:@_eager_loaded_parent)
+        # Use eager loaded data for faster arrangement
+        return arrange_eager_loaded_nodes(nodes)
       end
+      
+      # Optimize by only creating the Set once and using a more efficient hash initialization
+      node_ids = Set.new(nodes.map(&:id))
+      index = {}
+      
+      # First pass: initialize all entries in the index
+      nodes.each do |node|
+        index[node.id] ||= {}
+      end
+      
+      # Second pass: build parent-child relationships
+      arranged = {}
+      nodes.each do |node|
+        # Get or initialize the children hash
+        children = index[node.id]
+        parent_id = node.parent_id
+        
+        # Add this node as a child to its parent in our index
+        parent_children = (index[parent_id] ||= {})
+        parent_children[node] = children
+        
+        # If this node's parent is not in our nodes collection, 
+        # add the node directly to the arranged hash
+        arranged[node] = children unless node_ids.include?(parent_id)
+      end
+      
+      arranged
+    end
+    
+    # Arranges nodes that have been eager loaded
+    # This is much faster as parent-child relationships are already in memory
+    def arrange_eager_loaded_nodes(nodes)
+      arranged = {}
+      nodes_by_id = {}
+      
+      # Index nodes by id for quick lookup
+      nodes.each do |node|
+        nodes_by_id[node.id] = node
+      end
+      
+      # Build the arranged hash
+      nodes.each do |node|
+        # Skip if this node is already processed as a child
+        next if node.instance_variable_defined?(:@_in_arranged_hash) && 
+                node.instance_variable_get(:@_in_arranged_hash)
+        
+        children = node.instance_variable_get(:@_eager_loaded_children) || []
+        parent = node.instance_variable_get(:@_eager_loaded_parent)
+        
+        if parent.nil? || !nodes_by_id.key?(parent.id)
+          # This is a root node in our collection
+          arranged[node] = arrange_eager_loaded_children(node, children)
+        end
+      end
+      
+      arranged
+    end
+    
+    # Helper method to recursively arrange eager loaded children
+    def arrange_eager_loaded_children(node, children)
+      result = {}
+      
+      children.each do |child|
+        child.instance_variable_set(:@_in_arranged_hash, true)
+        grand_children = child.instance_variable_get(:@_eager_loaded_children) || []
+        result[child] = arrange_eager_loaded_children(child, grand_children)
+      end
+      
+      result
     end
 
     # convert a hash of the form {node => children} to an array of nodes, child first
@@ -68,6 +158,7 @@ module Ancestry
     # Arrangement to nested array for serialization
     # You can also supply your own serialization logic using blocks
     # also allows you to pass the order just as you can pass it to the arrange method
+    # Supports eager loading of associations
     def arrange_serializable(options = {}, nodes = nil, &block)
       nodes = arrange(options) if nodes.nil?
       nodes.map do |parent, children|
@@ -77,6 +168,69 @@ module Ancestry
           parent.serializable_hash.merge 'children' => arrange_serializable(options, children)
         end
       end
+    end
+    
+    # Efficiently load a tree structure with all descendants preloaded
+    # This helps avoid N+1 queries when working with tree structures
+    # @param root_nodes [Array] Array of root nodes
+    # @param options [Hash] Options to customize loading behavior
+    # @option options [Symbol,Array] :includes Associations to include
+    # @option options [Integer] :depth_limit Limit how deep to load the tree
+    # @return [Array] Root nodes with descendants preloaded
+    def preload_tree(root_nodes, options = {})
+      depth_limit = options[:depth_limit]
+      includes_param = options[:includes]
+      
+      # Early return if no root nodes or depth limit is 0
+      return root_nodes if root_nodes.empty? || depth_limit == 0
+      
+      # Get all descendants in a single query
+      descendant_conditions = root_nodes.map { |node| descendant_conditions(node) }
+                                       .reduce { |a, b| a.or(b) }
+      descendants_scope = ancestry_base_class.where(descendant_conditions)
+      
+      # Apply depth limit if specified
+      if depth_limit && respond_to?(:depth_cache_column)
+        max_depth = root_nodes.map(&:depth).max + depth_limit
+        descendants_scope = descendants_scope.where("#{depth_cache_column} <= ?", max_depth)
+      end
+      
+      # Apply includes if specified
+      descendants_scope = descendants_scope.includes(includes_param) if includes_param
+      
+      # Load all descendants in a single query
+      descendants = descendants_scope.to_a
+      
+      # Arrange the descendants into a hash for quick lookup
+      nodes_by_ancestry = {}
+      descendants.each do |node|
+        ancestry_key = node.read_attribute(ancestry_column)
+        nodes_by_ancestry[ancestry_key] ||= []
+        nodes_by_ancestry[ancestry_key] << node
+      end
+      
+      # Function to recursively preload children
+      preload_children = lambda do |nodes|
+        nodes.each do |node|
+          ancestry_value = node.child_ancestry
+          if children = nodes_by_ancestry[ancestry_value]
+            association = node.association(:children)
+            association.target = children
+            association.loaded!
+            preload_children.call(children) # Recursively preload deeper children
+          else
+            # Ensure the children association is marked as loaded even when empty
+            association = node.association(:children)
+            association.target = []
+            association.loaded!
+          end
+        end
+      end
+      
+      # Preload children for root nodes
+      preload_children.call(root_nodes)
+      
+      root_nodes
     end
 
     def tree_view(column, data = nil)
