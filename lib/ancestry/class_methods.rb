@@ -137,13 +137,13 @@ module Ancestry
             end
           end
           # ... check that all node parents are consistent with values observed earlier
-          node.path_ids.zip([nil] + node.path_ids).each do |node_identifier, parent_identifier|
-            parents[node_identifier] = parent_identifier unless parents.key?(node_identifier)
-            unless parents[node_identifier] == parent_identifier
+          node.path_ids.zip([nil] + node.path_ids).each do |node_id, parent_id|
+            parents[node_id] = parent_id unless parents.key?(node_id)
+            unless parents[node_id] == parent_id
               raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.conflicting_parent_id",
-                                                                 :node_id => node_identifier,
-                                                                 :parent_id => parent_identifier || 'nil',
-                                                                 :expected => parents[node_identifier] || 'nil')
+                                                                 :node_id => node_id,
+                                                                 :parent_id => parent_id || 'nil',
+                                                                 :expected => parents[node_id] || 'nil')
             end
           end
         rescue Ancestry::AncestryIntegrityException => e
@@ -175,22 +175,22 @@ module Ancestry
             parent_ids[node.ancestry_identifier_column] = node.parent_id if exists? node.parent_id
 
             # Reset parent id in array to nil if it introduces a cycle
-            parent_identifier = parent_ids[node.ancestry_identifier_column]
-            until parent_identifier.nil? || parent_identifier == node.ancestry_identifier_column
-              parent_identifier = parent_ids[parent_identifier]
+            parent_id = parent_ids[node.ancestry_identifier_column]
+            until parent_id.nil? || parent_id == node.ancestry_identifier_column
+              parent_id = parent_ids[parent_id]
             end
-            parent_ids[node.ancestry_identifier_column] = nil if parent_identifier == node.ancestry_identifier_column
+            parent_ids[node.ancestry_identifier_column] = nil if parent_id == node.ancestry_identifier_column
           end
 
           # For each node ...
           scope.find_each do |node|
             # ... rebuild ancestry from parent_ids array
-            ancestor_identifiers, parent_identifier = [], parent_ids[node.ancestry_identifier_column]
-            until parent_identifier.nil?
-              ancestor_identifiers, parent_identifier = [parent_identifier] + ancestor_identifiers, parent_ids[parent_identifier]
+            ancestor_ids, parent_id = [], parent_ids[node.ancestry_identifier_column]
+            until parent_id.nil?
+              ancestor_ids, parent_id = [parent_id] + ancestor_ids, parent_ids[parent_id]
             end
             node.without_ancestry_callbacks do
-              node.update_attribute :ancestor_ids, ancestor_identifiers
+              node.update_attribute :ancestor_ids, ancestor_ids
             end
           end
         end
