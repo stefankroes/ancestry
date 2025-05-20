@@ -4,7 +4,7 @@ module Ancestry
   module InstanceMethods
     # Validate that the ancestors don't include itself
     def ancestry_exclude_self
-      errors.add(:base, I18n.t("ancestry.exclude_self", class_name: self.class.name.humanize)) if ancestor_ids.include?(ancestry_identifier_column)
+      errors.add(:base, I18n.t("ancestry.exclude_self", class_name: self.class.name.humanize)) if ancestor_ids.include?(ancestry_identifier_value)
     end
 
     # Update descendants with new ancestry (after update)
@@ -51,7 +51,7 @@ module Ancestry
 
       descendants.each do |descendant|
         descendant.without_ancestry_callbacks do
-          descendant.update_attribute :ancestor_ids, (descendant.ancestor_ids.delete_if { |x| x == ancestry_identifier_column })
+          descendant.update_attribute :ancestor_ids, (descendant.ancestor_ids.delete_if { |x| x == ancestry_identifier_value })
         end
       end
     end
@@ -140,15 +140,15 @@ module Ancestry
     end
 
     def path_ids
-      ancestor_ids + [ancestry_identifier_column]
+      ancestor_ids + [ancestry_identifier_value]
     end
 
     def path_ids_before_last_save
-      ancestor_ids_before_last_save + [ancestry_identifier_column]
+      ancestor_ids_before_last_save + [ancestry_identifier_value]
     end
 
     def path_ids_in_database
-      ancestor_ids_in_database + [ancestry_identifier_column]
+      ancestor_ids_in_database + [ancestry_identifier_value]
     end
 
     def path(depth_options = {})
@@ -164,7 +164,7 @@ module Ancestry
     end
 
     def ancestor_of?(node)
-      node.ancestor_ids.include?(ancestry_identifier_column)
+      node.ancestor_ids.include?(ancestry_identifier_value)
     end
 
     # Parent
@@ -193,13 +193,13 @@ module Ancestry
     end
 
     def parent_of?(node)
-      ancestry_identifier_column == node.parent_id
+      ancestry_identifier_value == node.parent_id
     end
 
     # Root
 
     def root_id
-      has_parent? ? ancestor_ids.first : ancestry_identifier_column
+      has_parent? ? ancestor_ids.first : ancestry_identifier_value
     end
 
     def root
@@ -216,7 +216,7 @@ module Ancestry
     alias root? is_root?
 
     def root_of?(node)
-      ancestry_identifier_column == node.root_id
+      ancestry_identifier_value == node.root_id
     end
 
     # Children
@@ -240,7 +240,7 @@ module Ancestry
     alias_method :childless?, :is_childless?
 
     def child_of?(node)
-      parent_id == node.ancestry_identifier_column
+      parent_id == node.ancestry_identifier_value
     end
 
     # Siblings
@@ -279,7 +279,7 @@ module Ancestry
     end
 
     def descendant_of?(node)
-      ancestor_ids.include?(node.ancestry_identifier_column)
+      ancestor_ids.include?(node.ancestry_identifier_value)
     end
 
     # Indirects
@@ -293,7 +293,7 @@ module Ancestry
     end
 
     def indirect_of?(node)
-      ancestor_ids[0..-2].include?(node.ancestry_identifier_column)
+      ancestor_ids[0..-2].include?(node.ancestry_identifier_value)
     end
 
     # Subtree
@@ -307,7 +307,7 @@ module Ancestry
     end
 
     def in_subtree_of?(node)
-      ancestry_identifier_column == node.ancestry_identifier_column || descendant_of?(node)
+      ancestry_identifier_value == node.ancestry_identifier_value || descendant_of?(node)
     end
 
     # Callback disabling
@@ -323,9 +323,12 @@ module Ancestry
       defined?(@disable_ancestry_callbacks) && @disable_ancestry_callbacks
     end
 
-    # alias for id
     def ancestry_identifier_column
-      id
+      :id
+    end
+
+    def ancestry_identifier_value
+      read_attribute(ancestry_identifier_column)
     end
 
     private

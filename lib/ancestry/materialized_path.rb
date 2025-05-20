@@ -64,7 +64,7 @@ module Ancestry
     def subtree_of(object)
       t = arel_table
       node = to_node(object)
-      descendants_of(node).or(where(t[ancestry_identifier_column].eq(node.ancestry_identifier_column)))
+      descendants_of(node).or(where(t[ancestry_identifier_column].eq(node.ancestry_identifier_value)))
     end
 
     def siblings_of(object)
@@ -200,7 +200,7 @@ module Ancestry
       def child_ancestry
         raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")) if new_record?
 
-        [attribute_in_database(self.class.ancestry_column), ancestry_identifier_column].compact.join(self.class.ancestry_delimiter)
+        [attribute_in_database(self.class.ancestry_column), ancestry_identifier_value].compact.join(self.class.ancestry_delimiter)
       end
 
       # The ancestry value for this record's old children
@@ -212,7 +212,7 @@ module Ancestry
           raise Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")
         end
 
-        [attribute_before_last_save(self.class.ancestry_column), ancestry_identifier_column].compact.join(self.class.ancestry_delimiter)
+        [attribute_before_last_save(self.class.ancestry_column), ancestry_identifier_value].compact.join(self.class.ancestry_delimiter)
       end
     end
   end

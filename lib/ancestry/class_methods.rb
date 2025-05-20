@@ -43,11 +43,11 @@ module Ancestry
     # @returns Hash{Node => {Node => {}, Node => {}}}
     # If a node's parent is not included, the node will be included as if it is a top level node
     def arrange_nodes(nodes)
-      node_ids = Set.new(nodes.map(&:ancestry_identifier_column))
+      node_ids = Set.new(nodes.map(&ancestry_identifier_column))
       index = Hash.new { |h, k| h[k] = {} }
 
       nodes.each_with_object({}) do |node, arranged|
-        children = index[node.ancestry_identifier_column]
+        children = index[node.ancestry_identifier_value]
         index[node.parent_id][node] = children
         arranged[node] = children unless node_ids.include?(node.parent_id)
       end
@@ -125,14 +125,14 @@ module Ancestry
           # ... check validity of ancestry column
           if !node.sane_ancestor_ids?
             raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.invalid_ancestry_column",
-                                                               :node_id => node.ancestry_identifier_column,
+                                                               :node_id => node.ancestry_identifier_value,
                                                                :ancestry_column => node.read_attribute(node.class.ancestry_column))
           end
           # ... check that all ancestors exist
           node.ancestor_ids.each do |ancestor_id|
             unless exists?(ancestor_id)
               raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.reference_nonexistent_node",
-                                                                 :node_id => node.ancestry_identifier_column,
+                                                                 :node_id => node.ancestry_identifier_value,
                                                                  :ancestor_id => ancestor_id)
             end
           end
@@ -172,20 +172,20 @@ module Ancestry
               end
             end
             # ... save parent id of this node in parent_ids array if it exists
-            parent_ids[node.ancestry_identifier_column] = node.parent_id if exists? node.parent_id
+            parent_ids[node.ancestry_identifier_value] = node.parent_id if exists? node.parent_id
 
             # Reset parent id in array to nil if it introduces a cycle
-            parent_id = parent_ids[node.ancestry_identifier_column]
-            until parent_id.nil? || parent_id == node.ancestry_identifier_column
+            parent_id = parent_ids[node.ancestry_identifier_value]
+            until parent_id.nil? || parent_id == node.ancestry_identifier_value
               parent_id = parent_ids[parent_id]
             end
-            parent_ids[node.ancestry_identifier_column] = nil if parent_id == node.ancestry_identifier_column
+            parent_ids[node.ancestry_identifier_value] = nil if parent_id == node.ancestry_identifier_value
           end
 
           # For each node ...
           scope.find_each do |node|
             # ... rebuild ancestry from parent_ids array
-            ancestor_ids, parent_id = [], parent_ids[node.ancestry_identifier_column]
+            ancestor_ids, parent_id = [], parent_ids[node.ancestry_identifier_value]
             until parent_id.nil?
               ancestor_ids, parent_id = [parent_id] + ancestor_ids, parent_ids[parent_id]
             end
@@ -204,7 +204,7 @@ module Ancestry
           node.without_ancestry_callbacks do
             node.update_attribute :ancestor_ids, ancestor_ids
           end
-          build_ancestry_from_parent_ids! column, node.ancestry_identifier_column, ancestor_ids + [node.ancestry_identifier_column]
+          build_ancestry_from_parent_ids! column, node.ancestry_identifier_value, ancestor_ids + [node.ancestry_identifier_value]
         end
       end
     end
@@ -264,9 +264,8 @@ module Ancestry
       end
     end
 
-    # alias for primary_key
     def ancestry_identifier_column
-      primary_key
+      primary_key.to_sym
     end
   end
 end
