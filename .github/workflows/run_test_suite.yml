@@ -43,20 +43,7 @@ jobs:
         # - https://guides.rubyonrails.org/maintenance_policy.html
         format: [materialized_path, materialized_path2]
         activerecord: [70, 71, 72]
-        ruby: [3.2, 3.3]
-        # additional tests
-        include:
-          # EOL 6/2022 (ruby >= 2.2.2, <2.7)
-          - ruby: 2.6
-            activerecord: 52
-          # EOL 2023
-          - ruby: 2.7
-            activerecord: 60
-          # rails 6.1 and 7.0 have different ruby versions
-          - ruby: 2.7
-            activerecord: 61
-          - ruby: "3.0"
-            activerecord: 61
+        ruby: [3.1, 3.3]
     env:
       # for the pg cli (psql, pg_isready) and possibly rails
       PGHOST: 127.0.0.1 # container is mapping it locally
@@ -97,7 +84,6 @@ jobs:
           UPDATE_STRATEGY: sql
         run: |
           bundle exec rake
-        if: ${{ matrix.activerecord != 52 }}
       - name: run pg tests (ANCESTRY_COLUMN=ancestry_alt)
         env:
           DB: pg
@@ -111,8 +97,6 @@ jobs:
           UPDATE_STRATEGY: sql
         run: |
           bundle exec rake
-          FORMAT=${{ matrix.format }} UPDATE_STRATEGY=sql bundle exec rake
-        if: ${{ matrix.activerecord != 52 }}
       - name: run mysql tests
         env:
           DB: mysql2
