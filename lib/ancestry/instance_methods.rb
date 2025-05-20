@@ -255,7 +255,7 @@ module Ancestry
     end
 
     def has_siblings?
-      siblings.count > 1
+      siblings.where.not(self.class.primary_key => id).exists?
     end
     alias_method :siblings?, :has_siblings?
 
