@@ -31,7 +31,7 @@ module Ancestry
     end
 
     def child_ancestry_sql
-      concat("#{table_name}.#{ancestry_column}", "#{table_name}.#{primary_key}", "'#{ancestry_delimiter}'")
+      concat("#{table_name}.#{ancestry_column}", "#{table_name}.#{ancestry_identifier_column}", "'#{ancestry_delimiter}'")
     end
 
     def ancestry_depth_sql
@@ -68,7 +68,7 @@ module Ancestry
       def child_ancestry
         raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")) if new_record?
 
-        "#{attribute_in_database(self.class.ancestry_column)}#{id}#{self.class.ancestry_delimiter}"
+        "#{attribute_in_database(self.class.ancestry_column)}#{ancestry_identifier_value}#{self.class.ancestry_delimiter}"
       end
 
       # Please see notes for MaterializedPath#child_ancestry_before_last_save
@@ -77,7 +77,7 @@ module Ancestry
           raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record"))
         end
 
-        "#{attribute_before_last_save(self.class.ancestry_column)}#{id}#{self.class.ancestry_delimiter}"
+        "#{attribute_before_last_save(self.class.ancestry_column)}#{ancestry_identifier_value}#{self.class.ancestry_delimiter}"
       end
     end
   end
