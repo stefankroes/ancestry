@@ -7,7 +7,7 @@ module Ancestry
       if object.is_a?(ancestry_base_class)
         object
       else
-        unscoped_where { |scope| scope.find(object.try(ancestry_identifier_column) || object) }
+        unscoped_where { |scope| scope.find_by!(ancestry_identifier_column => object.try(ancestry_identifier_column) || object) }
       end
     end
 
