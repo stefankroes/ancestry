@@ -4,7 +4,7 @@ module Ancestry
   module InstanceMethods
     # Validate that the ancestors don't include itself
     def ancestry_exclude_self
-      errors.add(:base, I18n.t("ancestry.exclude_self", class_name: self.class.name.humanize)) if ancestor_ids.include?(id)
+      errors.add(:base, I18n.t("ancestry.exclude_self", class_name: self.class.model_name.human)) if ancestor_ids.include?(id)
     end
 
     # Update descendants with new ancestry (after update)
