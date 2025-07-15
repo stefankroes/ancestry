@@ -11,9 +11,12 @@
     # so we are targeting the ruby version indirectly through active record
     if ar_version < "7.0"
       gem "sqlite3", "~> 1.6.9"
-    else
+    elsif ar_version < "8.0"
       # sqlite3 v 2.0 is causing trouble with rails
       gem "sqlite3", "< 2.0"
+    else
+      # Rails 8.0 requires sqlite3 >= 2.1
+      gem "sqlite3", ">= 2.1"
     end
   end
 end
