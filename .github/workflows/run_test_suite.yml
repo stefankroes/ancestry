@@ -71,7 +71,7 @@ jobs:
       FORMAT: ${{ matrix.format }}
     steps:
       - name: checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: setup Ruby
         # https://github.com/ruby/setup-ruby#versioning
