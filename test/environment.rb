@@ -152,7 +152,7 @@ class AncestryTestDatabase
       end
     end
 
-    testmethod = caller[0][/`.*'/][1..-2]
+    testmethod = caller[0].match(/[`'](?:[^#]*#)?([^']*)'/)[1]
     model_name = "#{testmethod.camelize}TestNode"
 
     begin
