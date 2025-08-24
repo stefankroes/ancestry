@@ -65,6 +65,8 @@ class StiSupportTest < ActiveSupport::TestCase
     end
   end
 
+  # TODO: add some and remove some. make sure the updates work correctly
+  # thinking will find an issue here
   def test_sti_support_for_counter_cache
     AncestryTestDatabase.with_model :counter_cache => true, :extra_columns => {:type => :string} do |model|
       # NOTE: had to use subclasses other than Subclass1/Subclass2 from above
