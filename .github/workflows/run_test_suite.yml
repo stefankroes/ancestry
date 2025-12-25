@@ -42,8 +42,8 @@ jobs:
         # - https://www.ruby-lang.org/en/downloads/branches/
         # - https://guides.rubyonrails.org/maintenance_policy.html
         format: [materialized_path, materialized_path2]
-        activerecord: [71, 72, 80]
-        ruby: [3.2, 3.3]
+        activerecord: [71, 72, 80, 81]
+        ruby: ["3.2", "3.3", "3.4"]
         # additional tests
         include:
           # EOL 2023
@@ -60,10 +60,7 @@ jobs:
           - format: materialized_path2
             activerecord: 70
             ruby: "3.0"
-          # active record 7.0 and 3.4 was failing
-          - format: materialized_path2
-            activerecord: 80
-            ruby: "3.4"
+
     env:
       # for the pg cli (psql, pg_isready) and possibly rails
       PGHOST: 127.0.0.1 # container is mapping it locally
