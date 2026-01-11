@@ -7,4 +7,4 @@ gemspec
 gem "activerecord", "~> 7.2"
 gem "mysql2"
 gem "pg"
-gem "sqlite3"
+gem "sqlite3", "~> 1.6.9"
