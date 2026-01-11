@@ -274,6 +274,18 @@ module Ancestry
       self.class.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).descendants_of(self)
     end
 
+    # Returns preloaded descendants if available, otherwise falls back to a query.
+    # Use Ancestry::Preloader.preload_descendants(records) to populate this cache.
+    #
+    # @return [Array<ActiveRecord::Base>] Descendant records
+    def preloaded_descendants
+      if defined?(@preloaded_descendants)
+        @preloaded_descendants
+      else
+        descendants.to_a
+      end
+    end
+
     def descendant_ids(depth_options = {})
       descendants(depth_options).pluck(self.class.primary_key)
     end
