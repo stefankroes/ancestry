@@ -77,10 +77,13 @@ module Ancestry
 
     # Counter Cache
     def increase_parent_counter_cache
+      # TODO: return if ancestry_callbacks_disabled?
+      # TODO: return unless parent_id
       self.class.ancestry_base_class.increment_counter counter_cache_column, parent_id
     end
 
     def decrease_parent_counter_cache
+      # TODO: ?
       # @_trigger_destroy_callback comes from activerecord, which makes sure only once decrement when concurrent deletion.
       # but @_trigger_destroy_callback began after rails@5.1.0.alpha.
       # https://github.com/rails/rails/blob/v5.2.0/activerecord/lib/active_record/persistence.rb#L340
@@ -88,17 +91,27 @@ module Ancestry
       # https://github.com/rails/rails/pull/27248
       return if defined?(@_trigger_destroy_callback) && !@_trigger_destroy_callback
       return if ancestry_callbacks_disabled?
+      # TODO: return unless parent_id
 
       self.class.ancestry_base_class.decrement_counter counter_cache_column, parent_id
     end
 
     def update_parent_counter_cache
+      # TODO:
+      # # @_trigger_update_callback comes from activerecord, which makes sure only once decrement when concurrent deletion.
+      # # but @_trigger_update_callback began after rails@5.1.0.alpha.
+      # # https://github.com/rails/rails/blob/v5.2.0/activerecord/lib/active_record/persistence.rb#L340
+      # # https://github.com/rails/rails/pull/27248
+      # return if defined?(@_trigger_update_callback) && !@_trigger_update_callback
       return unless saved_change_to_attribute?(self.class.ancestry_column)
+      # TODO: return if ancestry_callbacks_disabled?
 
       if (parent_id_was = parent_id_before_last_save)
         self.class.ancestry_base_class.decrement_counter counter_cache_column, parent_id_was
       end
 
+      # NOTE: will probably be callingincrease_parent_counter_cache instead
+      # make sure this will not break this PR
       parent_id && increase_parent_counter_cache
     end
 
