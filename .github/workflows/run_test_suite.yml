@@ -43,7 +43,7 @@ jobs:
         # - https://guides.rubyonrails.org/maintenance_policy.html
         format: [materialized_path, materialized_path2]
         activerecord: [71, 72, 80, 81]
-        ruby: ["3.2", "3.3", "3.4"]
+        ruby: ["3.2", "3.3", "3.4", "4.0"]
         # additional tests
         include:
           # EOL 2023
