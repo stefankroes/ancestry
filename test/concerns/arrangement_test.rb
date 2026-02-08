@@ -234,4 +234,61 @@ class ArrangementTest < ActiveSupport::TestCase
       assert_equal([n5.id, n3.id], model.arrange_nodes([n5, n3]).keys.map(&:id))
     end
   end
+
+  def test_arrange_nodes_orphan_strategy_rootify
+    AncestryTestDatabase.with_model do |model|
+      # - n1
+      #   - n2
+      #     - n3
+      #   - n4
+      n1 = model.create!
+      n2 = model.create!(parent: n1)
+      n3 = model.create!(parent: n2)
+      n4 = model.create!(parent: n1)
+
+      # n2 and n4's parent (n1) is missing, so they become roots
+      result = model.arrange_nodes([n2, n3, n4], orphan_strategy: :rootify)
+      assert_equal({n2 => {n3 => {}}, n4 => {}}, result)
+    end
+  end
+
+  def test_arrange_nodes_orphan_strategy_destroy
+    AncestryTestDatabase.with_model do |model|
+      # - n1
+      #   - n2
+      #     - n3
+      #   - n4
+      n1 = model.create!
+      n2 = model.create!(parent: n1)
+      n3 = model.create!(parent: n2)
+      n4 = model.create!(parent: n1)
+
+      # n2 and n4's parent (n1) is missing, so they and their children are dropped
+      result = model.arrange_nodes([n2, n3, n4], orphan_strategy: :destroy)
+      assert_equal({}, result)
+    end
+  end
+
+  def test_arrange_nodes_orphan_strategy_restrict
+    AncestryTestDatabase.with_model do |model|
+      n1 = model.create!
+      n2 = model.create!(parent: n1)
+
+      # n2's parent (n1) is missing, so restrict raises
+      assert_raises(Ancestry::AncestryException) do
+        model.arrange_nodes([n2], orphan_strategy: :restrict)
+      end
+    end
+  end
+
+  def test_arrange_nodes_orphan_strategy_rootify_is_default
+    AncestryTestDatabase.with_model do |model|
+      n1 = model.create!
+      n2 = model.create!(parent: n1)
+
+      # default behavior: orphans become roots
+      result = model.arrange_nodes([n2])
+      assert_equal({n2 => {}}, result)
+    end
+  end
 end
