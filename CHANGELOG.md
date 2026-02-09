@@ -23,20 +23,20 @@ a nice looking [Changelog](http://keepachangelog.com).
 * Ruby 3.4 support
 * Rails 8.0 support
 
-#### Notable features
+### Notable features
 
 Depth scopes now work without `cache_depth`. But please only use this in background
 jobs. If you need to do this in the ui, please use `cache_depth`.
 
 `build_cache_depth_sql!` is quicker than `build_cache_depth!` (1 query instead of N+1 queries).
 
-#### Deprecations
+### Deprecations
 
 - Option `:depth_cache_column` is going away.
   Please use a single key instead: `cache_depth: :depth_cach_column_name`.
   `cache_depth: true` still defaults to `ancestry_depth`.
 
-#### Breaking Changes
+### Breaking Changes
 
 * `siblings` no longer returns self. This is a bug fix, but does change behavior.
 * Dropped support for Rails < 6.1
@@ -84,7 +84,7 @@ jobs. If you need to do this in the ui, please use `cache_depth`.
 * ruby 3.2 support [#596](https://github.com/stefankroes/ancestry/pull/596) (thx @petergoldstein)
 * Reduce memory for sort_by_ancestry [#415](https://github.com/stefankroes/ancestry/pull/415)
 
-#### Notable features
+### Notable features
 
 Default configuration values are provided for a few options: `update_strategy`, `ancestry_format`, and `primary_key_format`.
 These can be set in an initializer via `Ancestry.default_{ancestry_format} = value`
@@ -94,7 +94,7 @@ It shows promise to make the `ancestry` field more sql friendly.
 
 Both of these are better documented in [the readme](/README.md).
 
-#### Breaking changes
+### Breaking changes
 
 - `ancestry_primary_key_format` is now specified or a single key not the whole regular expression.
   We used to accept `/\A[0-9]+(/[0-9]+)*` or `'[0-9]'`, but now we only accept `'[0-9]'`.
@@ -158,18 +158,18 @@ Both of these are better documented in [the readme](/README.md).
 
 ## Version [3.0.5] <sub><sup>2018-11-06</sup></sub>
 
-## Changed
+### Changed
 
 * Added indirect children support (thx @tilo)
 * Fixed test sorting for pg on mac osx
 
-## Fixes
+### Fixes
 
 * Reduced memory footprint of parsing ancestry column (thx @NickLaMuro)
 
 ## Version [3.0.4] <sub><sup>2018-10-27</sup></sub>
 
-## Fixes
+### Fixes
 
 * Properly detects non-integer columns (thx @adam101)
 * Arrange no longer drops nodes due to missing parents (thx @trafium)
@@ -180,7 +180,7 @@ This branch (3.x) should still be compatible with rails 3 and 4.
 Rails 5.1 and 5.2 support were introduced in this version, but ongoing support
 has been moved to ancestry 4.0
 
-## Fixes
+### Fixes
 
 * Reduce object allocation (thx @NickLaMuro)
 * Rails 5.1 fixes (thx @ctrombley)
@@ -192,7 +192,7 @@ has been moved to ancestry 4.0
 
 ## Version [3.0.2] <sub><sup>2018-04-24</sup></sub>
 
-## Fixes
+### Fixes
 
 * fixed `order_by_ancestry` bug
 * fixed order tests for postgres on mac (it uses a different collation)
@@ -202,7 +202,7 @@ has been moved to ancestry 4.0
 
 ## Version [3.0.1] <sub><sup>2017-07-05</sup></sub>
 
-## Fixes
+### Fixes
 
 * added gem metadata
 * fixed keep a changelog link (thx @mattbrictson)
@@ -213,12 +213,12 @@ has been moved to ancestry 4.0
 
 ## Version [3.0.0] <sub><sup>2017-05-18</sup></sub>
 
-## Changed
+### Changed
 
 * Dropping Rails 3.0, and 3.1. Added Rails 5.1 support (thx @ledermann)
 * Dropping Rails 4.0, 4.1 for build reasons. Since 4.2 is supported, all 4.x should still work.
 
-## Fixes
+### Fixes
 
 * Performance: Use `pluck` vs `map` for ids (thx @njakobsen and @culturecode)
 * Fixed acts_as_tree compatibility (thx @crazymykl)
@@ -351,7 +351,7 @@ Missed 2 commits (which are feature adds)
 * Depth caching (and cache rebuilding)
 * Depth method for nodes
 * Named scopes for selecting by depth
-* Relative depth options for tree navigation methods: 
+* Relative depth options for tree navigation methods:
     * ancestors
     * path
     * descendants
@@ -381,7 +381,6 @@ Missed 2 commits (which are feature adds)
 * Subtree movement
 * Named scopes
 * Validations
-
 
 [HEAD]: https://github.com/stefankroes/ancestry/compare/v5.0.0...HEAD
 [5.0.0]: https://github.com/stefankroes/ancestry/compare/v4.3.3...v5.0.0
