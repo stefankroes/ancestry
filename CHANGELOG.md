@@ -121,7 +121,7 @@ Both of these are better documented in [the readme](/README.md).
 * dropped support for rails 4.2 and 5.0 (thx @d-m-u)
 * better documentation counter cache option (thx @pustomytnyk)
 * clean up code (thx @amatsuda @d-m-u)
-* fixed rails 6.1 support (thx @cmr119 @d-staehler @danini-the-panini )
+* fixed rails 6.1 support (thx @cmr119 @d-staehler @danini-the-panini)
 * phasing out `parent_id?`, `ancestors?` and using `has_parent?` instead
 * fixed postgres order bug on rails 6.2 and higher (thx @smoyt)
 
@@ -134,7 +134,7 @@ Both of these are better documented in [the readme](/README.md).
 * introduce i18n
 * pg sql optimization for ancestry changes (thx @suonlight and @geis)
 * pg sql optimization for sorting (thx @brendon and @d-m-u)
-* fix to humanise model name (thx @mkllnk)
+* fix to humanize model name (thx @mkllnk)
 * able to convert to ancestry from a parent_id column with a different name
 * documentation fixes for better diagrams and grammar (thx @dtamais, @d-m-u, and @CamilleDrapier)
 
@@ -299,7 +299,7 @@ Missed 2 commits (which are feature adds)
 
 * Prepended table names to column names in queries (thx @raelik)
 * Better check to see if acts_as_tree can be overloaded (thx @jims)
-* Performance inprovements (thx @kueda)
+* Performance improvements (thx @kueda)
 
 ## Version [1.2.3] <sub><sup>2010-10-28</sup></sub>
 
@@ -318,7 +318,7 @@ Missed 2 commits (which are feature adds)
 
 * Removed some duplication in has_ancestry
 * Cleaned up plugin pattern according to http://yehudakatz.com/2009/11/12/better-ruby-idioms/
-* Moved parts of ancestry into seperate files
+* Moved parts of ancestry into separate files
 * Made it possible to pass options into the arrange method
 * Renamed acts_as_tree to has_ancestry
 * Aliased has_ancestry as acts_as_tree if acts_as_tree is available
