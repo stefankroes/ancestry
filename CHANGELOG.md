@@ -32,7 +32,7 @@ jobs. If you need to do this in the ui, please use `cache_depth`.
 
 ### Deprecations
 
-- Option `:depth_cache_column` is going away.
+* Option `:depth_cache_column` is going away.
   Please use a single key instead: `cache_depth: :depth_cach_column_name`.
   `cache_depth: true` still defaults to `ancestry_depth`.
 
@@ -45,17 +45,17 @@ jobs. If you need to do this in the ui, please use `cache_depth`.
 * Options are no longer set via class methods. Using `has_ancestry` is now the only way to enable these features.
   These are all not part of the public API.
   * These are now class level read only accessors
-    - `ancestry_base_class`         (introduced 1.1, removed by #633)
-    - `ancestry_column`             (introduced 1.2, removed by #633)
-    - `ancestry_delimiter`          (introduced 4.3.0, removed by #633)
-    - `depth_cache_column`          (introduced 4.3.0, removed by #654)
+    * `ancestry_base_class`         (introduced 1.1, removed by #633)
+    * `ancestry_column`             (introduced 1.2, removed by #633)
+    * `ancestry_delimiter`          (introduced 4.3.0, removed by #633)
+    * `depth_cache_column`          (introduced 4.3.0, removed by #654)
   * These no longer have any accessors
-    - `ancestry_format`             (introduced 4.3.0, removed by #654)
-    - `orphan_strategy`             (introduced 1.1, removed by #617)
-    - `ancestry_primary_key_format` (introduced 4.3.0, removed by #649)
-    - `touch_ancestors`             (introduced 2.1, removed by TODO)
+    * `ancestry_format`             (introduced 4.3.0, removed by #654)
+    * `orphan_strategy`             (introduced 1.1, removed by #617)
+    * `ancestry_primary_key_format` (introduced 4.3.0, removed by #649)
+    * `touch_ancestors`             (introduced 2.1, removed by TODO)
 * These are seen as internal and may go away:
-  - `apply_orphan_strategy` Please use `orphan_strategy: :none` and a custom `before_destory` instead.
+  * `apply_orphan_strategy` Please use `orphan_strategy: :none` and a custom `before_destory` instead.
 
 ## Version [4.3.3] <sub><sup>2023-04-01</sup></sub>
 
@@ -64,13 +64,13 @@ jobs. If you need to do this in the ui, please use `cache_depth`.
 ## Version [4.3.2] <sub><sup>2023-03-25</sup></sub>
 
 * Fix: added back fields that were removed in #589 [#647](https://github.com/stefankroes/ancestry/pull/647) (thx @rastamhadi)
-  - path_ids_in_database
+  * path_ids_in_database
 
 ## Version [4.3.1] <sub><sup>2023-03-19</sup></sub>
 
 * Fix: added back fields that were removed in #589 [#637](https://github.com/stefankroes/ancestry/pull/637) (thx @znz)
-  - ancestor_ids_in_database
-  - parent_id_in_database
+  * ancestor_ids_in_database
+  * parent_id_in_database
 
 ## Version [4.3.0] <sub><sup>2023-03-09</sup></sub>
 
@@ -96,7 +96,7 @@ Both of these are better documented in [the readme](/README.md).
 
 ### Breaking changes
 
-- `ancestry_primary_key_format` is now specified or a single key not the whole regular expression.
+* `ancestry_primary_key_format` is now specified or a single key not the whole regular expression.
   We used to accept `/\A[0-9]+(/[0-9]+)*` or `'[0-9]'`, but now we only accept `'[0-9]'`.
 
 ## Version [4.2.0] <sub><sup>2022-06-09</sup></sub>
@@ -352,20 +352,20 @@ Missed 2 commits (which are feature adds)
 * Depth method for nodes
 * Named scopes for selecting by depth
 * Relative depth options for tree navigation methods:
-    * ancestors
-    * path
-    * descendants
-    * descendant_ids
-    * subtree
-    * subtree_ids
+  * ancestors
+  * path
+  * descendants
+  * descendant_ids
+  * subtree
+  * subtree_ids
 * Updated README
 * Easy migration from existing plugins/gems
 * acts_as_tree checks unknown options
 * acts_as_tree checks that options are hash
 * Added a bang (!) to the integrity functions
-    * Since these functions should only be used from ./script/console and not
-      from your application, this change is not considered as breaking backwards
-      compatibility and the major version wasn't bumped.
+  * Since these functions should only be used from ./script/console and not
+    from your application, this change is not considered as breaking backwards
+    compatibility and the major version wasn't bumped.
 * Updated install script to point to documentation
 * Removed rails specific init
 * Removed uninstall script
