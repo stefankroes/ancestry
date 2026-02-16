@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-psql -c 'create database ancestry_test;' || echo 'db exists'
-mysql -e 'CREATE SCHEMA IF NOT EXISTS 'ancestry_test';'
+bundle install
+echo
 
-#MAKE="make -j $(nproc)" bundle install --gemfile gemfiles/gemfile_61.gemfile
+echo "Setting up the postgres database for specs..."
+DB=pg rake db:create
+echo "Setting up the mysql database for specs..."
+DB=mysql rake db:create

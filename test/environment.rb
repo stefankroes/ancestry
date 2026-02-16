@@ -13,9 +13,6 @@ end
 
 require 'active_support'
 require 'active_support/test_case'
-require 'test_helpers'
-ActiveSupport.test_order = :random if ActiveSupport.respond_to?(:test_order=)
-ActiveSupport::TestCase.include(TestHelpers)
 require 'active_record'
 require 'logger'
 
@@ -29,30 +26,8 @@ class AncestryTestDatabase
     ActiveRecord::Base.logger = Logger.new($stderr)
     ActiveRecord::Base.logger.level = Logger::Severity::UNKNOWN
 
-    # Assume Travis CI database config if no custom one exists
-    filename = if File.exist?(File.expand_path('../database.yml', __FILE__))
-                 File.expand_path('../database.yml', __FILE__)
-               else
-                 File.expand_path('../database.ci.yml', __FILE__)
-               end
-
-    # Setup database connection
-    all_config =
-      if YAML.respond_to?(:safe_load_file)
-        YAML.safe_load_file(filename, aliases: true)
-      else
-        YAML.load_file(filename)
-      end
-    config = all_config[db_type]
-    if config.blank?
-      $stderr.puts "", "", "ERROR: Could not find '#{db_type}' in #{filename}"
-      $stderr.puts "Pick from: #{all_config.keys.join(", ")}", "", ""
-      exit(1)
-    end
-    ActiveRecord::Base.establish_connection(**config)
-
     begin
-      ActiveRecord::Base.connection
+      connect
       Ancestry.default_update_strategy = ENV["UPDATE_STRATEGY"] == "sql" ? :sql : :ruby
       Ancestry.default_ancestry_format = ENV["FORMAT"].to_sym if ENV["FORMAT"].present?
 
@@ -196,16 +171,80 @@ class AncestryTestDatabase
     @materialized_path2 = (ENV["FORMAT"] == "materialized_path2")
   end
 
+  # Normalize DB env var to match database.yml keys
   def self.db_type
-    ENV["DB"].presence || "sqlite3"
+    case ENV.fetch("DB", "sqlite3")
+    when "sqlite", "sqlite3" then "sqlite3"
+    when "pg", "postgresql"  then "pg"
+    when "mysql", "mysql2"   then "mysql2"
+    else
+      ENV["DB"]
+    end
+  end
+
+  def self.connection_options
+    @connection_options ||=
+      begin
+        if defined?(I18n)
+          I18n.enforce_available_locales = false if I18n.respond_to?(:enforce_available_locales=)
+        end
+
+        filename = if File.exist?(File.expand_path('../database.yml', __FILE__))
+                     File.expand_path('../database.yml', __FILE__)
+                   else
+                     File.expand_path('../database.ci.yml', __FILE__)
+                   end
+
+        all_config =
+          if YAML.respond_to?(:safe_load_file)
+            YAML.safe_load_file(filename, aliases: true)
+          else
+            YAML.load_file(filename)
+          end
+
+        # Setup database connection
+        config = all_config[db_type]
+        if config.blank?
+          $stderr.puts "", "", "ERROR: Could not find '#{db_type}' in #{filename}"
+          $stderr.puts "Pick from: #{all_config.keys.join(", ")}", "", ""
+          exit(1)
+        end
+
+        config
+      end
+  end
+
+  def self.create
+    ActiveRecord::Base.establish_connection(connection_options.except("database"))
+    ActiveRecord::Base.connection.create_database(connection_options["database"])
+    self
+  end
+
+  def self.drop
+    ActiveRecord::Base.establish_connection(connection_options.except("database"))
+    ActiveRecord::Base.connection.drop_database(connection_options["database"])
+    self
+  end
+
+  def self.connect
+    ActiveRecord::Base.establish_connection(connection_options)
+    ActiveRecord::Base.connection # Check the connection works
+    self
   end
 end
 
-AncestryTestDatabase.setup
+# Only run setup and minitest when loaded for testing (not from Rakefile db tasks)
+unless File.basename($PROGRAM_NAME) == "rake"
+  require 'test_helpers'
+  ActiveSupport.test_order = :random if ActiveSupport.respond_to?(:test_order=)
+  ActiveSupport::TestCase.include(TestHelpers)
 
-puts "\nLoaded Ancestry test suite environment:"
-puts "  Ruby: #{RUBY_VERSION}"
-puts "  ActiveRecord: #{ActiveRecord::VERSION::STRING}"
-puts "  Database: #{ActiveRecord::Base.connection.adapter_name}\n\n"
+  AncestryTestDatabase.setup
 
-require 'minitest/autorun'
+  puts "\nLoaded Ancestry test suite environment:"
+  puts "  Ruby: #{RUBY_VERSION}"
+  puts "  ActiveRecord: #{ActiveRecord::VERSION::STRING}"
+  puts "  Database: #{ActiveRecord::Base.connection.adapter_name}\n\n"
+
+  require 'minitest/autorun'
+end
