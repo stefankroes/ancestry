@@ -108,4 +108,27 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
       assert model.primary_key_is_an_integer?
     end
   end
+
+  def test_validate_descendants_depth
+    AncestryTestDatabase.with_model depth: 3, width: 3, cache_depth: true do |model, roots|
+      model.validates :ancestry_depth, numericality: { less_than_or_equal_to: 2 }
+
+      root = roots.first.first
+      child = root.children.first
+      # original tree: root(0) -> child(1) -> grandchild(2)
+
+      # moving child to a new root should keep depth 2
+      new_root = model.create!
+      child.parent = new_root
+      assert child.save, child.errors.full_messages.join(', ')
+
+      # moving child to new_child increases depth by 1
+      # new_root(0) -> new_child(1) -> child(2) -> grandchild(3) -> INVALID
+      new_child = new_root.children.create!
+      child.parent = new_child
+      assert_not child.save
+      error_message = I18n.t("errors.messages.less_than_or_equal_to", count: 2)
+      assert_includes child.errors[:ancestry_depth], error_message
+    end
+  end
 end

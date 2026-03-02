@@ -55,6 +55,9 @@ module Ancestry
       # Validate that the ancestor ids don't include own id
       validate :ancestry_exclude_self
 
+      # Validate descendants' depths don't exceed max depth when moving them
+      validate :ancestry_depth_of_descendants, if: :ancestry_changed?
+
       # Update descendants with new ancestry after update
       after_update :update_descendants_with_new_ancestry, if: :ancestry_changed?
 

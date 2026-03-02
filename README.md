@@ -133,25 +133,25 @@ Children can be created through the children relation on a node: `node.children.
 The node with the large border is the reference node (the node from which the navigation method is invoked.)
 The yellow nodes are those returned by the method.
 
-|                               |                                                     |                                 |
-|:-:                            |:-:                                                  |:-:                              |
-|**parent**                     |**root**<sup><a href="#fn1" id="ref1">1</a></sup>    |**ancestors**                    |
-|![parent](/img/parent.png)     |![root](/img/root.png)                               |![ancestors](/img/ancestors.png) |
-| nil for a root node           |self for a root node                                 |root..parent                     |
-| `parent_id`                   |`root_id`                                            |`ancestor_ids`                   |
-| `has_parent?`                 |`is_root?`                                           |`ancestors?`                     |
-|`parent_of?`                   |`root_of?`                                           |`ancestor_of?`                   |
-|**children**                   |**descendants**                                      |**indirects**                    |
-|![children](/img/children.png) |![descendants](/img/descendants.png)                 |![indirects](/img/indirects.png) |
-| `child_ids`                   |`descendant_ids`                                     |`indirect_ids`                   |
-| `has_children?`               |                                                     |                                 |
-| `child_of?`                   |`descendant_of?`                                     |`indirect_of?`                   |
-|**siblings**                   |**subtree**                                          |**path**                         |
-|![siblings](/img/siblings.png) |![subtree](/img/subtree.png)                         |![path](/img/path.png)           |
-| excludes self                 |self..indirects                                      |root..self                       |
-|`sibling_ids`                  |`subtree_ids`                                        |`path_ids`                       |
-|`has_siblings?`                |                                                     |                                 |
-|`sibling_of?(node)`            |`in_subtree_of?`                                     |                                 |
+|                                |                                                   |                                  |
+| :----------------------------: | :-----------------------------------------------: | :------------------------------: |
+|           **parent**           | **root**<sup><a href="#fn1" id="ref1">1</a></sup> |          **ancestors**           |
+|   ![parent](/img/parent.png)   |              ![root](/img/root.png)               | ![ancestors](/img/ancestors.png) |
+|      nil for a root node       |               self for a root node                |           root..parent           |
+|          `parent_id`           |                     `root_id`                     |          `ancestor_ids`          |
+|         `has_parent?`          |                    `is_root?`                     |           `ancestors?`           |
+|          `parent_of?`          |                    `root_of?`                     |          `ancestor_of?`          |
+|          **children**          |                  **descendants**                  |          **indirects**           |
+| ![children](/img/children.png) |       ![descendants](/img/descendants.png)        | ![indirects](/img/indirects.png) |
+|          `child_ids`           |                 `descendant_ids`                  |          `indirect_ids`          |
+|        `has_children?`         |                                                   |                                  |
+|          `child_of?`           |                 `descendant_of?`                  |          `indirect_of?`          |
+|          **siblings**          |                    **subtree**                    |             **path**             |
+| ![siblings](/img/siblings.png) |           ![subtree](/img/subtree.png)            |      ![path](/img/path.png)      |
+|         excludes self          |                  self..indirects                  |            root..self            |
+|         `sibling_ids`          |                   `subtree_ids`                   |            `path_ids`            |
+|        `has_siblings?`         |                                                   |                                  |
+|      `sibling_of?(node)`       |                 `in_subtree_of?`                  |                                  |
 
 When using `STI` all classes are returned from the scopes unless you specify otherwise using `where(:type => "ChildClass")`.
 
@@ -518,6 +518,19 @@ Some use migrations, but that can make the migration suite fragile. The command 
 ```ruby
 Model.rebuild_depth_cache!
 ```
+
+## Depth Constraints
+
+You can use standard Rails validations on your depth cache column to restrict the depth of your tree. For example, to ensure no nodes are deeper than 2:
+
+```ruby
+class TreeNode < ActiveRecord::Base
+  has_ancestry cache_depth: true
+  validates :ancestry_depth, numericality: { less_than_or_equal_to: 2 }
+end
+```
+
+Ancestry will automatically validate not just the node itself, but also ensure that moving a subtree does not cause any of its descendants to exceed the maximum depth.
 
 # Running Tests
 
