@@ -119,7 +119,7 @@ module Ancestry
     end
 
     def update_parent_counter_cache
-      return unless saved_change_to_attribute?(self.class.ancestry_column)
+      return unless ancestry_changed?
 
       if (parent_id_was = parent_id_before_last_save)
         self.class.ancestry_base_class.decrement_counter counter_cache_column, parent_id_was
