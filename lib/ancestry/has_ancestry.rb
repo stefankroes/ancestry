@@ -43,7 +43,15 @@ module Ancestry
 
       # Include dynamic class methods
       extend Ancestry::ClassMethods
-      extend Ancestry::HasAncestry.ancestry_format_module(ancestry_format)
+
+      format_module = Ancestry::HasAncestry.ancestry_format_module(ancestry_format)
+      extend format_module
+
+      # Include generated module with baked-in column/format (replaces format InstanceMethods)
+      generated_mod = Ancestry::InstanceMethodsBuilder.build(
+        format_module, ancestry_column, ancestry_delimiter, ancestry_root
+      )
+      include generated_mod
 
       attribute ancestry_column, default: ancestry_root
 

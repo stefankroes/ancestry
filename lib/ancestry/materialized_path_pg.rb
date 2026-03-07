@@ -12,7 +12,8 @@ module Ancestry
         # Replace old ancestry prefix with new ancestry:
         # CONCAT(new_ancestry, SUBSTRING(column, LENGTH(old_ancestry) + 1))
         column = self.class.ancestry_column
-        replace_sql = self.class.concat("'#{new_ancestry}'", "SUBSTRING(#{column}, #{old_ancestry.length + 1})")
+        adapter = self.class.connection.adapter_name.downcase
+        replace_sql = Ancestry::MaterializedPath.concat(adapter, "'#{new_ancestry}'", "SUBSTRING(#{column}, #{old_ancestry.length + 1})")
         update_clause = {
           column => Arel.sql(replace_sql)
         }
