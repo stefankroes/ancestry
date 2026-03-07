@@ -13,9 +13,8 @@ module Ancestry
     end
 
     def indirects_of(object)
-      t = arel_table
       node = to_node(object)
-      where(t[ancestry_column].matches("#{node.child_ancestry}%#{ancestry_delimiter}%", nil, true))
+      where(MaterializedPath2.indirects_condition(arel_table[ancestry_column], node.child_ancestry, ancestry_delimiter))
     end
 
     def ordered_by_ancestry(order = nil)
@@ -23,7 +22,7 @@ module Ancestry
     end
 
     def descendants_by_ancestry(ancestry)
-      arel_table[ancestry_column].matches("#{ancestry}%", nil, true)
+      MaterializedPath2.descendants_condition(arel_table[ancestry_column], ancestry, ancestry_delimiter)
     end
 
     def ancestry_root
@@ -31,7 +30,7 @@ module Ancestry
     end
 
     def child_ancestry_sql
-      concat("#{table_name}.#{ancestry_column}", "#{table_name}.#{primary_key}", "'#{ancestry_delimiter}'")
+      MaterializedPath2.child_ancestry_sql(table_name, ancestry_column, primary_key, ancestry_delimiter, connection.adapter_name.downcase)
     end
 
     def ancestry_depth_sql
@@ -39,11 +38,33 @@ module Ancestry
     end
 
     def generate_ancestry(ancestor_ids)
+      MaterializedPath2.generate(ancestor_ids, ancestry_delimiter, ancestry_root)
+    end
+
+    def self.generate(ancestor_ids, delimiter, root)
       if ancestor_ids.present? && ancestor_ids.any?
-        "#{ancestry_delimiter}#{ancestor_ids.join(ancestry_delimiter)}#{ancestry_delimiter}"
+        "#{delimiter}#{ancestor_ids.join(delimiter)}#{delimiter}"
       else
-        ancestry_root
+        root
       end
+    end
+
+    def self.child_ancestry_value(ancestry_value, id, delimiter)
+      "#{ancestry_value}#{id}#{delimiter}"
+    end
+
+    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, delimiter, adapter)
+      MaterializedPath.concat(adapter, "#{table_name}.#{ancestry_column}", "#{table_name}.#{primary_key}", "'#{delimiter}'")
+    end
+
+    # mp2: descendants just use LIKE (trailing delimiter prevents false prefix matches)
+    def self.descendants_condition(attr, child_ancestry, _delimiter)
+      attr.matches("#{child_ancestry}%", nil, true)
+    end
+
+    # mp2: indirects match child_ancestry + at least one more segment
+    def self.indirects_condition(attr, child_ancestry, delimiter)
+      attr.matches("#{child_ancestry}%#{delimiter}%", nil, true)
     end
 
     # module method
@@ -53,14 +74,17 @@ module Ancestry
       "(#{tmp} -1)"
     end
 
-    private
-
-    def ancestry_nil_allowed?
-      false
+    def self.validation_options(primary_key_format, delimiter)
+      {
+        format: {with: /\A#{Regexp.escape(delimiter)}(#{primary_key_format}#{Regexp.escape(delimiter)})*\z/.freeze},
+        allow_nil: false
+      }
     end
 
-    def ancestry_format_regexp(primary_key_format)
-      /\A#{Regexp.escape(ancestry_delimiter)}(#{primary_key_format}#{Regexp.escape(ancestry_delimiter)})*\z/.freeze
+    private
+
+    def ancestry_validation_options(ancestry_primary_key_format)
+      MaterializedPath2.validation_options(ancestry_primary_key_format, ancestry_delimiter)
     end
 
     module InstanceMethods
@@ -68,7 +92,7 @@ module Ancestry
       def child_ancestry
         raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")) if new_record?
 
-        "#{attribute_in_database(self.class.ancestry_column)}#{id}#{self.class.ancestry_delimiter}"
+        MaterializedPath2.child_ancestry_value(attribute_in_database(self.class.ancestry_column), id, self.class.ancestry_delimiter)
       end
 
       # Please see notes for MaterializedPath#child_ancestry_before_last_save
@@ -77,7 +101,7 @@ module Ancestry
           raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record"))
         end
 
-        "#{attribute_before_last_save(self.class.ancestry_column)}#{id}#{self.class.ancestry_delimiter}"
+        MaterializedPath2.child_ancestry_value(attribute_before_last_save(self.class.ancestry_column), id, self.class.ancestry_delimiter)
       end
     end
   end

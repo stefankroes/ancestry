@@ -108,13 +108,17 @@ module Ancestry
 
     # Pseudo-preordered array of nodes.  Children will always follow parents,
     # This is deterministic unless the parents are missing *and* a sort block is specified
-    def sort_by_ancestry(nodes)
+    def sort_by_ancestry(nodes, &block)
+      _sort_by_ancestry(nodes, ancestry_column, &block)
+    end
+
+    def _sort_by_ancestry(nodes, column, &block)
       arranged = nodes if nodes.is_a?(Hash)
 
       unless arranged
         presorted_nodes = nodes.sort do |a, b|
-          rank = (a.public_send(ancestry_column) || ' ') <=> (b.public_send(ancestry_column) || ' ')
-          rank = yield(a, b) if rank == 0 && block_given?
+          rank = (a.public_send(column) || ' ') <=> (b.public_send(column) || ' ')
+          rank = block.call(a, b) if rank == 0 && block
           rank
         end
 
@@ -129,6 +133,10 @@ module Ancestry
     # just in case, raise an AncestryIntegrityException if issues are detected
     # specify :report => :list to return an array of exceptions or :report => :echo to echo any error messages
     def check_ancestry_integrity!(options = {})
+      _check_ancestry_integrity!(ancestry_column, options)
+    end
+
+    def _check_ancestry_integrity!(column, options = {})
       parents = {}
       exceptions = [] if options[:report] == :list
 
@@ -139,7 +147,7 @@ module Ancestry
           if !node.sane_ancestor_ids?
             raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.invalid_ancestry_column",
                                                                :node_id => node.id,
-                                                               :ancestry_column => node.read_attribute(node.class.ancestry_column))
+                                                               :ancestry_column => node.read_attribute(column))
           end
           # ... check that all ancestors exist
           node.ancestor_ids.each do |ancestor_id|

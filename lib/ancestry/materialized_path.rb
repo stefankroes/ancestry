@@ -30,16 +30,13 @@ module Ancestry
     end
 
     def children_of(object)
-      t = arel_table
       node = to_node(object)
-      where(t[ancestry_column].eq(node.child_ancestry))
+      where(arel_table[ancestry_column].eq(node.child_ancestry))
     end
 
-    # indirect = anyone who is a descendant, but not a child
     def indirects_of(object)
-      t = arel_table
       node = to_node(object)
-      where(t[ancestry_column].matches("#{node.child_ancestry}#{ancestry_delimiter}%", nil, true))
+      where(MaterializedPath.indirects_condition(arel_table[ancestry_column], node.child_ancestry, ancestry_delimiter))
     end
 
     def descendants_of(object)
@@ -47,8 +44,7 @@ module Ancestry
     end
 
     def descendants_by_ancestry(ancestry)
-      t = arel_table
-      t[ancestry_column].matches("#{ancestry}#{ancestry_delimiter}%", nil, true).or(t[ancestry_column].eq(ancestry))
+      MaterializedPath.descendants_condition(arel_table[ancestry_column], ancestry, ancestry_delimiter)
     end
 
     def descendant_conditions(object)
@@ -62,15 +58,13 @@ module Ancestry
     end
 
     def subtree_of(object)
-      t = arel_table
       node = to_node(object)
-      descendants_of(node).or(where(t[primary_key].eq(node.id)))
+      descendants_of(node).or(where(arel_table[primary_key].eq(node.id)))
     end
 
     def siblings_of(object)
-      t = arel_table
       node = to_node(object)
-      where(t[ancestry_column].eq(node[ancestry_column].presence))
+      where(arel_table[ancestry_column].eq(node[ancestry_column].presence))
     end
 
     def ordered_by_ancestry(order = nil)
@@ -95,11 +89,7 @@ module Ancestry
     end
 
     def child_ancestry_sql
-      %{
-        CASE WHEN #{table_name}.#{ancestry_column} IS NULL THEN #{concat("#{table_name}.#{primary_key}")}
-        ELSE      #{concat("#{table_name}.#{ancestry_column}", "'#{ancestry_delimiter}'", "#{table_name}.#{primary_key}")}
-        END
-      }
+      MaterializedPath.child_ancestry_sql(table_name, ancestry_column, primary_key, ancestry_delimiter, connection.adapter_name.downcase)
     end
 
     def ancestry_depth_sql
@@ -107,30 +97,66 @@ module Ancestry
     end
 
     def generate_ancestry(ancestor_ids)
-      if ancestor_ids.present? && ancestor_ids.any?
-        ancestor_ids.join(ancestry_delimiter)
-      else
-        ancestry_root
-      end
+      MaterializedPath.generate(ancestor_ids, ancestry_delimiter, ancestry_root)
     end
 
     def parse_ancestry_column(obj)
-      return [] if obj.nil? || obj == ancestry_root
-
-      obj_ids = obj.split(ancestry_delimiter).delete_if(&:blank?)
-      primary_key_is_an_integer? ? obj_ids.map!(&:to_i) : obj_ids
+      MaterializedPath.parse(obj, ancestry_root, ancestry_delimiter, primary_key_is_an_integer?)
     end
 
     def ancestry_depth_change(old_value, new_value)
       parse_ancestry_column(new_value).size - parse_ancestry_column(old_value).size
     end
 
+    def self.generate(ancestor_ids, delimiter, root)
+      if ancestor_ids.present? && ancestor_ids.any?
+        ancestor_ids.join(delimiter)
+      else
+        root
+      end
+    end
+
+    def self.parse(obj, root, delimiter, integer_pk)
+      return [] if obj.nil? || obj == root
+
+      obj_ids = obj.split(delimiter).delete_if(&:blank?)
+      integer_pk ? obj_ids.map!(&:to_i) : obj_ids
+    end
+
+    def self.child_ancestry_value(ancestry_value, id, delimiter)
+      [ancestry_value, id].compact.join(delimiter)
+    end
+
+    # Arel condition: descendants have ancestry matching child_ancestry or starting with child_ancestry/
+    def self.descendants_condition(attr, child_ancestry, delimiter)
+      attr.matches("#{child_ancestry}#{delimiter}%", nil, true).or(attr.eq(child_ancestry))
+    end
+
+    # Arel condition: indirects have ancestry matching child_ancestry/*/
+    def self.indirects_condition(attr, child_ancestry, delimiter)
+      attr.matches("#{child_ancestry}#{delimiter}%", nil, true)
+    end
+
     def concat(*args)
-      if %w(sqlite sqlite3).include?(connection.adapter_name.downcase)
+      MaterializedPath.concat(connection.adapter_name.downcase, *args)
+    end
+
+    def self.concat(adapter, *args)
+      if %w(sqlite sqlite3).include?(adapter)
         args.join('||')
       else
         %{CONCAT(#{args.join(', ')})}
       end
+    end
+
+    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, delimiter, adapter)
+      pk_sql = concat(adapter, "#{table_name}.#{primary_key}")
+      full_sql = concat(adapter, "#{table_name}.#{ancestry_column}", "'#{delimiter}'", "#{table_name}.#{primary_key}")
+      %{
+        CASE WHEN #{table_name}.#{ancestry_column} IS NULL THEN #{pk_sql}
+        ELSE      #{full_sql}
+        END
+      }
     end
 
     def self.construct_depth_sql(table_name, ancestry_column, ancestry_delimiter)
@@ -139,21 +165,17 @@ module Ancestry
       "(CASE WHEN #{table_name}.#{ancestry_column} IS NULL THEN 0 ELSE 1 + #{tmp} END)"
     end
 
-    private
-
-    def ancestry_validation_options(ancestry_primary_key_format)
+    def self.validation_options(primary_key_format, delimiter)
       {
-        format: {with: ancestry_format_regexp(ancestry_primary_key_format)},
-        allow_nil: ancestry_nil_allowed?
+        format: {with: /\A#{primary_key_format}(#{Regexp.escape(delimiter)}#{primary_key_format})*\z/.freeze},
+        allow_nil: true
       }
     end
 
-    def ancestry_nil_allowed?
-      true
-    end
+    private
 
-    def ancestry_format_regexp(primary_key_format)
-      /\A#{primary_key_format}(#{Regexp.escape(ancestry_delimiter)}#{primary_key_format})*\z/.freeze
+    def ancestry_validation_options(ancestry_primary_key_format)
+      MaterializedPath.validation_options(ancestry_primary_key_format, ancestry_delimiter)
     end
 
     module InstanceMethods
@@ -168,23 +190,23 @@ module Ancestry
       end
 
       def ancestor_ids
-        self.class.parse_ancestry_column(read_attribute(self.class.ancestry_column))
+        MaterializedPath.parse(read_attribute(self.class.ancestry_column), self.class.ancestry_root, self.class.ancestry_delimiter, self.class.primary_key_is_an_integer?)
       end
 
       def ancestor_ids_in_database
-        self.class.parse_ancestry_column(attribute_in_database(self.class.ancestry_column))
+        MaterializedPath.parse(attribute_in_database(self.class.ancestry_column), self.class.ancestry_root, self.class.ancestry_delimiter, self.class.primary_key_is_an_integer?)
       end
 
       def ancestor_ids_before_last_save
-        self.class.parse_ancestry_column(attribute_before_last_save(self.class.ancestry_column))
+        MaterializedPath.parse(attribute_before_last_save(self.class.ancestry_column), self.class.ancestry_root, self.class.ancestry_delimiter, self.class.primary_key_is_an_integer?)
       end
 
       def parent_id_in_database
-        self.class.parse_ancestry_column(attribute_in_database(self.class.ancestry_column)).last
+        MaterializedPath.parse(attribute_in_database(self.class.ancestry_column), self.class.ancestry_root, self.class.ancestry_delimiter, self.class.primary_key_is_an_integer?).last
       end
 
       def parent_id_before_last_save
-        self.class.parse_ancestry_column(attribute_before_last_save(self.class.ancestry_column)).last
+        MaterializedPath.parse(attribute_before_last_save(self.class.ancestry_column), self.class.ancestry_root, self.class.ancestry_delimiter, self.class.primary_key_is_an_integer?).last
       end
 
       # optimization - better to go directly to column and avoid parsing
@@ -200,7 +222,7 @@ module Ancestry
       def child_ancestry
         raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")) if new_record?
 
-        [attribute_in_database(self.class.ancestry_column), id].compact.join(self.class.ancestry_delimiter)
+        MaterializedPath.child_ancestry_value(attribute_in_database(self.class.ancestry_column), id, self.class.ancestry_delimiter)
       end
 
       # The ancestry value for this record's old children
@@ -212,7 +234,7 @@ module Ancestry
           raise Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")
         end
 
-        [attribute_before_last_save(self.class.ancestry_column), id].compact.join(self.class.ancestry_delimiter)
+        MaterializedPath.child_ancestry_value(attribute_before_last_save(self.class.ancestry_column), id, self.class.ancestry_delimiter)
       end
     end
   end
