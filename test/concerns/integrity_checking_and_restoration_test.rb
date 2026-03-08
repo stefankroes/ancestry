@@ -14,7 +14,7 @@ class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
 
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
       # Check detection of invalid format for ancestry column
-      roots.first.first.update_attribute model.ancestry_column, 'invalid_ancestry'
+      roots.first.first.update_attribute AncestryTestDatabase.ancestry_column, 'invalid_ancestry'
       assert_raise Ancestry::AncestryIntegrityException do
         model.check_ancestry_integrity!
       end
@@ -67,7 +67,7 @@ class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
     width, depth = 3, 3
     # Check that integrity is restored for invalid format for ancestry column
     AncestryTestDatabase.with_model :width => width, :depth => depth do |model, roots|
-      roots.first.first.update_attribute model.ancestry_column, 'invalid_ancestry'
+      roots.first.first.update_attribute AncestryTestDatabase.ancestry_column, 'invalid_ancestry'
       assert_integrity_restoration model
     end
 

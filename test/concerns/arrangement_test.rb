@@ -131,7 +131,7 @@ class ArrangementTest < ActiveSupport::TestCase
 
   def test_arrange_serializable
     AncestryTestDatabase.with_model :depth => 2, :width => 2 do |model, _roots|
-      col = model.ancestry_column
+      col = AncestryTestDatabase.ancestry_column
       # materialized path 2 has a slash at the beginning and end
       fmt =
         if AncestryTestDatabase.materialized_path2?

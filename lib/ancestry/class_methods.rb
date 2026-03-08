@@ -241,24 +241,29 @@ module Ancestry
       update_all("#{depth_cache_column} = #{ancestry_depth_sql}")
     end
 
-    def rebuild_counter_cache!
-      if %w(mysql mysql2).include?(connection.adapter_name.downcase)
-        connection.execute %{
-          UPDATE #{table_name} AS dest
+    def self._rebuild_counter_cache!(klass, column)
+      child_sql = klass.child_ancestry_sql
+      counter_col = klass.counter_cache_column
+      tbl = klass.table_name
+      pk = klass.primary_key
+
+      if %w(mysql mysql2).include?(klass.connection.adapter_name.downcase)
+        klass.connection.execute %{
+          UPDATE #{tbl} AS dest
           LEFT JOIN (
-            SELECT #{table_name}.#{primary_key}, COUNT(*) AS child_count
-            FROM #{table_name}
-            JOIN #{table_name} children ON children.#{ancestry_column} = (#{child_ancestry_sql})
-            GROUP BY #{table_name}.#{primary_key}
-          ) src USING(#{primary_key})
-          SET dest.#{counter_cache_column} = COALESCE(src.child_count, 0)
+            SELECT #{tbl}.#{pk}, COUNT(*) AS child_count
+            FROM #{tbl}
+            JOIN #{tbl} children ON children.#{column} = (#{child_sql})
+            GROUP BY #{tbl}.#{pk}
+          ) src USING(#{pk})
+          SET dest.#{counter_col} = COALESCE(src.child_count, 0)
         }
       else
-        update_all %{
-          #{counter_cache_column} = (
+        klass.update_all %{
+          #{counter_col} = (
             SELECT COUNT(*)
-            FROM #{table_name} children
-            WHERE children.#{ancestry_column} = (#{child_ancestry_sql})
+            FROM #{tbl} children
+            WHERE children.#{column} = (#{child_sql})
           )
         }
       end

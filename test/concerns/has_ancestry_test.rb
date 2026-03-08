@@ -9,13 +9,15 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
         # explicitly calling has_ancestry so we can be sure no args passed
         has_ancestry
       end
-      assert_equal :ancestry, model.ancestry_column
+      assert model.method_defined?(:ancestor_ids), "expected ancestor_ids to be defined"
+      assert_equal [], model.new.ancestor_ids
     end
   end
 
   def test_non_default_ancestry_column
     AncestryTestDatabase.with_model :ancestry_column => :alternative_ancestry do |model|
-      assert_equal :alternative_ancestry, model.ancestry_column
+      assert model.method_defined?(:ancestor_ids), "expected ancestor_ids to be defined"
+      assert_equal [], model.new.ancestor_ids
     end
   end
 

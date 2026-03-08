@@ -2,7 +2,7 @@
 
 module TestHelpers
   def assert_ancestry(node, value, child: :skip, db: :value)
-    column_name = node.class.ancestry_column
+    column_name = AncestryTestDatabase.ancestry_column
     if value.nil?
       assert_nil node.send(column_name)
     else

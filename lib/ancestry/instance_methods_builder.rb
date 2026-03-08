@@ -255,8 +255,67 @@ module Ancestry
           end
         end
 
+        # Validate that descendants' depths don't exceed max depth when moving them
+        def ancestry_depth_of_descendants
+          return if new_record? || (respond_to?(:previously_new_record?) && previously_new_record?)
+          return unless self.class.respond_to?(:depth_cache_column) && self.class.depth_cache_column
+
+          depth_col = self.class.depth_cache_column
+          validator = self.class.validators_on(depth_col).find do |v|
+            v.is_a?(ActiveModel::Validations::NumericalityValidator) &&
+              (v.options[:less_than_or_equal_to] || v.options[:less_than])
+          end
+          return unless validator
+
+          max_depth = validator.options[:less_than_or_equal_to] || (validator.options[:less_than] - 1)
+
+          old_value = attribute_in_database(:#{column})
+          new_value = read_attribute(:#{column})
+          depth_change = self.class.ancestry_depth_change(old_value, new_value)
+
+          if depth_change > 0
+            max_descendant_depth = unscoped_descendants.maximum(depth_col) || attribute_in_database(depth_col) || 0
+            if max_descendant_depth + depth_change > max_depth
+              errors.add(depth_col, :less_than_or_equal_to, count: max_depth)
+            end
+          end
+        end
+
         def cache_depth
           write_attribute self.class.ancestry_base_class.depth_cache_column, depth
+        end
+
+        # Update descendants with new ancestry using a single SQL statement
+        def update_descendants_with_new_ancestry_sql
+          if !ancestry_callbacks_disabled? && sane_ancestor_ids?
+            old_ancestry = self.class.generate_ancestry(path_ids_before_last_save)
+            new_ancestry = self.class.generate_ancestry(path_ids)
+            adapter = self.class.connection.adapter_name.downcase
+            replace_sql = Ancestry::MaterializedPath.concat(adapter, "'\#{new_ancestry}'", "SUBSTRING(#{column}, \#{old_ancestry.length + 1})")
+            update_clause = {
+              :#{column} => Arel.sql(replace_sql)
+            }
+
+            current_time = current_time_from_proper_timezone
+            timestamp_attributes_for_update_in_model.each do |col|
+              update_clause[col] = current_time
+            end
+
+            update_descendants_hook(update_clause, old_ancestry, new_ancestry)
+            unscoped_descendants_before_last_save.update_all update_clause
+          end
+        end
+
+        def update_descendants_hook(update_clause, old_ancestry, new_ancestry)
+          if self.class.respond_to?(:depth_cache_column)
+            depth_cache_column = self.class.depth_cache_column
+            depth_change = self.class.ancestry_depth_change(old_ancestry, new_ancestry)
+
+            if depth_change != 0
+              update_clause[depth_cache_column] = Arel.sql("\#{depth_cache_column} + \#{depth_change}")
+            end
+          end
+          update_clause
         end
       RUBY
 
@@ -372,6 +431,10 @@ module Ancestry
 
         def check_ancestry_integrity!(options = {})
           Ancestry::ClassMethods._check_ancestry_integrity!(self, :#{column}, options)
+        end
+
+        def rebuild_counter_cache!
+          Ancestry::ClassMethods._rebuild_counter_cache!(self, :#{column})
         end
       RUBY
 
