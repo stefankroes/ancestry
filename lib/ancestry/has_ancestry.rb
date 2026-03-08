@@ -50,7 +50,7 @@ module Ancestry
       )
       include generated_mod
 
-      attribute column, default: root
+      attribute column, default: format_module.root(delimiter)
 
       validates column, ancestry_validation_options(primary_key_format)
 

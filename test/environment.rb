@@ -52,6 +52,11 @@ class AncestryTestDatabase
     @ancestry_column ||= ENV["ANCESTRY_COLUMN"].presence || "ancestry"
   end
 
+  def self.ancestry_root
+    format_module = Ancestry::HasAncestry.ancestry_format_module(nil)
+    format_module.root('/')
+  end
+
   def self.ancestry_collation
     return @ancestry_collation if defined?(@ancestry_collation)
 

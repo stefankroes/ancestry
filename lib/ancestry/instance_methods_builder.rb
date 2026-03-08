@@ -393,10 +393,6 @@ module Ancestry
           ordered_by_ancestry(order)
         end
 
-        def ancestry_root
-          #{root.inspect}
-        end
-
         def child_ancestry_sql
           #{format_module}.child_ancestry_sql(table_name, #{column.inspect}, primary_key, "#{delimiter}", connection.adapter_name.downcase)
         end

@@ -43,7 +43,7 @@ class MaterializedPath2Test < ActiveSupport::TestCase
 
     AncestryTestDatabase.with_model do |model|
       node = model.create # assuming id == 1
-      ['/3/', '/10/2/', '/9/4/30/', model.ancestry_root].each do |value|
+      ['/3/', '/10/2/', '/9/4/30/', AncestryTestDatabase.ancestry_root].each do |value|
         node.send :write_attribute, AncestryTestDatabase.ancestry_column, value
         assert node.sane_ancestor_ids?
         assert node.valid?
@@ -71,7 +71,7 @@ class MaterializedPath2Test < ActiveSupport::TestCase
 
     AncestryTestDatabase.with_model(:id => :string, :primary_key_format => /[a-z]/) do |model|
       node = model.create(:id => 'z')
-      ['/a/', '/a/b/', '/a/b/c/', model.ancestry_root].each do |value|
+      ['/a/', '/a/b/', '/a/b/c/', AncestryTestDatabase.ancestry_root].each do |value|
         node.send :write_attribute, AncestryTestDatabase.ancestry_column, value
         assert node.valid?
       end
