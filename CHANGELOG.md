@@ -3,6 +3,27 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
+## Version [5.1.0] <sub><sup>2026-03-10</sup></sub>
+
+* `update_strategy: :sql` now works on all databases (SQLite, MySQL, PostgreSQL) [#715](https://github.com/stefankroes/ancestry/pull/715)
+* Introduce depth constraint validation for subtree moves [#713](https://github.com/stefankroes/ancestry/pull/713) (thx @wilburhimself)
+* Fix: CHANGELOG HTML entity fix [#712](https://github.com/stefankroes/ancestry/pull/712) (thx @biow0lf)
+* Testing Ruby 4.0 support [#709](https://github.com/stefankroes/ancestry/pull/709) (thx @fkmy)
+* Tested against Ruby 2.7–4.0 and Rails 6.0–8.1 [#716](https://github.com/stefankroes/ancestry/pull/716)
+
+### Deprecations
+
+These class-level accessors still work but are being phased out.
+We are moving configuration into baked method bodies and away from class variables.
+If you depend on reading these at runtime, now is a good time to find alternatives:
+
+* `ancestry_column`, `ancestry_delimiter`, `depth_cache_column`, `counter_cache_column`, `touch_ancestors`
+
+### Breaking Changes
+
+* `sort_by_ancestry` and `check_ancestry_integrity!` now delegate to `_sort_by_ancestry` and
+  `_check_ancestry_integrity!` with an explicit column parameter. The public API is unchanged.
+
 ## Version [5.0.0] <sub><sup>2026-02-08</sup></sub>
 
 * Fix: `siblings` now excludes self [#710](https://github.com/stefankroes/ancestry/pull/710) (thx @chikamichi)
@@ -382,7 +403,8 @@ Missed 2 commits (which are feature adds)
 * Named scopes
 * Validations
 
-[HEAD]: https://github.com/stefankroes/ancestry/compare/v5.0.0...HEAD
+[HEAD]: https://github.com/stefankroes/ancestry/compare/v5.1.0...HEAD
+[5.1.0]: https://github.com/stefankroes/ancestry/compare/v5.0.0...v5.1.0
 [5.0.0]: https://github.com/stefankroes/ancestry/compare/v4.3.3...v5.0.0
 [4.3.3]: https://github.com/stefankroes/ancestry/compare/v4.3.2...v4.3.3
 [4.3.2]: https://github.com/stefankroes/ancestry/compare/v4.3.1...v4.3.2
