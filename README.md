@@ -519,6 +519,19 @@ Some use migrations, but that can make the migration suite fragile. The command 
 Model.rebuild_depth_cache!
 ```
 
+## Depth Constraints
+
+You can use standard Rails validations on your depth cache column to restrict the depth of your tree. For example, to ensure no nodes are deeper than 2:
+
+```ruby
+class TreeNode < ActiveRecord::Base
+  has_ancestry cache_depth: true
+  validates :ancestry_depth, numericality: { less_than_or_equal_to: 2 }
+end
+```
+
+Ancestry will automatically validate not just the node itself, but also ensure that moving a subtree does not cause any of its descendants to exceed the maximum depth.
+
 # Running Tests
 
 ```bash
