@@ -39,20 +39,11 @@ jobs:
       matrix:
         # this matrix is driven by these sources:
         # - https://www.fastruby.io/blog/ruby/rails/versions/compatibility-table.html
-        # - https://www.ruby-lang.org/en/downloads/branches/
         # - https://guides.rubyonrails.org/maintenance_policy.html
-        format: [materialized_path, materialized_path2]
-        activerecord: [71, 72, 80, 81]
-        ruby: ["3.2", "3.3", "3.4", "4.0"]
-        # additional tests
         include:
           # EOL 2023
           - format: materialized_path2
             activerecord: 60
-            ruby: 2.7
-          # rails 6.1 and 7.0 have different ruby versions
-          - format: materialized_path2
-            activerecord: 61
             ruby: 2.7
           - format: materialized_path2
             activerecord: 61
@@ -60,6 +51,22 @@ jobs:
           - format: materialized_path2
             activerecord: 70
             ruby: "3.0"
+          - format: materialized_path2
+            activerecord: 71
+            ruby: "3.0"
+          # --- Stable ---
+          - activerecord: 72
+            format: materialized_path2
+            ruby: "3.2"
+          - activerecord: 72
+            format: materialized_path
+            ruby: "3.3"
+          - activerecord: 81
+            format: materialized_path2
+            ruby: "3.4"
+          - activerecord: 81
+            format: materialized_path
+            ruby: "4.0" # Latest Ruby
 
     env:
       # for the pg cli (psql, pg_isready) and possibly rails
@@ -88,6 +95,12 @@ jobs:
       - name: run sqlite tests
         env:
           DB: sqlite3
+        run: |
+          bundle exec rake
+      - name: run sqlite tests (UPDATE_STRATEGY=sql)
+        env:
+          DB: sqlite3
+          UPDATE_STRATEGY: sql
         run: |
           bundle exec rake
       - name: run pg tests
