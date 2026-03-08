@@ -5,6 +5,10 @@ module Ancestry
   # root: a=/,id=1    children=#{a}#{id}/% == /1/%
   # 3:    a=/1/2/,id=3 children=#{a}#{id}/% == /1/2/3/%
   module MaterializedPath2
+    def self.root(delimiter)
+      delimiter
+    end
+
     def self.generate(ancestor_ids, delimiter, root)
       if ancestor_ids.present? && ancestor_ids.any?
         "#{delimiter}#{ancestor_ids.join(delimiter)}#{delimiter}"

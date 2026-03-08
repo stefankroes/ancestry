@@ -9,10 +9,12 @@ module Ancestry
     # @param column [Symbol] the ancestry column name (e.g., :ancestry)
     # @param delimiter [String] the path delimiter (e.g., "/")
     # @param root [nil, String] the root value (nil for mp1, "/" for mp2)
+    # @param depth_cache_column [String, nil] column name for depth cache, or nil
+    # @param counter_cache_column [String, nil] column name for counter cache, or nil
     # @return [Module] a named module with baked-in instance methods
-    def self.build(format_module, column, delimiter, root)
+    def self.build(format_module, column, delimiter, root, depth_cache_column: nil, counter_cache_column: nil)
       format_name = format_module.name.split("::").last
-      mod_name = :"#{format_name}_#{column}"
+      mod_name = :"#{format_name}_#{column}#{"_d#{depth_cache_column}" if depth_cache_column}#{"_c#{counter_cache_column}" if counter_cache_column}"
 
       if Ancestry.const_defined?(mod_name, false)
         return Ancestry.const_get(mod_name, false)
@@ -255,35 +257,27 @@ module Ancestry
           end
         end
 
-        # Validate that descendants' depths don't exceed max depth when moving them
-        def ancestry_depth_of_descendants
-          return if new_record? || (respond_to?(:previously_new_record?) && previously_new_record?)
-          return unless self.class.respond_to?(:depth_cache_column) && self.class.depth_cache_column
-
-          depth_col = self.class.depth_cache_column
-          validator = self.class.validators_on(depth_col).find do |v|
-            v.is_a?(ActiveModel::Validations::NumericalityValidator) &&
-              (v.options[:less_than_or_equal_to] || v.options[:less_than])
-          end
-          return unless validator
-
-          max_depth = validator.options[:less_than_or_equal_to] || (validator.options[:less_than] - 1)
-
-          old_value = attribute_in_database(:#{column})
-          new_value = read_attribute(:#{column})
-          depth_change = self.class.ancestry_depth_change(old_value, new_value)
-
-          if depth_change > 0
-            max_descendant_depth = unscoped_descendants.maximum(depth_col) || attribute_in_database(depth_col) || 0
-            if max_descendant_depth + depth_change > max_depth
-              errors.add(depth_col, :less_than_or_equal_to, count: max_depth)
+        #{ if depth_cache_column
+          <<~RUBY
+            def ancestry_depth_of_descendants
+              return if new_record? || (respond_to?(:previously_new_record?) && previously_new_record?)
+              validate_depth_of_descendants(:#{depth_cache_column}, self.class.ancestry_depth_change(attribute_in_database(:#{column}), read_attribute(:#{column})))
             end
-          end
-        end
+          RUBY
+        else
+          <<~RUBY
+            def ancestry_depth_of_descendants
+            end
+          RUBY
+        end}
 
-        def cache_depth
-          write_attribute self.class.ancestry_base_class.depth_cache_column, depth
-        end
+        #{ if depth_cache_column
+          <<~RUBY
+            def cache_depth
+              write_attribute :#{depth_cache_column}, depth
+            end
+          RUBY
+        end}
 
         # Update descendants with new ancestry using a single SQL statement
         def update_descendants_with_new_ancestry_sql
@@ -306,17 +300,42 @@ module Ancestry
           end
         end
 
-        def update_descendants_hook(update_clause, old_ancestry, new_ancestry)
-          if self.class.respond_to?(:depth_cache_column)
-            depth_cache_column = self.class.depth_cache_column
-            depth_change = self.class.ancestry_depth_change(old_ancestry, new_ancestry)
-
-            if depth_change != 0
-              update_clause[depth_cache_column] = Arel.sql("\#{depth_cache_column} + \#{depth_change}")
+        #{ if depth_cache_column
+          <<~RUBY
+            def update_descendants_hook(update_clause, old_ancestry, new_ancestry)
+              add_depth_cache_to_update_clause(update_clause, :#{depth_cache_column}, self.class.ancestry_depth_change(old_ancestry, new_ancestry))
+              update_clause
             end
-          end
-          update_clause
-        end
+          RUBY
+        else
+          <<~RUBY
+            def update_descendants_hook(update_clause, old_ancestry, new_ancestry)
+              update_clause
+            end
+          RUBY
+        end}
+
+        #{ if counter_cache_column
+          <<~RUBY
+            def increase_parent_counter_cache
+              self.class.ancestry_base_class.increment_counter :#{counter_cache_column}, parent_id
+            end
+
+            def decrease_parent_counter_cache
+              return if defined?(@_trigger_destroy_callback) && !@_trigger_destroy_callback
+              return if ancestry_callbacks_disabled?
+              self.class.ancestry_base_class.decrement_counter :#{counter_cache_column}, parent_id
+            end
+
+            def update_parent_counter_cache
+              return unless ancestry_changed?
+              if (parent_id_was = parent_id_before_last_save)
+                self.class.ancestry_base_class.decrement_counter :#{counter_cache_column}, parent_id_was
+              end
+              parent_id && increase_parent_counter_cache
+            end
+          RUBY
+        end}
       RUBY
 
       # Class methods submodule — auto-extended when the main module is included
@@ -393,10 +412,6 @@ module Ancestry
           ordered_by_ancestry(order)
         end
 
-        def ancestry_root
-          #{root.inspect}
-        end
-
         def child_ancestry_sql
           #{format_module}.child_ancestry_sql(table_name, #{column.inspect}, primary_key, "#{delimiter}", connection.adapter_name.downcase)
         end
@@ -433,9 +448,31 @@ module Ancestry
           Ancestry::ClassMethods._check_ancestry_integrity!(self, :#{column}, options)
         end
 
-        def rebuild_counter_cache!
-          Ancestry::ClassMethods._rebuild_counter_cache!(self, :#{column})
-        end
+        #{ if counter_cache_column
+          <<~RUBY
+            def rebuild_counter_cache!
+              Ancestry::ClassMethods._rebuild_counter_cache!(self, :#{column}, :#{counter_cache_column})
+            end
+          RUBY
+        end}
+
+        #{ if depth_cache_column
+          <<~RUBY
+            def rebuild_depth_cache!
+              Ancestry::ClassMethods._rebuild_depth_cache!(self, :#{depth_cache_column})
+            end
+
+            def rebuild_depth_cache_sql!
+              update_all("#{depth_cache_column} = \#{ancestry_depth_sql}")
+            end
+          RUBY
+        else
+          <<~RUBY
+            def rebuild_depth_cache!
+              raise Ancestry::AncestryException, I18n.t("ancestry.cannot_rebuild_depth_cache")
+            end
+          RUBY
+        end}
       RUBY
 
       mod

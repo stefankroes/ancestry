@@ -102,7 +102,7 @@ class CounterCacheTest < ActiveSupport::TestCase
         end
       end
 
-      model.update_all(model.counter_cache_column => 0)
+      model.update_all(:children_count => 0)
       # ensure they are successfully broken
       roots.each do |lvl0_node, _lvl0_children|
         assert_equal 0, lvl0_node.reload.children_count

@@ -41,9 +41,9 @@ class StiSupportTest < ActiveSupport::TestCase
       subclass1.has_ancestry :ancestry_column => :t1, :counter_cache => true
       subclass2.has_ancestry :ancestry_column => :t1
 
-      # ensure class variables are distinct
-      assert subclass1.respond_to?(:counter_cache_column)
-      refute subclass2.respond_to?(:counter_cache_column)
+      # ensure counter cache is distinct per subclass
+      assert subclass1.method_defined?(:increase_parent_counter_cache)
+      refute subclass2.method_defined?(:increase_parent_counter_cache)
 
       root = subclass1.create!
       # this was the line that was blowing up for this orginal feature

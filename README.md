@@ -437,12 +437,12 @@ To migrate from `materialized_path` to `materialized_path2`:
 
 ```ruby
 klass = YourModel
-# set all child nodes
-klass.where.not(klass.arel_table[klass.ancestry_column].eq(nil)).update_all("#{klass.ancestry_column} = CONCAT('#{klass.ancestry_delimiter}', #{klass.ancestry_column}, '#{klass.ancestry_delimiter}')")
+# set all child nodes (wrap existing path with delimiters)
+klass.where.not(ancestry: nil).update_all("ancestry = CONCAT('/', ancestry, '/')")
 # set all root nodes
-klass.where(klass.arel_table[klass.ancestry_column].eq(nil)).update_all("#{klass.ancestry_column} = '#{klass.ancestry_root}'")
+klass.where(ancestry: nil).update_all("ancestry = '/'")
 
-change_column_null klass.table_name, klass.ancestry_column, false
+change_column_null klass.table_name, :ancestry, false
 ```
 
 # Migrating from plugin that uses parent_id column

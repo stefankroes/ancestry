@@ -75,31 +75,30 @@ module Ancestry
       end
     end
 
-    # Counter Cache
-    def increase_parent_counter_cache
-      self.class.ancestry_base_class.increment_counter counter_cache_column, parent_id
-    end
-
-    def decrease_parent_counter_cache
-      # @_trigger_destroy_callback comes from activerecord, which makes sure only once decrement when concurrent deletion.
-      # but @_trigger_destroy_callback began after rails@5.1.0.alpha.
-      # https://github.com/rails/rails/blob/v5.2.0/activerecord/lib/active_record/persistence.rb#L340
-      # https://github.com/rails/rails/pull/14735
-      # https://github.com/rails/rails/pull/27248
-      return if defined?(@_trigger_destroy_callback) && !@_trigger_destroy_callback
-      return if ancestry_callbacks_disabled?
-
-      self.class.ancestry_base_class.decrement_counter counter_cache_column, parent_id
-    end
-
-    def update_parent_counter_cache
-      return unless ancestry_changed?
-
-      if (parent_id_was = parent_id_before_last_save)
-        self.class.ancestry_base_class.decrement_counter counter_cache_column, parent_id_was
+    # Validate that descendants' depths don't exceed max depth when moving them
+    # Called from generated ancestry_depth_of_descendants with baked column names
+    def validate_depth_of_descendants(depth_cache_column, depth_change)
+      validator = self.class.validators_on(depth_cache_column).find do |v|
+        v.is_a?(ActiveModel::Validations::NumericalityValidator) &&
+          (v.options[:less_than_or_equal_to] || v.options[:less_than])
       end
+      return unless validator
 
-      parent_id && increase_parent_counter_cache
+      max_depth = validator.options[:less_than_or_equal_to] || (validator.options[:less_than] - 1)
+
+      if depth_change > 0
+        max_descendant_depth = unscoped_descendants.maximum(depth_cache_column) || attribute_in_database(depth_cache_column) || 0
+        if max_descendant_depth + depth_change > max_depth
+          errors.add(depth_cache_column, :less_than_or_equal_to, count: max_depth)
+        end
+      end
+    end
+
+    # Add depth cache update to SQL update clause for descendants
+    def add_depth_cache_to_update_clause(update_clause, depth_cache_column, depth_change)
+      if depth_change != 0
+        update_clause[depth_cache_column] = Arel.sql("#{depth_cache_column} + #{depth_change}")
+      end
     end
 
     # Callback disabling
