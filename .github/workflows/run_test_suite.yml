@@ -1,9 +1,9 @@
 name: run-test-suite
 on:
   push:
-    branches: [ master, 4-3-stable ]
+    branches: [ master, 4-3-stable, 5-1-stable ]
   pull_request:
-    branches: [ master, 4-3-stable ]
+    branches: [ master, 4-3-stable, 5-1-stable ]
 
 jobs:
   test:
