@@ -10,10 +10,11 @@ module Ancestry
     # @param delimiter [String] the path delimiter (e.g., "/")
     # @param root [nil, String] the root value (nil for mp1, "/" for mp2)
     # @param depth_cache_column [String, nil] column name for depth cache, or nil
+    # @param counter_cache_column [String, nil] column name for counter cache, or nil
     # @return [Module] a named module with baked-in instance methods
-    def self.build(format_module, column, delimiter, root, depth_cache_column: nil)
+    def self.build(format_module, column, delimiter, root, depth_cache_column: nil, counter_cache_column: nil)
       format_name = format_module.name.split("::").last
-      mod_name = :"#{format_name}_#{column}#{"_d#{depth_cache_column}" if depth_cache_column}"
+      mod_name = :"#{format_name}_#{column}#{"_d#{depth_cache_column}" if depth_cache_column}#{"_c#{counter_cache_column}" if counter_cache_column}"
 
       if Ancestry.const_defined?(mod_name, false)
         return Ancestry.const_get(mod_name, false)
@@ -313,6 +314,28 @@ module Ancestry
             end
           RUBY
         end}
+
+        #{ if counter_cache_column
+          <<~RUBY
+            def increase_parent_counter_cache
+              self.class.ancestry_base_class.increment_counter :#{counter_cache_column}, parent_id
+            end
+
+            def decrease_parent_counter_cache
+              return if defined?(@_trigger_destroy_callback) && !@_trigger_destroy_callback
+              return if ancestry_callbacks_disabled?
+              self.class.ancestry_base_class.decrement_counter :#{counter_cache_column}, parent_id
+            end
+
+            def update_parent_counter_cache
+              return unless ancestry_changed?
+              if (parent_id_was = parent_id_before_last_save)
+                self.class.ancestry_base_class.decrement_counter :#{counter_cache_column}, parent_id_was
+              end
+              parent_id && increase_parent_counter_cache
+            end
+          RUBY
+        end}
       RUBY
 
       # Class methods submodule — auto-extended when the main module is included
@@ -425,9 +448,13 @@ module Ancestry
           Ancestry::ClassMethods._check_ancestry_integrity!(self, :#{column}, options)
         end
 
-        def rebuild_counter_cache!
-          Ancestry::ClassMethods._rebuild_counter_cache!(self, :#{column})
-        end
+        #{ if counter_cache_column
+          <<~RUBY
+            def rebuild_counter_cache!
+              Ancestry::ClassMethods._rebuild_counter_cache!(self, :#{column}, :#{counter_cache_column})
+            end
+          RUBY
+        end}
 
         #{ if depth_cache_column
           <<~RUBY

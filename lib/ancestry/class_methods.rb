@@ -232,9 +232,8 @@ module Ancestry
       end
     end
 
-    def self._rebuild_counter_cache!(klass, column)
+    def self._rebuild_counter_cache!(klass, column, counter_col)
       child_sql = klass.child_ancestry_sql
-      counter_col = klass.counter_cache_column
       tbl = klass.table_name
       pk = klass.primary_key
 

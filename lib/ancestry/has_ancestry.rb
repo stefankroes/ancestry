@@ -58,11 +58,17 @@ module Ancestry
         depth_cache_sql = nil
       end
 
+      # Resolve counter cache column name (or nil)
+      counter_cache_column = if options[:counter_cache]
+        options[:counter_cache] == true ? 'children_count' : options[:counter_cache].to_s
+      end
+
       # Include generated module with baked-in column/format
       # This extends ClassMethods (scopes, helpers) and includes instance methods
       generated_mod = Ancestry::InstanceMethodsBuilder.build(
         format_module, column, delimiter, root,
-        depth_cache_column: depth_cache_column
+        depth_cache_column: depth_cache_column,
+        counter_cache_column: counter_cache_column
       )
       include generated_mod
 
@@ -109,11 +115,8 @@ module Ancestry
       scope :from_depth,   lambda { |depth| where("#{depth_cache_sql} >= ?", depth) }
       scope :after_depth,  lambda { |depth| where("#{depth_cache_sql} > ?", depth) }
 
-      # Create counter cache column accessor and set to option or default
-      if options[:counter_cache]
-        cattr_accessor :counter_cache_column
-        self.counter_cache_column = options[:counter_cache] == true ? 'children_count' : options[:counter_cache].to_s
-
+      # Counter cache callbacks
+      if counter_cache_column
         after_create :increase_parent_counter_cache, if: :has_parent?
         after_destroy :decrease_parent_counter_cache, if: :has_parent?
         after_update :update_parent_counter_cache

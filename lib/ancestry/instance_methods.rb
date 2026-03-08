@@ -75,33 +75,6 @@ module Ancestry
       end
     end
 
-    # Counter Cache
-    def increase_parent_counter_cache
-      self.class.ancestry_base_class.increment_counter counter_cache_column, parent_id
-    end
-
-    def decrease_parent_counter_cache
-      # @_trigger_destroy_callback comes from activerecord, which makes sure only once decrement when concurrent deletion.
-      # but @_trigger_destroy_callback began after rails@5.1.0.alpha.
-      # https://github.com/rails/rails/blob/v5.2.0/activerecord/lib/active_record/persistence.rb#L340
-      # https://github.com/rails/rails/pull/14735
-      # https://github.com/rails/rails/pull/27248
-      return if defined?(@_trigger_destroy_callback) && !@_trigger_destroy_callback
-      return if ancestry_callbacks_disabled?
-
-      self.class.ancestry_base_class.decrement_counter counter_cache_column, parent_id
-    end
-
-    def update_parent_counter_cache
-      return unless ancestry_changed?
-
-      if (parent_id_was = parent_id_before_last_save)
-        self.class.ancestry_base_class.decrement_counter counter_cache_column, parent_id_was
-      end
-
-      parent_id && increase_parent_counter_cache
-    end
-
     # Validate that descendants' depths don't exceed max depth when moving them
     # Called from generated ancestry_depth_of_descendants with baked column names
     def validate_depth_of_descendants(depth_cache_column, depth_change)
