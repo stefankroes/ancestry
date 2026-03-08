@@ -28,11 +28,6 @@ module Ancestry
       class_variable_set('@@ancestry_base_class', self)
       cattr_reader :ancestry_base_class, instance_reader: false
 
-      # Touch ancestors after updating
-      # days are limited. need to handle touch in pg case
-      cattr_accessor :touch_ancestors
-      self.touch_ancestors = options[:touch] || false
-
       # Include instance methods
       include Ancestry::InstanceMethods
 
