@@ -432,6 +432,10 @@ module Ancestry
         def check_ancestry_integrity!(options = {})
           Ancestry::ClassMethods._check_ancestry_integrity!(self, :#{column}, options)
         end
+
+        def rebuild_counter_cache!
+          Ancestry::ClassMethods._rebuild_counter_cache!(self, :#{column})
+        end
       RUBY
 
       mod
