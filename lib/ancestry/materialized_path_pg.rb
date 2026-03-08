@@ -2,15 +2,19 @@
 
 module Ancestry
   module MaterializedPathPg
-    # Update descendants with new ancestry (after update)
-    def update_descendants_with_new_ancestry
+    # Update descendants with new ancestry using a single SQL statement (after update)
+    def update_descendants_with_new_ancestry_sql
       # If enabled and node is existing and ancestry was updated and the new ancestry is sane ...
       # The only way the ancestry could be bad is via `update_attribute` with a bad value
       if !ancestry_callbacks_disabled? && sane_ancestor_ids?
         old_ancestry = self.class.generate_ancestry(path_ids_before_last_save)
         new_ancestry = self.class.generate_ancestry(path_ids)
+        # Replace old ancestry prefix with new ancestry:
+        # CONCAT(new_ancestry, SUBSTRING(column, LENGTH(old_ancestry) + 1))
+        column = self.class.ancestry_column
+        replace_sql = self.class.concat("'#{new_ancestry}'", "SUBSTRING(#{column}, #{old_ancestry.length + 1})")
         update_clause = {
-          self.class.ancestry_column => Arel.sql("regexp_replace(#{self.class.ancestry_column}, '^#{Regexp.escape(old_ancestry)}', '#{new_ancestry}')")
+          column => Arel.sql(replace_sql)
         }
 
         current_time = current_time_from_proper_timezone

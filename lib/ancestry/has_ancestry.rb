@@ -50,7 +50,7 @@ module Ancestry
       validates ancestry_column, ancestry_validation_options(primary_key_format)
 
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
-      include Ancestry::MaterializedPathPg if update_strategy == :sql
+      include Ancestry::MaterializedPathPg
 
       # Validate that the ancestor ids don't include own id
       validate :ancestry_exclude_self
@@ -59,7 +59,11 @@ module Ancestry
       validate :ancestry_depth_of_descendants, if: :ancestry_changed?
 
       # Update descendants with new ancestry after update
-      after_update :update_descendants_with_new_ancestry, if: :ancestry_changed?
+      if update_strategy == :sql
+        after_update :update_descendants_with_new_ancestry_sql, if: :ancestry_changed?
+      else
+        after_update :update_descendants_with_new_ancestry, if: :ancestry_changed?
+      end
 
       # Apply orphan strategy before destroy
       orphan_strategy_helper = "apply_orphan_strategy_#{orphan_strategy}"
