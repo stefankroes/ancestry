@@ -59,7 +59,6 @@ module Ancestry
       validates column, ancestry_validation_options(primary_key_format)
 
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
-      include Ancestry::MaterializedPathPg
 
       # Validate that the ancestor ids don't include own id
       validate :ancestry_exclude_self
