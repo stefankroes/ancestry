@@ -260,7 +260,144 @@ module Ancestry
         end
       RUBY
 
+      # Class methods submodule — auto-extended when the main module is included
+      class_mod = Module.new
+      mod.const_set(:ClassMethods, class_mod)
+
+      mod.define_method(:included) do |base|
+        base.extend(class_mod)
+      end
+      mod.send(:module_function, :included)
+
+      class_mod.class_eval <<~RUBY, __FILE__, __LINE__ + 1
+        def path_of(object)
+          to_node(object).path
+        end
+
+        def roots
+          where(arel_table[:#{column}].eq(#{root.inspect}))
+        end
+
+        def ancestors_of(object)
+          node = to_node(object)
+          where(arel_table[primary_key].in(node.ancestor_ids))
+        end
+
+        def inpath_of(object)
+          node = to_node(object)
+          where(arel_table[primary_key].in(node.path_ids))
+        end
+
+        def children_of(object)
+          node = to_node(object)
+          where(arel_table[:#{column}].eq(node.child_ancestry))
+        end
+
+        def indirects_of(object)
+          node = to_node(object)
+          where(#{format_module}.indirects_condition(arel_table[:#{column}], node.child_ancestry, "#{delimiter}"))
+        end
+
+        def descendants_of(object)
+          where(descendant_conditions(object))
+        end
+
+        def descendants_by_ancestry(ancestry)
+          #{format_module}.descendants_condition(arel_table[:#{column}], ancestry, "#{delimiter}")
+        end
+
+        def descendant_conditions(object)
+          node = to_node(object)
+          descendants_by_ancestry(node.child_ancestry)
+        end
+
+        def descendant_before_last_save_conditions(object)
+          node = to_node(object)
+          descendants_by_ancestry(node.child_ancestry_before_last_save)
+        end
+
+        def subtree_of(object)
+          node = to_node(object)
+          descendants_of(node).or(where(arel_table[primary_key].eq(node.id)))
+        end
+
+        def siblings_of(object)
+          node = to_node(object)
+          where(arel_table[:#{column}].eq(node[#{column.inspect}].presence))
+        end
+
+        def ordered_by_ancestry(order = nil)
+          #{_ordered_by_ancestry_body(format_module, column)}
+        end
+
+        def ordered_by_ancestry_and(order)
+          ordered_by_ancestry(order)
+        end
+
+        def ancestry_root
+          #{root.inspect}
+        end
+
+        def child_ancestry_sql
+          #{format_module}.child_ancestry_sql(table_name, #{column.inspect}, primary_key, "#{delimiter}", connection.adapter_name.downcase)
+        end
+
+        def ancestry_depth_sql
+          @ancestry_depth_sql ||= #{format_module}.construct_depth_sql(table_name, #{column.inspect}, "#{delimiter}")
+        end
+
+        def generate_ancestry(ancestor_ids)
+          #{format_module}.generate(ancestor_ids, "#{delimiter}", #{root.inspect})
+        end
+
+        def parse_ancestry_column(obj)
+          Ancestry::MaterializedPath.parse(obj, #{root.inspect}, "#{delimiter}", primary_key_is_an_integer?)
+        end
+
+        def ancestry_depth_change(old_value, new_value)
+          parse_ancestry_column(new_value).size - parse_ancestry_column(old_value).size
+        end
+
+        def ancestry_primary_key_format
+          Ancestry.default_primary_key_format
+        end
+
+        def ancestry_validation_options(ancestry_primary_key_format)
+          #{format_module}.validation_options(ancestry_primary_key_format, "#{delimiter}")
+        end
+
+        def sort_by_ancestry(nodes, &block)
+          Ancestry::ClassMethods._sort_by_ancestry(self, nodes, :#{column}, &block)
+        end
+
+        def check_ancestry_integrity!(options = {})
+          Ancestry::ClassMethods._check_ancestry_integrity!(self, :#{column}, options)
+        end
+      RUBY
+
       mod
+    end
+
+    # Generate the ordered_by_ancestry method body based on format
+    def self._ordered_by_ancestry_body(format_module, column)
+      if format_module == Ancestry::MaterializedPath2
+        <<~BODY.strip
+          reorder(Arel::Nodes::Ascending.new(arel_table[:#{column}]), order)
+        BODY
+      else
+        <<~BODY.strip
+          if %w(mysql mysql2 sqlite sqlite3).include?(connection.adapter_name.downcase)
+            reorder(arel_table[:#{column}], order)
+          elsif %w(postgresql oracleenhanced).include?(connection.adapter_name.downcase) && ActiveRecord::VERSION::STRING >= "6.1"
+            reorder(Arel::Nodes::Ascending.new(arel_table[:#{column}]).nulls_first, order)
+          else
+            reorder(
+              Arel::Nodes::Ascending.new(Arel::Nodes::NamedFunction.new('COALESCE', [arel_table[:#{column}], Arel.sql("''")])),
+              order
+            )
+          end
+        BODY
+      end
     end
   end
 end

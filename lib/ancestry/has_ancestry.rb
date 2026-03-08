@@ -20,14 +20,16 @@ module Ancestry
 
       orphan_strategy = options[:orphan_strategy] || :destroy
 
-      # Create ancestry column accessor and set to option or default
-      class_variable_set('@@ancestry_column', options[:ancestry_column] || :ancestry)
-      cattr_reader :ancestry_column, instance_reader: false
+      column = options[:ancestry_column] || :ancestry
 
-      primary_key_format = options[:primary_key_format].presence || Ancestry.default_primary_key_format
+      # TODO: remove these cvars once class_methods.rb and materialized_path_pg.rb are refactored
+      class_variable_set('@@ancestry_column', column)
+      cattr_reader :ancestry_column, instance_reader: false
 
       class_variable_set('@@ancestry_delimiter', '/')
       cattr_reader :ancestry_delimiter, instance_reader: false
+
+      primary_key_format = options[:primary_key_format].presence || Ancestry.default_primary_key_format
 
       # Save self as base class (for STI)
       class_variable_set('@@ancestry_base_class', self)
@@ -45,17 +47,19 @@ module Ancestry
       extend Ancestry::ClassMethods
 
       format_module = Ancestry::HasAncestry.ancestry_format_module(ancestry_format)
-      extend format_module
+      delimiter = '/'
+      root = (ancestry_format == :materialized_path2) ? delimiter : nil
 
-      # Include generated module with baked-in column/format (replaces format InstanceMethods)
+      # Include generated module with baked-in column/format
+      # This extends ClassMethods (scopes, helpers) and includes instance methods
       generated_mod = Ancestry::InstanceMethodsBuilder.build(
-        format_module, ancestry_column, ancestry_delimiter, ancestry_root
+        format_module, column, delimiter, root
       )
       include generated_mod
 
-      attribute ancestry_column, default: ancestry_root
+      attribute column, default: root
 
-      validates ancestry_column, ancestry_validation_options(primary_key_format)
+      validates column, ancestry_validation_options(primary_key_format)
 
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
       include Ancestry::MaterializedPathPg

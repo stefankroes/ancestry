@@ -108,11 +108,7 @@ module Ancestry
 
     # Pseudo-preordered array of nodes.  Children will always follow parents,
     # This is deterministic unless the parents are missing *and* a sort block is specified
-    def sort_by_ancestry(nodes, &block)
-      _sort_by_ancestry(nodes, ancestry_column, &block)
-    end
-
-    def _sort_by_ancestry(nodes, column, &block)
+    def self._sort_by_ancestry(klass, nodes, column, &block)
       arranged = nodes if nodes.is_a?(Hash)
 
       unless arranged
@@ -122,25 +118,21 @@ module Ancestry
           rank
         end
 
-        arranged = arrange_nodes(presorted_nodes)
+        arranged = klass.arrange_nodes(presorted_nodes)
       end
 
-      flatten_arranged_nodes(arranged)
+      klass.flatten_arranged_nodes(arranged)
     end
 
     # Integrity checking
     # compromised tree integrity is unlikely without explicitly setting cyclic parents or invalid ancestry and circumventing validation
     # just in case, raise an AncestryIntegrityException if issues are detected
     # specify :report => :list to return an array of exceptions or :report => :echo to echo any error messages
-    def check_ancestry_integrity!(options = {})
-      _check_ancestry_integrity!(ancestry_column, options)
-    end
-
-    def _check_ancestry_integrity!(column, options = {})
+    def self._check_ancestry_integrity!(klass, column, options = {})
       parents = {}
       exceptions = [] if options[:report] == :list
 
-      unscoped_where do |scope|
+      klass.unscoped_where do |scope|
         # For each node ...
         scope.find_each do |node|
           # ... check validity of ancestry column
@@ -151,7 +143,7 @@ module Ancestry
           end
           # ... check that all ancestors exist
           node.ancestor_ids.each do |ancestor_id|
-            unless exists?(ancestor_id)
+            unless klass.exists?(ancestor_id)
               raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.reference_nonexistent_node",
                                                                  :node_id => node.id,
                                                                  :ancestor_id => ancestor_id)
