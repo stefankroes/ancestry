@@ -222,23 +222,14 @@ module Ancestry
       end
     end
 
-    # Rebuild depth cache if it got corrupted or if depth caching was just turned on
-    def rebuild_depth_cache!
-      raise(Ancestry::AncestryException, I18n.t("ancestry.cannot_rebuild_depth_cache")) unless respond_to?(:depth_cache_column)
-
-      ancestry_base_class.transaction do
-        unscoped_where do |scope|
+    def self._rebuild_depth_cache!(klass, depth_cache_column)
+      klass.ancestry_base_class.transaction do
+        klass.unscoped_where do |scope|
           scope.find_each do |node|
             node.update_attribute depth_cache_column, node.depth
           end
         end
       end
-    end
-
-    # NOTE: this is temporarily kept separate from rebuild_depth_cache!
-    # this will become the implementation of rebuild_depth_cache!
-    def rebuild_depth_cache_sql!
-      update_all("#{depth_cache_column} = #{ancestry_depth_sql}")
     end
 
     def self._rebuild_counter_cache!(klass, column)

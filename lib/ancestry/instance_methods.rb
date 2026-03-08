@@ -102,6 +102,32 @@ module Ancestry
       parent_id && increase_parent_counter_cache
     end
 
+    # Validate that descendants' depths don't exceed max depth when moving them
+    # Called from generated ancestry_depth_of_descendants with baked column names
+    def validate_depth_of_descendants(depth_cache_column, depth_change)
+      validator = self.class.validators_on(depth_cache_column).find do |v|
+        v.is_a?(ActiveModel::Validations::NumericalityValidator) &&
+          (v.options[:less_than_or_equal_to] || v.options[:less_than])
+      end
+      return unless validator
+
+      max_depth = validator.options[:less_than_or_equal_to] || (validator.options[:less_than] - 1)
+
+      if depth_change > 0
+        max_descendant_depth = unscoped_descendants.maximum(depth_cache_column) || attribute_in_database(depth_cache_column) || 0
+        if max_descendant_depth + depth_change > max_depth
+          errors.add(depth_cache_column, :less_than_or_equal_to, count: max_depth)
+        end
+      end
+    end
+
+    # Add depth cache update to SQL update clause for descendants
+    def add_depth_cache_to_update_clause(update_clause, depth_cache_column, depth_change)
+      if depth_change != 0
+        update_clause[depth_cache_column] = Arel.sql("#{depth_cache_column} + #{depth_change}")
+      end
+    end
+
     # Callback disabling
 
     def without_ancestry_callbacks

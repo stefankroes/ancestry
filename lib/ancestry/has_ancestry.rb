@@ -38,10 +38,31 @@ module Ancestry
       delimiter = '/'
       root = (ancestry_format == :materialized_path2) ? delimiter : nil
 
+      # Resolve depth cache column name (or nil if virtual/absent)
+      if options[:cache_depth] == :virtual
+        depth_cache_column = nil
+        depth_cache_sql = options[:depth_cache_column]&.to_s || 'ancestry_depth'
+      elsif options[:cache_depth]
+        if options[:depth_cache_column]
+          ActiveSupport::Deprecation.warn("has_ancestry :depth_cache_column is deprecated. Use :cache_depth instead.")
+        end
+        depth_cache_column =
+          if options[:cache_depth] == true
+            options[:depth_cache_column]&.to_s || 'ancestry_depth'
+          else
+            options[:cache_depth].to_s
+          end
+        depth_cache_sql = depth_cache_column
+      else
+        depth_cache_column = nil
+        depth_cache_sql = nil
+      end
+
       # Include generated module with baked-in column/format
       # This extends ClassMethods (scopes, helpers) and includes instance methods
       generated_mod = Ancestry::InstanceMethodsBuilder.build(
-        format_module, column, delimiter, root
+        format_module, column, delimiter, root,
+        depth_cache_column: depth_cache_column
       )
       include generated_mod
 
@@ -73,37 +94,15 @@ module Ancestry
         raise Ancestry::AncestryException, I18n.t("ancestry.invalid_orphan_strategy")
       end
 
-      # Create ancestry column accessor and set to option or default
-
-      if options[:cache_depth] == :virtual
-        # NOTE: not setting self.depth_cache_column so the code does not try to update the column
-        depth_cache_sql = options[:depth_cache_column]&.to_s || 'ancestry_depth'
-      elsif options[:cache_depth]
-        # Create accessor for column name and set to option or default
-        cattr_accessor :depth_cache_column
-        self.depth_cache_column =
-          if options[:cache_depth] == true
-            options[:depth_cache_column]&.to_s || 'ancestry_depth'
-          else
-            options[:cache_depth].to_s
-          end
-        if options[:depth_cache_column]
-          ActiveSupport::Deprecation.warn("has_ancestry :depth_cache_column is deprecated. Use :cache_depth instead.")
-        end
-
-        # Cache depth in depth cache column before save
+      # Depth cache callbacks and validation
+      if depth_cache_column
         before_validation :cache_depth
         before_save :cache_depth
-
-        # Validate depth column
         validates_numericality_of depth_cache_column, :greater_than_or_equal_to => 0, :only_integer => true, :allow_nil => false
-
-        depth_cache_sql = depth_cache_column
-      else
-        # this is not efficient, but it works
-        depth_cache_sql = ancestry_depth_sql
       end
 
+      # Depth scopes
+      depth_cache_sql ||= ancestry_depth_sql
       scope :before_depth, lambda { |depth| where("#{depth_cache_sql} < ?", depth) }
       scope :to_depth,     lambda { |depth| where("#{depth_cache_sql} <= ?", depth) }
       scope :at_depth,     lambda { |depth| where("#{depth_cache_sql} = ?", depth) }
