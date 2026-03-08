@@ -35,6 +35,18 @@ module Ancestry
       attr.matches("#{child_ancestry}%#{delimiter}%", nil, true)
     end
 
+    # SQL expression that extracts the root_id from the ancestry column
+    # MP2: ancestry is "/" (root, returns id) or "/1/2/3/" (root_id=1)
+    def self.construct_root_id_sql(table_name, ancestry_column, _delimiter, primary_key, adapter)
+      col = "#{table_name}.#{ancestry_column}"
+      pk = "#{table_name}.#{primary_key}"
+      if %w(mysql mysql2).include?(adapter)
+        "CASE WHEN #{col} = '/' THEN #{pk} ELSE CAST(SUBSTRING_INDEX(SUBSTRING(#{col}, 2), '/', 1) AS UNSIGNED) END"
+      else
+        "CASE WHEN #{col} = '/' THEN #{pk} ELSE CAST(SUBSTR(#{col}, 2, INSTR(SUBSTR(#{col},2), '/')-1) AS INTEGER) END"
+      end
+    end
+
     # SQL expression that extracts the parent_id from the ancestry column
     # MP2: ancestry is "/" (root) or "/1/2/3/" (parent_id=3)
     def self.construct_parent_id_sql(table_name, ancestry_column, _delimiter, adapter)

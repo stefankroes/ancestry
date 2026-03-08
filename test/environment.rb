@@ -110,6 +110,9 @@ class AncestryTestDatabase
       add_cache_column(table, options, :parent, :parent_id) do |path_module, col|
         path_module.construct_parent_id_sql("test_nodes", col, '/', 'sqlite3')
       end
+      add_cache_column(table, options, :root, :root_id) do |path_module, col|
+        path_module.construct_root_id_sql("test_nodes", col, '/', 'id', 'sqlite3')
+      end
 
       if options[:counter_cache]
         counter_cache_column = options[:counter_cache] == true ? :children_count : options[:counter_cache]

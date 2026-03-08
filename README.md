@@ -182,6 +182,10 @@ The `has_ancestry` method supports the following options:
                            false    Do not store parent id (default)
                            true     Cache parent id in 'parent_id'
                            :virtual Use a database generated column
+    :root                  Store the root id in a column: (See Cached Columns)
+                           false    Do not store root id (default)
+                           true     Cache root id in 'root_id'
+                           :virtual Use a database generated column
     :primary_key_format    Regular expression that matches the format of the primary key:
                            '[0-9]+'            integer ids (default)
                            '[-A-Fa-f0-9]{36}'  UUIDs
@@ -496,15 +500,19 @@ These options store those values in real database columns for use in queries, jo
 |----------------|------------------|---------------------------------|
 | `cache_depth: true` | `ancestry_depth` | `Model.rebuild_depth_cache!` |
 | `parent: true` | `parent_id`      | `Model.rebuild_parent_id_cache!`|
+| `root: true`   | `root_id`        | `Model.rebuild_root_id_cache!`  |
 
 Each option also accepts `:virtual` to use a database
 [generated column](https://dev.mysql.com/doc/refman/8.0/en/create-table-generated-columns.html)
 instead of callbacks. Generated columns are defined in your migration and computed automatically
 by the database from the ancestry column — no rebuild step is needed.
 
-The `parent_id` is already derived efficiently from the ancestry column, so most applications
-do not need `parent: true`. Use `parent: :virtual` if you want a `parent_id` column for
-database-level joins or foreign keys without callback overhead.
+The `parent_id` and `root_id` are already derived efficiently from the ancestry column, so most
+applications do not need `parent: true` or `root: true`. Use `:virtual` if you want these columns
+for database-level joins or foreign keys without callback overhead.
+
+Note: `root: true` requires an extra UPDATE after creating root nodes, since the `root_id` of a
+root node is its own `id`, which is not available until after the record is inserted.
 
 ## Migration
 

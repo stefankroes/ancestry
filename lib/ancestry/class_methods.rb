@@ -232,6 +232,16 @@ module Ancestry
       end
     end
 
+    def self._rebuild_root_id_cache!(klass, root_cache_column)
+      klass.ancestry_base_class.transaction do
+        klass.unscoped_where do |scope|
+          scope.find_each do |node|
+            node.update_attribute root_cache_column, node.root_id
+          end
+        end
+      end
+    end
+
     def self._rebuild_parent_id_cache!(klass, parent_cache_column)
       klass.ancestry_base_class.transaction do
         klass.unscoped_where do |scope|
