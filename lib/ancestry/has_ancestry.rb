@@ -8,7 +8,7 @@ module Ancestry
         raise Ancestry::AncestryException, I18n.t("ancestry.option_must_be_hash")
       end
 
-      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format]
+      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format, :parent]
       if (key = extra_keys.first)
         raise Ancestry::AncestryException, I18n.t("ancestry.unknown_option", key: key.inspect, value: options[key].inspect)
       end
@@ -58,6 +58,15 @@ module Ancestry
         depth_cache_sql = nil
       end
 
+      # Resolve parent cache column name (or nil if virtual/absent)
+      if options[:parent] == :virtual
+        parent_cache_column = nil
+      elsif options[:parent]
+        parent_cache_column = options[:parent] == true ? 'parent_id' : options[:parent].to_s
+      else
+        parent_cache_column = nil
+      end
+
       # Resolve counter cache column name (or nil)
       counter_cache_column = if options[:counter_cache]
         options[:counter_cache] == true ? 'children_count' : options[:counter_cache].to_s
@@ -68,7 +77,8 @@ module Ancestry
       generated_mod = Ancestry::InstanceMethodsBuilder.build(
         format_module, column, delimiter, root,
         depth_cache_column: depth_cache_column,
-        counter_cache_column: counter_cache_column
+        counter_cache_column: counter_cache_column,
+        parent_cache_column: parent_cache_column
       )
       include generated_mod
 
@@ -105,6 +115,12 @@ module Ancestry
         before_validation :cache_depth
         before_save :cache_depth
         validates_numericality_of depth_cache_column, :greater_than_or_equal_to => 0, :only_integer => true, :allow_nil => false
+      end
+
+      # Parent cache callbacks
+      if parent_cache_column
+        before_validation :cache_parent_id
+        before_save :cache_parent_id
       end
 
       # Depth scopes

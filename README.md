@@ -173,20 +173,25 @@ The `has_ancestry` method supports the following options:
                            :adopt     The orphan subtree is added to the parent of the deleted node
                                       If the deleted node is Root, then rootify the orphan subtree
                            :none      skip this logic. (add your own `before_destroy`)
-    :cache_depth           Cache the depth of each node: (See Depth Cache section)
-                           false   Do not cache depth (default)
-                           true    Cache depth in 'ancestry_depth'
-                           String  Cache depth in the column referenced
+    :cache_depth           Cache the depth (number of ancestors) in a column: (See Cached Columns)
+                           false    Do not cache depth (default)
+                           true     Cache depth in 'ancestry_depth'
+                           :virtual Use a database generated column
+                           String   Cache depth in the column referenced
+    :parent                Store the parent id in a column: (See Cached Columns)
+                           false    Do not store parent id (default)
+                           true     Cache parent id in 'parent_id'
+                           :virtual Use a database generated column
     :primary_key_format    Regular expression that matches the format of the primary key:
                            '[0-9]+'            integer ids (default)
                            '[-A-Fa-f0-9]{36}'  UUIDs
     :touch                 Touch the ancestors of a node when it changes:
                            false  don't invalid nested key-based caches (default)
                            true   touch all ancestors of previous and new parents
-    :counter_cache         Create counter cache column accessor:
-                           false  don't store a counter cache (default)
-                           true   store counter cache in `children_count`.
-                           String name of column to store counter cache.
+    :counter_cache         Cache the number of children in a column:
+                           false  Do not cache child count (default)
+                           true   Cache child count in 'children_count'
+                           String Cache child count in the column referenced
     :update_strategy       How to update descendants nodes:
                            :ruby  All descendants are updated using the ruby algorithm. (default)
                                   This triggers update callbacks for each descendant node
@@ -482,13 +487,28 @@ end
 $ rake db:migrate
 ```
 
-# Depth cache
+# Cached columns
 
-## Depth Cache Migration
+Ancestry derives `parent_id`, `root_id`, and `depth` by parsing the ancestry column.
+These options store those values in real database columns for use in queries, joins, and indexing.
 
-To add depth_caching to an existing model:
+| Option         | Default column   | Rebuild method                  |
+|----------------|------------------|---------------------------------|
+| `cache_depth: true` | `ancestry_depth` | `Model.rebuild_depth_cache!` |
+| `parent: true` | `parent_id`      | `Model.rebuild_parent_id_cache!`|
 
-## Add column
+Each option also accepts `:virtual` to use a database
+[generated column](https://dev.mysql.com/doc/refman/8.0/en/create-table-generated-columns.html)
+instead of callbacks. Generated columns are defined in your migration and computed automatically
+by the database from the ancestry column — no rebuild step is needed.
+
+The `parent_id` is already derived efficiently from the ancestry column, so most applications
+do not need `parent: true`. Use `parent: :virtual` if you want a `parent_id` column for
+database-level joins or foreign keys without callback overhead.
+
+## Migration
+
+Add the columns you need:
 
 ```ruby
 class AddDepthCacheToTable < ActiveRecord::Migration[6.1]
@@ -500,20 +520,17 @@ class AddDepthCacheToTable < ActiveRecord::Migration[6.1]
 end
 ```
 
-## Add ancestry to your model
+## Model
 
 ```ruby
-# app/models/[model.rb]
-
 class [Model] < ActiveRecord::Base
-   has_ancestry cache_depth: true
+  has_ancestry cache_depth: true
 end
 ```
 
-## Update existing values
+## Populating existing data
 
-Add a custom script or run from rails console.
-Some use migrations, but that can make the migration suite fragile. The command of interest is:
+After adding a cached column to an existing table, populate it from the console or a script:
 
 ```ruby
 Model.rebuild_depth_cache!
