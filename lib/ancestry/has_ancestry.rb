@@ -20,14 +20,16 @@ module Ancestry
 
       orphan_strategy = options[:orphan_strategy] || :destroy
 
-      # Create ancestry column accessor and set to option or default
-      class_variable_set('@@ancestry_column', options[:ancestry_column] || :ancestry)
-      cattr_reader :ancestry_column, instance_reader: false
+      column = options[:ancestry_column] || :ancestry
 
-      primary_key_format = options[:primary_key_format].presence || Ancestry.default_primary_key_format
+      # TODO: remove these cvars once class_methods.rb and materialized_path_pg.rb are refactored
+      class_variable_set('@@ancestry_column', column)
+      cattr_reader :ancestry_column, instance_reader: false
 
       class_variable_set('@@ancestry_delimiter', '/')
       cattr_reader :ancestry_delimiter, instance_reader: false
+
+      primary_key_format = options[:primary_key_format].presence || Ancestry.default_primary_key_format
 
       # Save self as base class (for STI)
       class_variable_set('@@ancestry_base_class', self)
@@ -43,11 +45,21 @@ module Ancestry
 
       # Include dynamic class methods
       extend Ancestry::ClassMethods
-      extend Ancestry::HasAncestry.ancestry_format_module(ancestry_format)
 
-      attribute ancestry_column, default: ancestry_root
+      format_module = Ancestry::HasAncestry.ancestry_format_module(ancestry_format)
+      delimiter = '/'
+      root = (ancestry_format == :materialized_path2) ? delimiter : nil
 
-      validates ancestry_column, ancestry_validation_options(primary_key_format)
+      # Include generated module with baked-in column/format
+      # This extends ClassMethods (scopes, helpers) and includes instance methods
+      generated_mod = Ancestry::InstanceMethodsBuilder.build(
+        format_module, column, delimiter, root
+      )
+      include generated_mod
+
+      attribute column, default: root
+
+      validates column, ancestry_validation_options(primary_key_format)
 
       update_strategy = options[:update_strategy] || Ancestry.default_update_strategy
       include Ancestry::MaterializedPathPg
@@ -75,7 +87,7 @@ module Ancestry
       end
 
       # Create ancestry column accessor and set to option or default
-      
+
       if options[:cache_depth] == :virtual
         # NOTE: not setting self.depth_cache_column so the code does not try to update the column
         depth_cache_sql = options[:depth_cache_column]&.to_s || 'ancestry_depth'

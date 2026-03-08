@@ -5,42 +5,6 @@ module Ancestry
   # root: a=/,id=1    children=#{a}#{id}/% == /1/%
   # 3:    a=/1/2/,id=3 children=#{a}#{id}/% == /1/2/3/%
   module MaterializedPath2
-    include MaterializedPath
-
-    def self.extended(base)
-      base.send(:include, MaterializedPath::InstanceMethods)
-      base.send(:include, InstanceMethods)
-    end
-
-    def indirects_of(object)
-      node = to_node(object)
-      where(MaterializedPath2.indirects_condition(arel_table[ancestry_column], node.child_ancestry, ancestry_delimiter))
-    end
-
-    def ordered_by_ancestry(order = nil)
-      reorder(Arel::Nodes::Ascending.new(arel_table[ancestry_column]), order)
-    end
-
-    def descendants_by_ancestry(ancestry)
-      MaterializedPath2.descendants_condition(arel_table[ancestry_column], ancestry, ancestry_delimiter)
-    end
-
-    def ancestry_root
-      ancestry_delimiter
-    end
-
-    def child_ancestry_sql
-      MaterializedPath2.child_ancestry_sql(table_name, ancestry_column, primary_key, ancestry_delimiter, connection.adapter_name.downcase)
-    end
-
-    def ancestry_depth_sql
-      @ancestry_depth_sql ||= MaterializedPath2.construct_depth_sql(table_name, ancestry_column, ancestry_delimiter)
-    end
-
-    def generate_ancestry(ancestor_ids)
-      MaterializedPath2.generate(ancestor_ids, ancestry_delimiter, ancestry_root)
-    end
-
     def self.generate(ancestor_ids, delimiter, root)
       if ancestor_ids.present? && ancestor_ids.any?
         "#{delimiter}#{ancestor_ids.join(delimiter)}#{delimiter}"
@@ -79,30 +43,6 @@ module Ancestry
         format: {with: /\A#{Regexp.escape(delimiter)}(#{primary_key_format}#{Regexp.escape(delimiter)})*\z/.freeze},
         allow_nil: false
       }
-    end
-
-    private
-
-    def ancestry_validation_options(ancestry_primary_key_format)
-      MaterializedPath2.validation_options(ancestry_primary_key_format, ancestry_delimiter)
-    end
-
-    module InstanceMethods
-      # Please see notes for MaterializedPath#child_ancestry
-      def child_ancestry
-        raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")) if new_record?
-
-        MaterializedPath2.child_ancestry_value(attribute_in_database(self.class.ancestry_column), id, self.class.ancestry_delimiter)
-      end
-
-      # Please see notes for MaterializedPath#child_ancestry_before_last_save
-      def child_ancestry_before_last_save
-        if new_record? || (respond_to?(:previously_new_record?) && previously_new_record?)
-          raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record"))
-        end
-
-        MaterializedPath2.child_ancestry_value(attribute_before_last_save(self.class.ancestry_column), id, self.class.ancestry_delimiter)
-      end
     end
   end
 end
