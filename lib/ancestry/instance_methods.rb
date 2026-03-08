@@ -7,32 +7,6 @@ module Ancestry
       errors.add(:base, I18n.t("ancestry.exclude_self", class_name: self.class.model_name.human)) if ancestor_ids.include?(id)
     end
 
-    # Validate that descendants' depths don't exceed max depth when moving them
-    def ancestry_depth_of_descendants
-      return if new_record? || (respond_to?(:previously_new_record?) && previously_new_record?)
-      return unless self.class.respond_to?(:depth_cache_column) && self.class.depth_cache_column
-
-      column = self.class.depth_cache_column
-      validator = self.class.validators_on(column).find do |v|
-        v.is_a?(ActiveModel::Validations::NumericalityValidator) &&
-          (v.options[:less_than_or_equal_to] || v.options[:less_than])
-      end
-      return unless validator
-
-      max_depth = validator.options[:less_than_or_equal_to] || (validator.options[:less_than] - 1)
-
-      old_value = attribute_in_database(self.class.ancestry_column)
-      new_value = read_attribute(self.class.ancestry_column)
-      depth_change = self.class.ancestry_depth_change(old_value, new_value)
-
-      if depth_change > 0
-        max_descendant_depth = unscoped_descendants.maximum(column) || attribute_in_database(column) || 0
-        if max_descendant_depth + depth_change > max_depth
-          errors.add(column, :less_than_or_equal_to, count: max_depth)
-        end
-      end
-    end
-
     # Update descendants with new ancestry (after update)
     def update_descendants_with_new_ancestry
       # If enabled and the new ancestry is sane ...

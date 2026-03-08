@@ -22,12 +22,9 @@ module Ancestry
 
       column = options[:ancestry_column] || :ancestry
 
-      # TODO: remove these cvars once class_methods.rb and materialized_path_pg.rb are refactored
+      # TODO: remove these cvars once class_methods.rb consumers are refactored
       class_variable_set('@@ancestry_column', column)
       cattr_reader :ancestry_column, instance_reader: false
-
-      class_variable_set('@@ancestry_delimiter', '/')
-      cattr_reader :ancestry_delimiter, instance_reader: false
 
       primary_key_format = options[:primary_key_format].presence || Ancestry.default_primary_key_format
 
