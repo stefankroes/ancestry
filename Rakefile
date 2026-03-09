@@ -38,4 +38,56 @@ namespace :db do
   end
 end
 
+desc "Show uncovered lines from coverage results"
+task :coverage do
+  require 'json'
+
+  resultset = File.join(__dir__, "coverage", ".resultset.json")
+  unless File.exist?(resultset)
+    abort "No coverage data found. Run: COVERAGE=1 rake test"
+  end
+
+  data = JSON.parse(File.read(resultset))
+
+  # Merge all runs
+  merged = {}
+  data.each do |_name, run|
+    run["coverage"].each do |file, info|
+      next unless file.include?("lib/ancestry")
+      short = file.sub(/.*lib\/ancestry\//, "")
+      lines = info["lines"]
+      if merged[short]
+        lines.each_with_index { |v, i| merged[short][i] = [merged[short][i].to_i, v.to_i].max if v }
+      else
+        merged[short] = lines.dup
+      end
+    end
+  end
+
+  puts "Coverage runs: #{data.keys.join(', ')}"
+  puts
+
+  total_lines = 0
+  total_covered = 0
+
+  merged.sort.each do |file, lines|
+    uncovered = []
+    coverable = 0
+    lines.each_with_index do |hits, i|
+      next if hits.nil? # non-executable line
+      coverable += 1
+      uncovered << i + 1 if hits == 0
+    end
+    total_lines += coverable
+    total_covered += coverable - uncovered.size
+    next if uncovered.empty?
+    puts "#{file} (#{uncovered.size} uncovered):"
+    puts "  Lines: #{uncovered.join(', ')}"
+  end
+
+  pct = total_lines > 0 ? (100.0 * total_covered / total_lines).round(1) : 0
+  puts
+  puts "Total: #{total_covered}/#{total_lines} (#{pct}%)"
+end
+
 # task :doc => :yard

@@ -5,9 +5,19 @@ require 'bundler/setup'
 
 if ENV["COVERAGE"]
   require 'simplecov'
+  require 'simplecov-json'
   SimpleCov.start do
     add_filter '/test/'
     add_filter '/vendor/'
+    command_name [
+      ENV.fetch("FORMAT", "materialized_path"),
+      ENV.fetch("UPDATE_STRATEGY", "ruby"),
+      ENV.fetch("DB", "sqlite3"),
+    ].join("-")
+    formatter SimpleCov::Formatter::MultiFormatter.new([
+      SimpleCov::Formatter::HTMLFormatter,
+      SimpleCov::Formatter::JSONFormatter,
+    ])
   end
 end
 
