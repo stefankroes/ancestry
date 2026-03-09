@@ -11,10 +11,12 @@ module Ancestry
     # @param root [nil, String] the root value (nil for mp1, "/" for mp2)
     # @param depth_cache_column [String, nil] column name for depth cache, or nil
     # @param counter_cache_column [String, nil] column name for counter cache, or nil
+    # @param parent_cache_column [String, nil] column name for parent cache, or nil
+    # @param root_cache_column [String, nil] column name for root cache, or nil
     # @return [Module] a named module with baked-in instance methods
-    def self.build(format_module, column, delimiter, root, depth_cache_column: nil, counter_cache_column: nil)
+    def self.build(format_module, column, delimiter, root, depth_cache_column: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil)
       format_name = format_module.name.split("::").last
-      mod_name = :"#{format_name}_#{column}#{"_d#{depth_cache_column}" if depth_cache_column}#{"_c#{counter_cache_column}" if counter_cache_column}"
+      mod_name = :"#{format_name}_#{column}#{"_d#{depth_cache_column}" if depth_cache_column}#{"_c#{counter_cache_column}" if counter_cache_column}#{"_p#{parent_cache_column}" if parent_cache_column}#{"_r#{root_cache_column}" if root_cache_column}"
 
       if Ancestry.const_defined?(mod_name, false)
         return Ancestry.const_get(mod_name, false)
@@ -271,10 +273,21 @@ module Ancestry
           RUBY
         end}
 
-        #{ if depth_cache_column
+        #{ if depth_cache_column || parent_cache_column || root_cache_column
           <<~RUBY
-            def cache_depth
-              write_attribute :#{depth_cache_column}, depth
+            def cache_ancestry_columns
+              #{"write_attribute :#{depth_cache_column}, depth" if depth_cache_column}
+              #{"write_attribute :#{parent_cache_column}, parent_id" if parent_cache_column}
+              #{"write_attribute :#{root_cache_column}, root_id" if root_cache_column}
+            end
+          RUBY
+        end}
+
+        #{ if root_cache_column
+          <<~RUBY
+            def cache_ancestry_columns_after_create
+              new_root_id = root_id
+              update_column :#{root_cache_column}, new_root_id if read_attribute(:#{root_cache_column}) != new_root_id
             end
           RUBY
         end}
@@ -300,20 +313,11 @@ module Ancestry
           end
         end
 
-        #{ if depth_cache_column
-          <<~RUBY
-            def update_descendants_hook(update_clause, old_ancestry, new_ancestry)
-              add_depth_cache_to_update_clause(update_clause, :#{depth_cache_column}, self.class.ancestry_depth_change(old_ancestry, new_ancestry))
-              update_clause
-            end
-          RUBY
-        else
-          <<~RUBY
-            def update_descendants_hook(update_clause, old_ancestry, new_ancestry)
-              update_clause
-            end
-          RUBY
-        end}
+        def update_descendants_hook(update_clause, old_ancestry, new_ancestry)
+          #{"add_depth_cache_to_update_clause(update_clause, :#{depth_cache_column}, self.class.ancestry_depth_change(old_ancestry, new_ancestry))" if depth_cache_column}
+          #{"add_root_cache_to_update_clause(update_clause, :#{root_cache_column})" if root_cache_column}
+          update_clause
+        end
 
         #{ if counter_cache_column
           <<~RUBY
@@ -470,6 +474,38 @@ module Ancestry
           <<~RUBY
             def rebuild_depth_cache!
               raise Ancestry::AncestryException, I18n.t("ancestry.cannot_rebuild_depth_cache")
+            end
+          RUBY
+        end}
+
+        #{ if parent_cache_column
+          <<~RUBY
+            def ancestry_parent_id_sql
+              @ancestry_parent_id_sql ||= #{format_module}.construct_parent_id_sql(table_name, #{column.inspect}, "#{delimiter}", connection.adapter_name.downcase)
+            end
+
+            def rebuild_parent_id_cache!
+              Ancestry::ClassMethods._rebuild_parent_id_cache!(self, :#{parent_cache_column})
+            end
+
+            def rebuild_parent_id_cache_sql!
+              update_all("#{parent_cache_column} = (\#{ancestry_parent_id_sql})")
+            end
+          RUBY
+        end}
+
+        #{ if root_cache_column
+          <<~RUBY
+            def ancestry_root_id_sql
+              @ancestry_root_id_sql ||= #{format_module}.construct_root_id_sql(table_name, #{column.inspect}, "#{delimiter}", primary_key, connection.adapter_name.downcase)
+            end
+
+            def rebuild_root_id_cache!
+              Ancestry::ClassMethods._rebuild_root_id_cache!(self, :#{root_cache_column})
+            end
+
+            def rebuild_root_id_cache_sql!
+              update_all("#{root_cache_column} = (\#{ancestry_root_id_sql})")
             end
           RUBY
         end}

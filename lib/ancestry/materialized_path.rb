@@ -56,6 +56,29 @@ module Ancestry
       }
     end
 
+    # SQL expression that extracts the root_id from the ancestry column
+    # MP1: ancestry is NULL (root, returns id) or "1/2/3" (root_id=1)
+    def self.construct_root_id_sql(table_name, ancestry_column, _delimiter, primary_key, adapter)
+      col = "#{table_name}.#{ancestry_column}"
+      pk = "#{table_name}.#{primary_key}"
+      if %w(mysql mysql2).include?(adapter)
+        "CASE WHEN #{col} IS NULL THEN #{pk} ELSE CAST(SUBSTRING_INDEX(#{col}, '/', 1) AS UNSIGNED) END"
+      else
+        "CASE WHEN #{col} IS NULL THEN #{pk} ELSE CAST(SUBSTR(#{col}, 1, INSTR(#{col}||'/', '/')-1) AS INTEGER) END"
+      end
+    end
+
+    # SQL expression that extracts the parent_id from the ancestry column
+    # MP1: ancestry is NULL (root) or "1/2/3" (parent_id=3)
+    def self.construct_parent_id_sql(table_name, ancestry_column, _delimiter, adapter)
+      col = "#{table_name}.#{ancestry_column}"
+      if %w(mysql mysql2).include?(adapter)
+        "CASE WHEN #{col} IS NULL THEN NULL ELSE CAST(SUBSTRING_INDEX(#{col}, '/', -1) AS UNSIGNED) END"
+      else
+        "CASE WHEN #{col} IS NULL THEN NULL ELSE CAST(SUBSTR(#{col}, LENGTH(RTRIM(#{col}, REPLACE(#{col}, '/', ''))) + 1) AS INTEGER) END"
+      end
+    end
+
     def self.construct_depth_sql(table_name, ancestry_column, ancestry_delimiter)
       tmp = %{(LENGTH(#{table_name}.#{ancestry_column}) - LENGTH(REPLACE(#{table_name}.#{ancestry_column},'#{ancestry_delimiter}','')))}
       tmp += "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1

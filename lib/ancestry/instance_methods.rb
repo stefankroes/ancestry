@@ -94,6 +94,15 @@ module Ancestry
       end
     end
 
+    # Add root cache update to SQL update clause for descendants
+    def add_root_cache_to_update_clause(update_clause, root_cache_column)
+      old_root_id = ancestor_ids_before_last_save.first || id_before_last_save
+      new_root_id = ancestor_ids.first || id
+      if old_root_id != new_root_id
+        update_clause[root_cache_column] = new_root_id
+      end
+    end
+
     # Add depth cache update to SQL update clause for descendants
     def add_depth_cache_to_update_clause(update_clause, depth_cache_column, depth_change)
       if depth_change != 0

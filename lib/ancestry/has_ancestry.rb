@@ -8,7 +8,7 @@ module Ancestry
         raise Ancestry::AncestryException, I18n.t("ancestry.option_must_be_hash")
       end
 
-      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format]
+      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format, :parent, :root]
       if (key = extra_keys.first)
         raise Ancestry::AncestryException, I18n.t("ancestry.unknown_option", key: key.inspect, value: options[key].inspect)
       end
@@ -58,6 +58,24 @@ module Ancestry
         depth_cache_sql = nil
       end
 
+      # Resolve parent cache column name (or nil if virtual/absent)
+      if options[:parent] == :virtual
+        parent_cache_column = nil
+      elsif options[:parent]
+        parent_cache_column = options[:parent] == true ? 'parent_id' : options[:parent].to_s
+      else
+        parent_cache_column = nil
+      end
+
+      # Resolve root cache column name (or nil if virtual/absent)
+      if options[:root] == :virtual
+        root_cache_column = nil
+      elsif options[:root]
+        root_cache_column = options[:root] == true ? 'root_id' : options[:root].to_s
+      else
+        root_cache_column = nil
+      end
+
       # Resolve counter cache column name (or nil)
       counter_cache_column = if options[:counter_cache]
         options[:counter_cache] == true ? 'children_count' : options[:counter_cache].to_s
@@ -68,7 +86,9 @@ module Ancestry
       generated_mod = Ancestry::InstanceMethodsBuilder.build(
         format_module, column, delimiter, root,
         depth_cache_column: depth_cache_column,
-        counter_cache_column: counter_cache_column
+        counter_cache_column: counter_cache_column,
+        parent_cache_column: parent_cache_column,
+        root_cache_column: root_cache_column
       )
       include generated_mod
 
@@ -100,11 +120,20 @@ module Ancestry
         raise Ancestry::AncestryException, I18n.t("ancestry.invalid_orphan_strategy")
       end
 
-      # Depth cache callbacks and validation
+      # Depth cache validation
       if depth_cache_column
-        before_validation :cache_depth
-        before_save :cache_depth
         validates_numericality_of depth_cache_column, :greater_than_or_equal_to => 0, :only_integer => true, :allow_nil => false
+      end
+
+      # Cache column callbacks
+      if depth_cache_column || parent_cache_column || root_cache_column
+        before_validation :cache_ancestry_columns
+        before_save :cache_ancestry_columns
+      end
+
+      # Root id requires the record's id, which isn't available until after insert
+      if root_cache_column
+        after_create :cache_ancestry_columns_after_create
       end
 
       # Depth scopes

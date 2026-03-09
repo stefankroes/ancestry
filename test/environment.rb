@@ -104,20 +104,16 @@ class AncestryTestDatabase
 
     ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
       table.send(column_type, options[:ancestry_column], **column_options(force_allow_nil: skip_ancestry))
-      case options[:cache_depth]
-      when true
-        table.integer :ancestry_depth
-      when :virtual
-        # sorry, this duplicates has_ancestry a little
-        path_module = Ancestry::HasAncestry.ancestry_format_module(options[:ancestry_format])
-        ancestry_depth_sql = path_module.construct_depth_sql("test_nodes", options[:ancestry_column], '/')
-
-        table.virtual :ancestry_depth, type: :integer, as: ancestry_depth_sql, stored: true
-      when nil, false
-        # no column
-      else
-        table.integer options[:cache_depth]
+      add_cache_column(table, options, :cache_depth, :ancestry_depth) do |path_module, col|
+        path_module.construct_depth_sql("test_nodes", col, '/')
       end
+      add_cache_column(table, options, :parent, :parent_id) do |path_module, col|
+        path_module.construct_parent_id_sql("test_nodes", col, '/', 'sqlite3')
+      end
+      add_cache_column(table, options, :root, :root_id) do |path_module, col|
+        path_module.construct_root_id_sql("test_nodes", col, '/', 'id', 'sqlite3')
+      end
+
       if options[:counter_cache]
         counter_cache_column = options[:counter_cache] == true ? :children_count : options[:counter_cache]
         table.integer counter_cache_column, default: 0, null: false
@@ -163,6 +159,25 @@ class AncestryTestDatabase
         node = model.create!(:parent => parent)
         [node, create_test_nodes(model, depth - 1, width, node)]
       end
+    end
+  end
+
+  # Add an integer or virtual column based on the cache option value.
+  # @param option_key [Symbol] the has_ancestry option key (e.g. :cache_depth, :parent)
+  # @param default_column [Symbol] default column name when option is `true`
+  # @yield [path_module, ancestry_column] block returning the SQL expression for virtual columns
+  def self.add_cache_column(table, options, option_key, default_column)
+    case options[option_key]
+    when true
+      table.integer default_column
+    when :virtual
+      path_module = Ancestry::HasAncestry.ancestry_format_module(options[:ancestry_format])
+      sql = yield(path_module, options[:ancestry_column] || ancestry_column)
+      table.virtual default_column, type: :integer, as: sql, stored: true
+    when nil, false
+      # no column
+    else
+      table.integer options[option_key]
     end
   end
 
