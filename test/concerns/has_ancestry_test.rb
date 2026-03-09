@@ -21,6 +21,12 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
+  def test_invalid_ancestry_format
+    assert_raise Ancestry::AncestryException do
+      Class.new(ActiveRecord::Base).has_ancestry :ancestry_format => :invalid_format
+    end
+  end
+
   def test_invalid_has_ancestry_options
     assert_raise Ancestry::AncestryException do
       Class.new(ActiveRecord::Base).has_ancestry :this_option_doesnt_exist => 42
@@ -96,6 +102,29 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
           end
         end
       end
+    end
+  end
+
+  def test_default_primary_key_format
+    AncestryTestDatabase.with_model skip_ancestry: true do |model|
+      old_value = Ancestry.default_primary_key_format
+      begin
+        Ancestry.default_primary_key_format = '[a-z]+'
+        model.has_ancestry
+        # numeric ids should now be invalid
+        node = model.create!
+        node.ancestor_ids = [1]
+        assert_not node.valid?, "expected numeric ancestry to be invalid with [a-z]+ format"
+      ensure
+        Ancestry.default_primary_key_format = old_value
+      end
+    end
+  end
+
+  def test_acts_as_tree
+    AncestryTestDatabase.with_model skip_ancestry: true do |model|
+      model.acts_as_tree
+      assert model.method_defined?(:ancestor_ids)
     end
   end
 

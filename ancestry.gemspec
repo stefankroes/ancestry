@@ -48,5 +48,6 @@ EOF
   s.add_development_dependency 'minitest'
   s.add_development_dependency 'rake', '~> 13.0'
   s.add_development_dependency 'simplecov'
+  s.add_development_dependency 'simplecov-json'
   s.add_development_dependency 'yard'
 end

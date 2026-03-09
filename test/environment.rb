@@ -5,9 +5,19 @@ require 'bundler/setup'
 
 if ENV["COVERAGE"]
   require 'simplecov'
+  require 'simplecov-json'
   SimpleCov.start do
     add_filter '/test/'
     add_filter '/vendor/'
+    command_name [
+      ENV.fetch("FORMAT", "materialized_path"),
+      ENV.fetch("UPDATE_STRATEGY", "ruby"),
+      ENV.fetch("DB", "sqlite3"),
+    ].join("-")
+    formatter SimpleCov::Formatter::MultiFormatter.new([
+      SimpleCov::Formatter::HTMLFormatter,
+      SimpleCov::Formatter::JSONFormatter,
+    ])
   end
 end
 
@@ -108,10 +118,10 @@ class AncestryTestDatabase
         path_module.construct_depth_sql("test_nodes", col, '/')
       end
       add_cache_column(table, options, :parent, :parent_id) do |path_module, col|
-        path_module.construct_parent_id_sql("test_nodes", col, '/', 'sqlite3')
+        path_module.construct_parent_id_sql("test_nodes", col, '/', db_type)
       end
       add_cache_column(table, options, :root, :root_id) do |path_module, col|
-        path_module.construct_root_id_sql("test_nodes", col, '/', 'id', 'sqlite3')
+        path_module.construct_root_id_sql("test_nodes", col, '/', 'id', db_type)
       end
 
       if options[:counter_cache]

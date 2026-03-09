@@ -42,6 +42,8 @@ module Ancestry
       pk = "#{table_name}.#{primary_key}"
       if %w(mysql mysql2).include?(adapter)
         "CASE WHEN #{col} = '/' THEN #{pk} ELSE CAST(SUBSTRING_INDEX(SUBSTRING(#{col}, 2), '/', 1) AS UNSIGNED) END"
+      elsif %w(pg postgresql postgis).include?(adapter)
+        "CASE WHEN #{col} = '/' THEN #{pk} ELSE CAST(SUBSTR(#{col}, 2, STRPOS(SUBSTR(#{col},2), '/')-1) AS INTEGER) END"
       else
         "CASE WHEN #{col} = '/' THEN #{pk} ELSE CAST(SUBSTR(#{col}, 2, INSTR(SUBSTR(#{col},2), '/')-1) AS INTEGER) END"
       end
