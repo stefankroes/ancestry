@@ -102,6 +102,21 @@ class DepthCachingTest < ActiveSupport::TestCase
     end
   end
 
+  def test_depth_cache_after_lateral_move
+    AncestryTestDatabase.with_model :depth => 3, :width => 2, :cache_depth => :depth_cache do |model, roots|
+      # Move a depth-2 node to a different depth-1 parent (same depth, depth_change == 0)
+      node = model.at_depth(2).first
+      new_parent = model.at_depth(1).where.not(id: node.parent_id).first
+      node.update!(:parent => new_parent)
+
+      assert_equal 2, node.reload.depth_cache
+      node.descendants.each do |descendant|
+        assert_equal descendant.depth, descendant.depth_cache,
+          "depth_cache should be unchanged for descendant #{descendant.id}"
+      end
+    end
+  end
+
   # we are already testing generate and parse against static values
   # this assumes those are methods are tested and working
   def test_ancestry_depth_change
