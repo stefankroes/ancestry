@@ -63,6 +63,8 @@ module Ancestry
       pk = "#{table_name}.#{primary_key}"
       if %w(mysql mysql2).include?(adapter)
         "CASE WHEN #{col} IS NULL THEN #{pk} ELSE CAST(SUBSTRING_INDEX(#{col}, '/', 1) AS UNSIGNED) END"
+      elsif %w(pg postgresql postgis).include?(adapter)
+        "CASE WHEN #{col} IS NULL THEN #{pk} ELSE CAST(SUBSTR(#{col}, 1, STRPOS(#{col}||'/', '/')-1) AS INTEGER) END"
       else
         "CASE WHEN #{col} IS NULL THEN #{pk} ELSE CAST(SUBSTR(#{col}, 1, INSTR(#{col}||'/', '/')-1) AS INTEGER) END"
       end

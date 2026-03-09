@@ -118,10 +118,10 @@ class AncestryTestDatabase
         path_module.construct_depth_sql("test_nodes", col, '/')
       end
       add_cache_column(table, options, :parent, :parent_id) do |path_module, col|
-        path_module.construct_parent_id_sql("test_nodes", col, '/', 'sqlite3')
+        path_module.construct_parent_id_sql("test_nodes", col, '/', db_type)
       end
       add_cache_column(table, options, :root, :root_id) do |path_module, col|
-        path_module.construct_root_id_sql("test_nodes", col, '/', 'id', 'sqlite3')
+        path_module.construct_root_id_sql("test_nodes", col, '/', 'id', db_type)
       end
 
       if options[:counter_cache]
