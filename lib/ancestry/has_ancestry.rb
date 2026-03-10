@@ -8,7 +8,7 @@ module Ancestry
         raise Ancestry::AncestryException, I18n.t("ancestry.option_must_be_hash")
       end
 
-      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format, :parent, :root]
+      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format, :parent, :root, :associations]
       if (key = extra_keys.first)
         raise Ancestry::AncestryException, I18n.t("ancestry.unknown_option", key: key.inspect, value: options[key].inspect)
       end
@@ -59,26 +59,55 @@ module Ancestry
       end
 
       # Resolve parent cache column name (or nil if virtual/absent)
+      # Virtual columns have a DB column (for associations/reads) but aren't writable by callbacks
       if options[:parent] == :virtual
         parent_cache_column = nil
+        parent_column = 'parent_id'
       elsif options[:parent]
         parent_cache_column = options[:parent] == true ? 'parent_id' : options[:parent].to_s
+        parent_column = parent_cache_column
       else
         parent_cache_column = nil
+        parent_column = nil
       end
 
       # Resolve root cache column name (or nil if virtual/absent)
+      # Virtual columns have a DB column (for associations/reads) but aren't writable by callbacks
       if options[:root] == :virtual
         root_cache_column = nil
+        root_column = 'root_id'
       elsif options[:root]
         root_cache_column = options[:root] == true ? 'root_id' : options[:root].to_s
+        root_column = root_cache_column
       else
         root_cache_column = nil
+        root_column = nil
       end
 
       # Resolve counter cache column name (or nil)
       counter_cache_column = if options[:counter_cache]
         options[:counter_cache] == true ? 'children_count' : options[:counter_cache].to_s
+      end
+
+      # Define associations before including the builder module.
+      # The builder module is higher in MRO and overrides the association methods,
+      # but the association reflections remain available for includes/preload/inverse_of.
+      # super from builder methods reaches the association's generated methods.
+      define_associations = options.fetch(:associations, true) != false
+
+      parent_association = define_associations && parent_column
+      root_association = define_associations && root_column
+
+      if parent_association
+        belongs_to :parent, class_name: self.name, foreign_key: parent_column,
+                   optional: true, inverse_of: :children
+        has_many :children, class_name: self.name, foreign_key: parent_column,
+                 inverse_of: :parent
+      end
+
+      if root_association
+        belongs_to :root, class_name: self.name, foreign_key: root_column,
+                   optional: true
       end
 
       # Include generated module with baked-in column/format
@@ -88,7 +117,9 @@ module Ancestry
         depth_cache_column: depth_cache_column,
         counter_cache_column: counter_cache_column,
         parent_cache_column: parent_cache_column,
-        root_cache_column: root_cache_column
+        root_cache_column: root_cache_column,
+        parent_association: parent_association,
+        root_association: root_association
       )
       include generated_mod
 
