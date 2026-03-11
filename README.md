@@ -24,6 +24,7 @@ materialized path, closure tree table, adjacency lists, nested sets, and adjacen
 ## Features from Ancestry gem Implementation
 
 - relations are implemented as `scopes`
+- some relations can be implemented as ActiveRecord associations
 - `STI` support
 - Arrangement of subtrees into hashes
 - Multiple strategies for querying materialized_path
@@ -48,8 +49,8 @@ When using `STI` all classes are returned from the scopes unless you specify oth
 - Ancestry 2.x supports Rails 4.1 and earlier
 - Ancestry 3.x supports Rails 4.2 and 5.0
 - Ancestry 4.x supports Rails 5.2 through 7.0
-- Ancestry 5.0 supports Rails 6.0 and higher  
-  Rails 5.2 with `update_strategy=ruby` is still being tested in 5.0.
+- Ancestry 5.0 supports Rails 6.0 through 8.1
+- Ancestry 6.0 supports Rails 7.0 through 8.1
 
 # Installation
 
@@ -180,12 +181,14 @@ The `has_ancestry` method supports the following options:
                            String   Cache depth in the column referenced
     :parent                Store the parent id in a column: (See Cached Columns)
                            false    Do not store parent id (default)
-                           true     Cache parent id in 'parent_id'
-                           :virtual Use a database generated column
+                           true     Cache parent id in 'parent_id' and define
+                                    belongs_to :parent and has_many :children associations
+                           :virtual Use a database generated column with associations
     :root                  Store the root id in a column: (See Cached Columns)
                            false    Do not store root id (default)
-                           true     Cache root id in 'root_id'
-                           :virtual Use a database generated column
+                           true     Cache root id in 'root_id' and define
+                                    belongs_to :root association
+                           :virtual Use a database generated column with association
     :primary_key_format    Regular expression that matches the format of the primary key:
                            '[0-9]+'            integer ids (default)
                            '[-A-Fa-f0-9]{36}'  UUIDs
@@ -513,6 +516,39 @@ for database-level joins or foreign keys without callback overhead.
 
 Note: `root: true` requires an extra UPDATE after creating root nodes, since the `root_id` of a
 root node is its own `id`, which is not available until after the record is inserted.
+
+## Associations
+
+When `parent: true` is set, ancestry defines real ActiveRecord associations:
+
+- `belongs_to :parent` — enables `includes(:parent)` and `joins(:parent)`
+- `has_many :children` — enables `includes(:children)` and `joins(:children)`
+
+When `root: true` is set:
+
+- `belongs_to :root` — enables `includes(:root)` and `joins(:root)`
+
+These are standard ActiveRecord associations backed by real database columns, so they support
+eager loading, preloading, and inverse caching:
+
+```ruby
+class TreeNode < ActiveRecord::Base
+  has_ancestry parent: true
+end
+
+# Eager load parents to avoid N+1
+TreeNode.where(depth: 2).includes(:parent)
+
+# Eager load children
+roots = TreeNode.roots.includes(:children)
+roots.each { |r| r.children } # no extra queries
+
+# Join queries
+TreeNode.joins(:parent).where(parents_tree_nodes: { name: "Root" })
+```
+
+Virtual columns (`parent: :virtual`, `root: :virtual`) also define associations. Since the database
+computes these columns automatically, they support eager loading and joins without callback overhead.
 
 ## Migration
 

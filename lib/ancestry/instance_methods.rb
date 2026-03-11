@@ -94,6 +94,36 @@ module Ancestry
       end
     end
 
+    # Sync parent cache column and reset association after ancestry change
+    def ancestry_sync_parent_cache(parent_cache_column, value)
+      write_attribute(parent_cache_column, value.last) if parent_cache_column
+      association(:parent).reset if association_cached?(:parent)
+    end
+
+    # Sync root cache column and reset association after ancestry change
+    def ancestry_sync_root_cache(root_cache_column, value)
+      write_attribute(root_cache_column, value.first || id) if root_cache_column
+      association(:root).reset if association_cached?(:root)
+    end
+
+    # Look up parent, using association cache when available
+    def ancestry_lookup_parent
+      if association(:parent).loaded?
+        association(:parent).target
+      else
+        unscoped_where { |scope| scope.find_by(scope.primary_key => parent_id) }
+      end
+    end
+
+    # Look up root, using association cache when available
+    def ancestry_lookup_root
+      if association(:root).loaded?
+        association(:root).target || self
+      else
+        unscoped_where { |scope| scope.find_by(scope.primary_key => root_id) } || self
+      end
+    end
+
     # Add root cache update to SQL update clause for descendants
     def add_root_cache_to_update_clause(update_clause, root_cache_column)
       old_root_id = ancestor_ids_before_last_save.first || id_before_last_save

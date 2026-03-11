@@ -14,9 +14,9 @@ module Ancestry
     # @param parent_cache_column [String, nil] column name for parent cache, or nil
     # @param root_cache_column [String, nil] column name for root cache, or nil
     # @return [Module] a named module with baked-in instance methods
-    def self.build(format_module, column, delimiter, root, depth_cache_column: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil)
+    def self.build(format_module, column, delimiter, root, depth_cache_column: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil, parent_association: false, root_association: false)
       format_name = format_module.name.split("::").last
-      mod_name = :"#{format_name}_#{column}#{"_d#{depth_cache_column}" if depth_cache_column}#{"_c#{counter_cache_column}" if counter_cache_column}#{"_p#{parent_cache_column}" if parent_cache_column}#{"_r#{root_cache_column}" if root_cache_column}"
+      mod_name = :"#{format_name}_#{column}#{"_d#{depth_cache_column}" if depth_cache_column}#{"_c#{counter_cache_column}" if counter_cache_column}#{"_p#{parent_cache_column}" if parent_cache_column}#{"_r#{root_cache_column}" if root_cache_column}#{"_ap" if parent_association}#{"_ar" if root_association}"
 
       if Ancestry.const_defined?(mod_name, false)
         return Ancestry.const_get(mod_name, false)
@@ -36,6 +36,8 @@ module Ancestry
 
         def ancestor_ids=(value)
           write_attribute(:#{column}, #{format_module}.generate(value, "#{delimiter}", #{root.inspect}))
+          #{"ancestry_sync_parent_cache(#{parent_cache_column.inspect}, value)" if parent_cache_column || parent_association}
+          #{"ancestry_sync_root_cache(#{root_cache_column.inspect}, value)" if root_cache_column || root_association}
         end
 
         def ancestor_ids
@@ -171,23 +173,43 @@ module Ancestry
           self.class.ancestry_base_class.scope_depth(depth_options, depth).ordered_by_ancestry.inpath_of(self)
         end
 
-        def children
-          self.class.ancestry_base_class.children_of(self)
-        end
+        #{ if parent_association
+          <<~RUBY
+            def child_ids
+              children.pluck(self.class.primary_key)
+            end
 
-        def child_ids
-          children.pluck(self.class.primary_key)
-        end
+            def has_children?
+              children.exists?
+            end
+            alias children? has_children?
 
-        def has_children?
-          children.exists?
-        end
-        alias children? has_children?
+            def is_childless?
+              !has_children?
+            end
+            alias childless? is_childless?
+          RUBY
+        else
+          <<~RUBY
+            def children
+              self.class.ancestry_base_class.children_of(self)
+            end
 
-        def is_childless?
-          !has_children?
-        end
-        alias childless? is_childless?
+            def child_ids
+              children.pluck(self.class.primary_key)
+            end
+
+            def has_children?
+              children.exists?
+            end
+            alias children? has_children?
+
+            def is_childless?
+              !has_children?
+            end
+            alias childless? is_childless?
+          RUBY
+        end}
 
         def siblings
           self.class.ancestry_base_class.siblings_of(self).where.not(self.class.primary_key => id)
@@ -235,29 +257,50 @@ module Ancestry
 
         def parent=(parent)
           self.ancestor_ids = parent ? parent.path_ids : []
+          #{ if parent_association
+            "association(:parent).target = parent"
+          end}
         end
 
         def parent_id=(new_parent_id)
           self.parent = new_parent_id.present? ? unscoped_find(new_parent_id) : nil
         end
 
-        def parent
-          if has_parent?
-            unscoped_where do |scope|
-              scope.find_by scope.primary_key => parent_id
+        #{ if parent_association
+          <<~RUBY
+            def parent
+              ancestry_lookup_parent if has_parent?
             end
-          end
-        end
+          RUBY
+        else
+          <<~RUBY
+            def parent
+              if has_parent?
+                unscoped_where { |scope| scope.find_by(scope.primary_key => parent_id) }
+              end
+            end
+          RUBY
+        end}
 
         # Root
 
-        def root
-          if has_parent?
-            unscoped_where { |scope| scope.find_by(scope.primary_key => root_id) } || self
-          else
-            self
-          end
-        end
+        #{ if root_association
+          <<~RUBY
+            def root
+              has_parent? ? ancestry_lookup_root : self
+            end
+          RUBY
+        else
+          <<~RUBY
+            def root
+              if has_parent?
+                unscoped_where { |scope| scope.find_by(scope.primary_key => root_id) } || self
+              else
+                self
+              end
+            end
+          RUBY
+        end}
 
         #{ if depth_cache_column
           <<~RUBY
