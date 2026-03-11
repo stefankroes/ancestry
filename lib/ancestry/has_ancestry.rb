@@ -44,7 +44,7 @@ module Ancestry
         depth_cache_sql = options[:depth_cache_column]&.to_s || 'ancestry_depth'
       elsif options[:cache_depth]
         if options[:depth_cache_column]
-          ActiveSupport::Deprecation.warn("has_ancestry :depth_cache_column is deprecated. Use :cache_depth instead.")
+          Ancestry.deprecator.warn("has_ancestry :depth_cache_column is deprecated. Use :cache_depth instead.")
         end
         depth_cache_column =
           if options[:cache_depth] == true

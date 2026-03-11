@@ -73,4 +73,8 @@ module Ancestry
   def self.default_primary_key_format=(value)
     @@default_primary_key_format = value
   end
+
+  def self.deprecator
+    @deprecator ||= ActiveSupport::Deprecation.new(nil, "ancestry")
+  end
 end
