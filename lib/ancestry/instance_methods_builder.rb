@@ -211,6 +211,16 @@ module Ancestry
           RUBY
         end}
 
+        alias leaf? is_childless?
+
+        def leaves(depth_options = {})
+          self.class.ancestry_base_class.scope_depth(depth_options, depth).leaves_of(self)
+        end
+
+        def leaf_ids(depth_options = {})
+          leaves(depth_options).pluck(self.class.primary_key)
+        end
+
         def siblings
           self.class.ancestry_base_class.siblings_of(self).where.not(self.class.primary_key => id)
         end
@@ -449,6 +459,14 @@ module Ancestry
         def siblings_of(object)
           node = to_node(object)
           where(arel_table[:#{column}].eq(node[#{column.inspect}].presence))
+        end
+
+        def leaves
+          where("NOT EXISTS (SELECT 1 FROM \#{table_name} c WHERE c.#{column} = (\#{child_ancestry_sql}))")
+        end
+
+        def leaves_of(object)
+          descendants_of(object).merge(leaves)
         end
 
         def ordered_by_ancestry(order = nil)
