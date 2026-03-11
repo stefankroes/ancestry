@@ -3,9 +3,11 @@
 require_relative '../environment'
 
 class RootVirtualTest < ActiveSupport::TestCase
+  # MySQL does not support virtual root_id — generated columns cannot
+  # reference auto-increment columns, and root_id = id for root nodes.
+
   def test_root_id_virtual_on_create
-    assert true, "only runs for postgres and recent rails versions"
-    return unless only_test_virtual_column?
+    return if !AncestryTestDatabase.virtual_columns? || AncestryTestDatabase.mysql?
 
     AncestryTestDatabase.with_model :depth => 3, :width => 3, :root => :virtual do |model, _roots|
       model.all.each do |node|
@@ -15,8 +17,7 @@ class RootVirtualTest < ActiveSupport::TestCase
   end
 
   def test_root_id_virtual_root_is_self
-    assert true, "only runs for postgres and recent rails versions"
-    return unless only_test_virtual_column?
+    return if !AncestryTestDatabase.virtual_columns? || AncestryTestDatabase.mysql?
 
     AncestryTestDatabase.with_model :depth => 2, :width => 2, :root => :virtual do |model, _roots|
       model.roots.each do |root|
@@ -26,8 +27,7 @@ class RootVirtualTest < ActiveSupport::TestCase
   end
 
   def test_root_id_virtual_after_cross_tree_move
-    assert true, "only runs for postgres and recent rails versions"
-    return unless only_test_virtual_column?
+    return if !AncestryTestDatabase.virtual_columns? || AncestryTestDatabase.mysql?
 
     AncestryTestDatabase.with_model :depth => 3, :width => 2, :root => :virtual do |model, _roots|
       node = model.at_depth(1).first
@@ -43,11 +43,5 @@ class RootVirtualTest < ActiveSupport::TestCase
         assert_equal new_parent.id, descendant.read_attribute(:root_id)
       end
     end
-  end
-
-  private
-
-  def only_test_virtual_column?
-    AncestryTestDatabase.postgres? && ActiveRecord.version.to_s >= "7.0"
   end
 end
