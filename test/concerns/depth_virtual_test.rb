@@ -1,10 +1,9 @@
 require_relative '../environment'
 
-# These are only valid for postgres 
+# These tests require Rails 7.0+ for table.virtual support
 class DepthVirtualTest < ActiveSupport::TestCase
   def test_depth_caching
-    assert true, "only runs for postgres and recent rails versions"
-    return unless only_test_virtual_column?
+    return unless AncestryTestDatabase.virtual_columns?
 
     AncestryTestDatabase.with_model :depth => 3, :width => 3, :cache_depth => :virtual do |_model, roots|
       roots.each do |lvl0_node, lvl0_children|
@@ -20,8 +19,7 @@ class DepthVirtualTest < ActiveSupport::TestCase
   end
 
   def test_depth_caching_after_subtree_movement
-    assert true, "only runs for postgres and recent rails versions"
-    return unless only_test_virtual_column?
+    return unless AncestryTestDatabase.virtual_columns?
 
     AncestryTestDatabase.with_model :depth => 6, :width => 1, :cache_depth => :virtual do |model, _roots|
       node = model.at_depth(3).first
@@ -37,8 +35,7 @@ class DepthVirtualTest < ActiveSupport::TestCase
   end
 
   def test_depth_scopes
-    assert true, "only runs for postgres and recent rails versions"
-    return unless only_test_virtual_column?
+    return unless AncestryTestDatabase.virtual_columns?
 
     AncestryTestDatabase.with_model :depth => 4, :width => 2, :cache_depth => true do |model, _roots|
       model.before_depth(2).all? { |node| assert node.depth < 2 }
@@ -50,8 +47,7 @@ class DepthVirtualTest < ActiveSupport::TestCase
   end
 
   def test_depth_scopes_without_depth_cache
-    assert true, "only runs for postgres and recent rails versions"
-    return unless only_test_virtual_column?
+    return unless AncestryTestDatabase.virtual_columns?
 
     AncestryTestDatabase.with_model :depth => 4, :width => 2 do |model, _roots|
       model.before_depth(2).all? { |node| assert node.depth < 2 }
@@ -63,8 +59,7 @@ class DepthVirtualTest < ActiveSupport::TestCase
   end
 
   def test_exception_when_rebuilding_depth_cache_for_model_without_depth_caching
-    assert true, "only runs for postgres and recent rails versions"
-    return unless only_test_virtual_column?
+    return unless AncestryTestDatabase.virtual_columns?
 
     AncestryTestDatabase.with_model do |model|
       assert_raise Ancestry::AncestryException do
@@ -74,8 +69,7 @@ class DepthVirtualTest < ActiveSupport::TestCase
   end
 
   def test_exception_on_unknown_depth_column
-    assert true, "only runs for postgres and recent rails versions"
-    return unless only_test_virtual_column?
+    return unless AncestryTestDatabase.virtual_columns?
 
     AncestryTestDatabase.with_model :cache_depth => true do |model|
       assert_raise Ancestry::AncestryException do
@@ -87,8 +81,7 @@ class DepthVirtualTest < ActiveSupport::TestCase
   # we are already testing generate and parse against static values
   # this assumes those are methods are tested and working
   def test_ancestry_depth_change
-    assert true, "only runs for postgres and recent rails versions"
-    return unless only_test_virtual_column?
+    return unless AncestryTestDatabase.virtual_columns?
 
     AncestryTestDatabase.with_model do |model|
       {
@@ -103,9 +96,5 @@ class DepthVirtualTest < ActiveSupport::TestCase
         assert_equal(diff, model.ancestry_depth_change(a_before, a_after))
       end
     end
-  end
-
-  def only_test_virtual_column?
-    AncestryTestDatabase.postgres? && ActiveRecord.version.to_s >= "7.0"
   end
 end

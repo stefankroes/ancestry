@@ -38,8 +38,8 @@ module Ancestry
     # SQL expression that extracts the root_id from the ancestry column
     # MP2: ancestry is "/" (root, returns id) or "/1/2/3/" (root_id=1)
     def self.construct_root_id_sql(table_name, ancestry_column, _delimiter, primary_key, adapter)
-      col = "#{table_name}.#{ancestry_column}"
-      pk = "#{table_name}.#{primary_key}"
+      col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
+      pk = table_name ? "#{table_name}.#{primary_key}" : primary_key.to_s
       if %w(mysql mysql2).include?(adapter)
         "CASE WHEN #{col} = '/' THEN #{pk} ELSE CAST(SUBSTRING_INDEX(SUBSTRING(#{col}, 2), '/', 1) AS UNSIGNED) END"
       elsif %w(pg postgresql postgis).include?(adapter)
@@ -52,7 +52,7 @@ module Ancestry
     # SQL expression that extracts the parent_id from the ancestry column
     # MP2: ancestry is "/" (root) or "/1/2/3/" (parent_id=3)
     def self.construct_parent_id_sql(table_name, ancestry_column, _delimiter, adapter)
-      col = "#{table_name}.#{ancestry_column}"
+      col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       if %w(mysql mysql2).include?(adapter)
         "CASE WHEN #{col} = '/' THEN NULL ELSE CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(#{col}, '/', -2), '/', 1) AS UNSIGNED) END"
       else
@@ -63,7 +63,8 @@ module Ancestry
 
     # module method
     def self.construct_depth_sql(table_name, ancestry_column, ancestry_delimiter)
-      tmp = %{(LENGTH(#{table_name}.#{ancestry_column}) - LENGTH(REPLACE(#{table_name}.#{ancestry_column},'#{ancestry_delimiter}','')))}
+      col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
+      tmp = %{(LENGTH(#{col}) - LENGTH(REPLACE(#{col},'#{ancestry_delimiter}','')))}
       tmp += "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
       "(#{tmp} -1)"
     end

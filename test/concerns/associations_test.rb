@@ -43,7 +43,7 @@ class AssociationsTest < ActiveSupport::TestCase
   end
 
   def test_parent_association_defined_with_virtual_parent
-    return unless only_test_virtual_column?
+    return unless AncestryTestDatabase.virtual_columns?
 
     AncestryTestDatabase.with_model(parent: :virtual) do |model|
       assert model.reflect_on_association(:parent), "belongs_to :parent with parent: :virtual"
@@ -53,7 +53,7 @@ class AssociationsTest < ActiveSupport::TestCase
   end
 
   def test_virtual_parent_includes
-    return unless only_test_virtual_column?
+    return unless AncestryTestDatabase.virtual_columns?
 
     AncestryTestDatabase.with_model(parent: :virtual) do |model|
       root = model.create!
@@ -66,7 +66,7 @@ class AssociationsTest < ActiveSupport::TestCase
   end
 
   def test_virtual_parent_includes_children
-    return unless only_test_virtual_column?
+    return unless AncestryTestDatabase.virtual_columns?
 
     AncestryTestDatabase.with_model(parent: :virtual) do |model|
       root = model.create!
@@ -80,7 +80,7 @@ class AssociationsTest < ActiveSupport::TestCase
   end
 
   def test_virtual_parent_assign_and_move
-    return unless only_test_virtual_column?
+    return if !AncestryTestDatabase.virtual_columns? || AncestryTestDatabase.mysql?
 
     AncestryTestDatabase.with_model(parent: :virtual, root: :virtual) do |model|
       root1 = model.create!
@@ -319,7 +319,7 @@ class AssociationsTest < ActiveSupport::TestCase
   end
 
   def test_root_association_defined_with_virtual_root
-    return unless only_test_virtual_column?
+    return if !AncestryTestDatabase.virtual_columns? || AncestryTestDatabase.mysql?
 
     AncestryTestDatabase.with_model(root: :virtual) do |model|
       assert model.reflect_on_association(:root), "belongs_to :root with root: :virtual"
@@ -328,7 +328,7 @@ class AssociationsTest < ActiveSupport::TestCase
   end
 
   def test_virtual_root_includes
-    return unless only_test_virtual_column?
+    return if !AncestryTestDatabase.virtual_columns? || AncestryTestDatabase.mysql?
 
     AncestryTestDatabase.with_model(root: :virtual) do |model|
       root = model.create!
@@ -521,9 +521,4 @@ class AssociationsTest < ActiveSupport::TestCase
     end
   end
 
-  private
-
-  def only_test_virtual_column?
-    AncestryTestDatabase.postgres? && ActiveRecord.version.to_s >= "7.0"
-  end
 end

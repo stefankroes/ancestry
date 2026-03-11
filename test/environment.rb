@@ -115,13 +115,13 @@ class AncestryTestDatabase
     ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
       table.send(column_type, options[:ancestry_column], **column_options(force_allow_nil: skip_ancestry))
       add_cache_column(table, options, :cache_depth, :ancestry_depth) do |path_module, col|
-        path_module.construct_depth_sql("test_nodes", col, '/')
+        path_module.construct_depth_sql(nil, col, '/')
       end
       add_cache_column(table, options, :parent, :parent_id) do |path_module, col|
-        path_module.construct_parent_id_sql("test_nodes", col, '/', db_type)
+        path_module.construct_parent_id_sql(nil, col, '/', db_type)
       end
       add_cache_column(table, options, :root, :root_id) do |path_module, col|
-        path_module.construct_root_id_sql("test_nodes", col, '/', 'id', db_type)
+        path_module.construct_root_id_sql(nil, col, '/', 'id', db_type)
       end
 
       if options[:counter_cache]
@@ -193,6 +193,19 @@ class AncestryTestDatabase
 
   def self.postgres?
     db_type == "pg"
+  end
+
+  def self.mysql?
+    db_type == "mysql2"
+  end
+
+  # SQLite virtual columns require Rails 7.2+ (PR #49346), PG/MySQL require 7.0+
+  def self.virtual_columns?
+    if postgres? || mysql?
+      ActiveRecord.version.to_s >= "7.0"
+    else
+      ActiveRecord.version.to_s >= "7.2"
+    end
   end
 
   def self.materialized_path2?
