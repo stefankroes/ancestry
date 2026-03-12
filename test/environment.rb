@@ -90,12 +90,12 @@ class AncestryTestDatabase
       if column_type == "string"
         {
           :collation => ancestry_collation == "default" ? nil : ancestry_collation,
-          :null  => !materialized_path2?
+          :null  => !(materialized_path2? || materialized_path3?)
         }
       else
         {
           :limit => 3000,
-          :null  => !materialized_path2?
+          :null  => !(materialized_path2? || materialized_path3?)
         }
       end
     force_allow_nil ? @column_options.merge(:null => true) : @column_options
@@ -212,6 +212,12 @@ class AncestryTestDatabase
     return @materialized_path2 if defined?(@materialized_path2)
 
     @materialized_path2 = (ENV["FORMAT"] == "materialized_path2")
+  end
+
+  def self.materialized_path3?
+    return @materialized_path3 if defined?(@materialized_path3)
+
+    @materialized_path3 = (ENV["FORMAT"] == "materialized_path3")
   end
 
   # Normalize DB env var to match database.yml keys

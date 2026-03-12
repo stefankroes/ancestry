@@ -136,6 +136,8 @@ class ArrangementTest < ActiveSupport::TestCase
       fmt =
         if AncestryTestDatabase.materialized_path2?
           ->(a) { a ? "/#{a}/" : "/" }
+        elsif AncestryTestDatabase.materialized_path3?
+          ->(a) { a ? "#{a}/" : "" }
         else
           ->(a) { a }
         end

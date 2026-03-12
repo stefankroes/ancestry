@@ -14,7 +14,7 @@ module Ancestry
       end
 
       ancestry_format = options[:ancestry_format] || Ancestry.default_ancestry_format
-      if ![:materialized_path, :materialized_path2].include?(ancestry_format)
+      if ![:materialized_path, :materialized_path2, :materialized_path3].include?(ancestry_format)
         raise Ancestry::AncestryException, I18n.t("ancestry.unknown_format", value: ancestry_format)
       end
 
@@ -36,7 +36,7 @@ module Ancestry
 
       format_module = Ancestry::HasAncestry.ancestry_format_module(ancestry_format)
       delimiter = '/'
-      root = (ancestry_format == :materialized_path2) ? delimiter : nil
+      root = format_module.root(delimiter)
 
       # Resolve depth cache column name (or nil if virtual/absent)
       if options[:cache_depth] == :virtual
@@ -197,8 +197,11 @@ module Ancestry
 
     def self.ancestry_format_module(ancestry_format)
       ancestry_format ||= Ancestry.default_ancestry_format
-      if ancestry_format == :materialized_path2
+      case ancestry_format
+      when :materialized_path2
         Ancestry::MaterializedPath2
+      when :materialized_path3
+        Ancestry::MaterializedPath3
       else
         Ancestry::MaterializedPath
       end
