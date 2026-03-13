@@ -3,6 +3,22 @@
 Doing our best at supporting [SemVer](http://semver.org/) with
 a nice looking [Changelog](http://keepachangelog.com).
 
+## Version [Unreleased]
+
+* Introduce virtual columns for `parent_id`, `root_id`, and `depth`. (mysql doesn't support `root: :virtual`) [#727](https://github.com/stefankroes/ancestry/pull/727) [#721](https://github.com/stefankroes/ancestry/pull/721) (addresses [#679](https://github.com/stefankroes/ancestry/issues/679), [#354](https://github.com/stefankroes/ancestry/issues/354), [#422](https://github.com/stefankroes/ancestry/issues/422))
+* Introduce `leaves` scope, `node.leaves`, `leaf_ids`, and `leaf?` [#725](https://github.com/stefankroes/ancestry/pull/725) [#726](https://github.com/stefankroes/ancestry/pull/726) (thx @asmega, @brendon for prior leaf node approaches in [#246](https://github.com/stefankroes/ancestry/pull/246), [#341](https://github.com/stefankroes/ancestry/pull/341))
+* Introduce `belongs_to :parent`, `belongs_to :root`, and `has_many :children` associations [#723](https://github.com/stefankroes/ancestry/pull/723) (addresses [#308](https://github.com/stefankroes/ancestry/issues/308), [#63](https://github.com/stefankroes/ancestry/issues/63), [#195](https://github.com/stefankroes/ancestry/pull/195))
+* Introduce `parent` and `root` caching in a physical column [#721](https://github.com/stefankroes/ancestry/pull/721)
+* Fixed deprecation warning [#724](https://github.com/stefankroes/ancestry/pull/724)
+* Fix: `root_id` for PostgreSQL [#722](https://github.com/stefankroes/ancestry/pull/722)
+
+### Breaking Changes
+
+* `ancestry_column` and `ancestry_delimiter` were deprecated, but have been officially removed.
+* `depth_cache_column`, `counter_cache_column`, and `touch_ancestors` class variables have been removed.
+* `MaterializedPathPg` (internal module) has been removed.
+* Instance and Class methods are now generated.
+
 ## Version [5.1.0] <sub><sup>2026-03-10</sup></sub>
 
 * `update_strategy: :sql` now works on all databases (SQLite, MySQL, PostgreSQL) [#715](https://github.com/stefankroes/ancestry/pull/715)
@@ -403,7 +419,7 @@ Missed 2 commits (which are feature adds)
 * Named scopes
 * Validations
 
-[HEAD]: https://github.com/stefankroes/ancestry/compare/v5.1.0...HEAD
+[Unreleased]: https://github.com/stefankroes/ancestry/compare/v5.1.0...HEAD
 [5.1.0]: https://github.com/stefankroes/ancestry/compare/v5.0.0...v5.1.0
 [5.0.0]: https://github.com/stefankroes/ancestry/compare/v4.3.3...v5.0.0
 [4.3.3]: https://github.com/stefankroes/ancestry/compare/v4.3.2...v4.3.3

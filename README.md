@@ -612,6 +612,18 @@ appraisal rake test
 appraisal sqlite3-ar-50 rake test
 ```
 
+# See also
+
+Other Ruby tree gems, each with different tradeoffs:
+
+- [acts_as_list](https://github.com/brendon/acts_as_list) — sortable lists with position column
+- [acts_as_tree](https://github.com/amerine/acts_as_tree) — simple adjacency list (parent_id only)
+- [awesome_nested_set](https://github.com/collectiveidea/awesome_nested_set) — nested set pattern (lft/rgt columns), fast subtree queries
+- [closure_tree](https://github.com/ClosureTree/closure_tree) — closure table pattern (separate hierarchy table), fast reads
+- [ltree_hierarchy](https://github.com/cfabianski/ltree_hierarchy) - Postgres ltree implementation
+- [parentry](https://github.com/hasghari/parentry) - ltree and array implementation of ancestry.
+- [pg_ltree](https://github.com/sjke/pg_ltree) - Postgres ltree implementation
+
 # Contributing and license
 
 Question? Bug report? Faulty/incomplete documentation? Feature request? Please

@@ -458,7 +458,7 @@ module Ancestry
 
         def siblings_of(object)
           node = to_node(object)
-          where(arel_table[:#{column}].eq(node[#{column.inspect}].presence))
+          where(arel_table[:#{column}].eq(node[#{column.inspect}]#{ ".presence" if root.nil? }))
         end
 
         def leaves
@@ -577,7 +577,7 @@ module Ancestry
 
     # Generate the ordered_by_ancestry method body based on format
     def self._ordered_by_ancestry_body(format_module, column)
-      if format_module == Ancestry::MaterializedPath2
+      if format_module == Ancestry::MaterializedPath2 || format_module == Ancestry::MaterializedPath3
         <<~BODY.strip
           reorder(Arel::Nodes::Ascending.new(arel_table[:#{column}]), order)
         BODY
