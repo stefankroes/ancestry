@@ -56,7 +56,11 @@ class ScopesTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model :depth => 3, :width => 3 do |model, _roots|
       # Some pg databases do not use symbols in sorting
       # if this is failing, try tweaking the collation of your ancestry columns
-      expected = model.all.sort_by { |m| [m.ancestor_ids.map(&:to_s), m.id.to_i] }
+      expected = if AncestryTestDatabase.array?
+        model.all.sort_by { |m| [m.ancestor_ids, m.id.to_i] }
+      else
+        model.all.sort_by { |m| [m.ancestor_ids.map(&:to_s), m.id.to_i] }
+      end
       actual = model.ordered_by_ancestry_and(:id)
       assert_equal (expected.map { |r| [r.ancestor_ids, r.id.to_s] }), (actual.map { |r| [r.ancestor_ids, r.id.to_s] })
     end

@@ -14,7 +14,7 @@ module Ancestry
       end
 
       ancestry_format = options[:ancestry_format] || Ancestry.default_ancestry_format
-      if ![:materialized_path, :materialized_path2, :materialized_path3, :ltree].include?(ancestry_format)
+      if ![:materialized_path, :materialized_path2, :materialized_path3, :ltree, :array].include?(ancestry_format)
         raise Ancestry::AncestryException, I18n.t("ancestry.unknown_format", value: ancestry_format)
       end
 
@@ -208,6 +208,8 @@ module Ancestry
         Ancestry::MaterializedPath3
       when :ltree
         Ancestry::Ltree
+      when :array
+        Ancestry::MaterializedPathArray
       else
         Ancestry::MaterializedPath
       end

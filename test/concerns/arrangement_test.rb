@@ -140,6 +140,8 @@ class ArrangementTest < ActiveSupport::TestCase
           ->(a) { a ? "#{a}/" : "" }
         elsif AncestryTestDatabase.ltree?
           ->(a) { a ? a.to_s.tr('/', '.') : "" }
+        elsif AncestryTestDatabase.array?
+          ->(a) { a ? a.split('/').map(&:to_i) : [] }
         else
           ->(a) { a }
         end

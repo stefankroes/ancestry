@@ -45,6 +45,10 @@ class AncestryTestDatabase
         ActiveRecord::Base.connection.execute("CREATE EXTENSION IF NOT EXISTS ltree")
       end
 
+      if array? && !postgres?
+        raise "Array format requires PostgreSQL"
+      end
+
       puts "testing #{db_type} #{Ancestry.default_update_strategy == :sql ? "(sql) " : ""}(with #{column_type} #{ancestry_column})"
       puts "column format: #{Ancestry.default_ancestry_format} options: #{column_options.inspect}"
     rescue StandardError => e
@@ -61,6 +65,8 @@ class AncestryTestDatabase
   def self.column_type
     @column_type ||= if ltree?
       "ltree"
+    elsif array?
+      "integer_array"
     else
       ENV["ANCESTRY_COLUMN_TYPE"].presence || "string"
     end
@@ -100,6 +106,11 @@ class AncestryTestDatabase
           :default => '',
           :null  => false
         }
+      elsif array?
+        {
+          :default => [],
+          :null  => false
+        }
       elsif column_type == "string"
         {
           :collation => ancestry_collation == "default" ? nil : ancestry_collation,
@@ -130,6 +141,8 @@ class AncestryTestDatabase
         # Create a plain nullable column for tests that call has_ancestry later
         if ltree?
           table.column options[:ancestry_column], :ltree, default: '', null: true
+        elsif array?
+          table.integer options[:ancestry_column], array: true, default: [], null: true
         else
           table.send column_type, options[:ancestry_column], **column_options(force_allow_nil: true)
         end
@@ -228,6 +241,12 @@ class AncestryTestDatabase
     return @ltree if defined?(@ltree)
 
     @ltree = (ENV["FORMAT"] == "ltree")
+  end
+
+  def self.array?
+    return @array if defined?(@array)
+
+    @array = (ENV["FORMAT"] == "array")
   end
 
   # Normalize DB env var to match database.yml keys

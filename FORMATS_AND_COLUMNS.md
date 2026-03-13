@@ -19,6 +19,7 @@ for tree queries.
 | `:materialized_path2` | `string` | `/` | `/1/2/3/` | `LIKE '/1/2/3/%'` | Any |
 | `:materialized_path3` | `string` | `""` | `1/2/3/` | `LIKE '1/2/3/%'` | Any |
 | `:ltree` | `ltree` | `""` | `1.2.3` | `<@ '1.2.3'` | PostgreSQL |
+| `:array` | `integer[]` | `{}` | `{1,2,3}` | `@> ARRAY[1,2,3]` | PostgreSQL |
 
 ### Choosing a Format
 
@@ -91,6 +92,22 @@ Grandchild:  ancestry = "1.2"
 - Descendant query: `ancestry <@ '1.2'` (GiST-indexed)
 - `nlevel(ancestry)` for depth, `subpath()` for path extraction
 - Integer primary keys only (ltree labels must be alphanumeric)
+
+#### `:array` (PostgreSQL only)
+
+```
+Root node:   ancestry = {}
+Child of 1:  ancestry = {1}
+Grandchild:  ancestry = {1,2}
+```
+
+- Column is `NOT NULL`, type is `integer[]`
+- Descendant query: `ancestry @> ARRAY[1,2]` (GIN-indexed containment)
+- No string parsing — ancestry values are native Ruby arrays
+- No collation issues — integer comparison, not string comparison
+- Correct numeric sort order — `{1,2}` sorts before `{1,10}`
+- Indexes: btree (equality, ordering) + GIN (containment queries)
+- Integer primary keys only
 
 ## Collation and Indexes
 

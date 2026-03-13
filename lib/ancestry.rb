@@ -9,6 +9,7 @@ require_relative 'ancestry/materialized_path'
 require_relative 'ancestry/materialized_path2'
 require_relative 'ancestry/materialized_path3'
 require_relative 'ancestry/ltree'
+require_relative 'ancestry/materialized_path_array'
 require_relative 'ancestry/instance_methods_builder'
 require_relative 'ancestry/migration'
 
