@@ -65,6 +65,9 @@ jobs:
             format: materialized_path2
             ruby: "3.4"
           - activerecord: 81
+            format: ltree
+            ruby: "3.4"
+          - activerecord: 81
             format: materialized_path
             ruby: "4.0" # Latest Ruby
 
@@ -93,11 +96,13 @@ jobs:
           bundler-cache: true
 
       - name: run sqlite tests
+        if: matrix.format != 'ltree'
         env:
           DB: sqlite3
         run: |
           bundle exec rake
       - name: run sqlite tests (UPDATE_STRATEGY=sql)
+        if: matrix.format != 'ltree'
         env:
           DB: sqlite3
           UPDATE_STRATEGY: sql
@@ -129,11 +134,13 @@ jobs:
           bundle exec rake
           FORMAT=${{ matrix.format }} UPDATE_STRATEGY=sql bundle exec rake
       - name: run mysql tests
+        if: matrix.format != 'ltree'
         env:
           DB: mysql2
         run: |
           bundle exec rake
       - name: run mysql tests (ANCESTRY_COLUMN_TYPE=binary)
+        if: matrix.format != 'ltree'
         env:
           DB: mysql2
           ANCESTRY_COLUMN_TYPE: binary

@@ -41,23 +41,23 @@ module Ancestry
         end
 
         def ancestor_ids
-          Ancestry::MaterializedPath.parse(read_attribute(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?)
+          #{format_module}.parse(read_attribute(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?)
         end
 
         def ancestor_ids_in_database
-          Ancestry::MaterializedPath.parse(attribute_in_database(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?)
+          #{format_module}.parse(attribute_in_database(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?)
         end
 
         def ancestor_ids_before_last_save
-          Ancestry::MaterializedPath.parse(attribute_before_last_save(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?)
+          #{format_module}.parse(attribute_before_last_save(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?)
         end
 
         def parent_id_in_database
-          Ancestry::MaterializedPath.parse(attribute_in_database(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?).last
+          #{format_module}.parse(attribute_in_database(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?).last
         end
 
         def parent_id_before_last_save
-          Ancestry::MaterializedPath.parse(attribute_before_last_save(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?).last
+          #{format_module}.parse(attribute_before_last_save(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?).last
         end
 
         # optimization - better to go directly to column and avoid parsing
@@ -350,10 +350,9 @@ module Ancestry
           if !ancestry_callbacks_disabled? && sane_ancestor_ids?
             old_ancestry = self.class.generate_ancestry(path_ids_before_last_save)
             new_ancestry = self.class.generate_ancestry(path_ids)
-            adapter = self.class.connection.adapter_name.downcase
-            replace_sql = Ancestry::MaterializedPath.concat(adapter, "'\#{new_ancestry}'", "SUBSTRING(#{column}, \#{old_ancestry.length + 1})")
+            replace_sql = #{format_module}.replace_ancestry_sql(:#{column}, old_ancestry, new_ancestry, self.class)
             update_clause = {
-              :#{column} => Arel.sql(replace_sql)
+              :#{column} => replace_sql
             }
 
             current_time = current_time_from_proper_timezone
@@ -490,7 +489,7 @@ module Ancestry
         end
 
         def parse_ancestry_column(obj)
-          Ancestry::MaterializedPath.parse(obj, #{root.inspect}, "#{delimiter}", primary_key_is_an_integer?)
+          #{format_module}.parse(obj, #{root.inspect}, "#{delimiter}", primary_key_is_an_integer?)
         end
 
         def ancestry_depth_change(old_value, new_value)
@@ -577,7 +576,7 @@ module Ancestry
 
     # Generate the ordered_by_ancestry method body based on format
     def self._ordered_by_ancestry_body(format_module, column)
-      if format_module == Ancestry::MaterializedPath2 || format_module == Ancestry::MaterializedPath3
+      if format_module.root(format_module.delimiter) != nil
         <<~BODY.strip
           reorder(Arel::Nodes::Ascending.new(arel_table[:#{column}]), order)
         BODY

@@ -4,7 +4,7 @@ module Ancestry
   # store ancestry as /grandparent_id/parent_id/
   # root: a=/,id=1    children=#{a}#{id}/% == /1/%
   # 3:    a=/1/2/,id=3 children=#{a}#{id}/% == /1/2/3/%
-  module MaterializedPath2
+  class MaterializedPath2 < MaterializedPath
     def self.root(delimiter)
       delimiter
     end
@@ -22,7 +22,7 @@ module Ancestry
     end
 
     def self.child_ancestry_sql(table_name, ancestry_column, primary_key, delimiter, adapter)
-      MaterializedPath.concat(adapter, "#{table_name}.#{ancestry_column}", "#{table_name}.#{primary_key}", "'#{delimiter}'")
+      concat(adapter, "#{table_name}.#{ancestry_column}", "#{table_name}.#{primary_key}", "'#{delimiter}'")
     end
 
     # mp2: descendants just use LIKE (trailing delimiter prevents false prefix matches)
@@ -61,7 +61,6 @@ module Ancestry
       end
     end
 
-    # module method
     def self.construct_depth_sql(table_name, ancestry_column, ancestry_delimiter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       tmp = %{(LENGTH(#{col}) - LENGTH(REPLACE(#{col},'#{ancestry_delimiter}','')))}

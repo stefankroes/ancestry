@@ -4,9 +4,13 @@ module Ancestry
   # store ancestry as grandparent_id/parent_id
   # root a=nil,id=1   children=id,id/%      == 1, 1/%
   # 3: a=1/2,id=3     children=a/id,a/id/%  == 1/2/3, 1/2/3/%
-  module MaterializedPath
+  class MaterializedPath
     def self.root(_delimiter)
       nil
+    end
+
+    def self.delimiter
+      '/'
     end
 
     def self.generate(ancestor_ids, delimiter, root)
@@ -44,6 +48,13 @@ module Ancestry
       else
         %{CONCAT(#{args.join(', ')})}
       end
+    end
+
+    # SQL to replace old ancestry prefix with new ancestry prefix in descendants
+    def self.replace_ancestry_sql(column, old_ancestry, new_ancestry, klass)
+      adapter = klass.connection.adapter_name.downcase
+      replace_sql = concat(adapter, "'#{new_ancestry}'", "SUBSTRING(#{column}, #{old_ancestry.length + 1})")
+      Arel.sql(replace_sql)
     end
 
     def self.child_ancestry_sql(table_name, ancestry_column, primary_key, delimiter, adapter)

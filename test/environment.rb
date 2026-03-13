@@ -41,6 +41,10 @@ class AncestryTestDatabase
       Ancestry.default_update_strategy = ENV["UPDATE_STRATEGY"] == "sql" ? :sql : :ruby
       Ancestry.default_ancestry_format = ENV["FORMAT"].to_sym if ENV["FORMAT"].present?
 
+      if ltree? && postgres?
+        ActiveRecord::Base.connection.execute("CREATE EXTENSION IF NOT EXISTS ltree")
+      end
+
       puts "testing #{db_type} #{Ancestry.default_update_strategy == :sql ? "(sql) " : ""}(with #{column_type} #{ancestry_column})"
       puts "column format: #{Ancestry.default_ancestry_format} options: #{column_options.inspect}"
     rescue StandardError => e
@@ -55,7 +59,11 @@ class AncestryTestDatabase
   end
 
   def self.column_type
-    @column_type ||= ENV["ANCESTRY_COLUMN_TYPE"].presence || "string"
+    @column_type ||= if ltree?
+      "ltree"
+    else
+      ENV["ANCESTRY_COLUMN_TYPE"].presence || "string"
+    end
   end
 
   def self.ancestry_column
@@ -64,7 +72,7 @@ class AncestryTestDatabase
 
   def self.ancestry_root
     format_module = Ancestry::HasAncestry.ancestry_format_module(nil)
-    format_module.root('/')
+    format_module.root(format_module.delimiter)
   end
 
   def self.ancestry_collation
@@ -87,7 +95,12 @@ class AncestryTestDatabase
   #                        used when we are testing migrating to ancestry
   def self.column_options(force_allow_nil: false)
     @column_options ||=
-      if column_type == "string"
+      if ltree?
+        {
+          :default => '',
+          :null  => false
+        }
+      elsif column_type == "string"
         {
           :collation => ancestry_collation == "default" ? nil : ancestry_collation,
           :null  => !(materialized_path2? || materialized_path3?)
@@ -113,15 +126,19 @@ class AncestryTestDatabase
     table_options[:id] = options.delete(:id) if options.key?(:id)
 
     ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
-      table.send(column_type, options[:ancestry_column], **column_options(force_allow_nil: skip_ancestry))
+      if ltree?
+        table.column options[:ancestry_column], :ltree, **column_options(force_allow_nil: skip_ancestry)
+      else
+        table.send(column_type, options[:ancestry_column], **column_options(force_allow_nil: skip_ancestry))
+      end
       add_cache_column(table, options, :cache_depth, :ancestry_depth) do |path_module, col|
-        path_module.construct_depth_sql(nil, col, '/')
+        path_module.construct_depth_sql(nil, col, path_module.delimiter)
       end
       add_cache_column(table, options, :parent, :parent_id) do |path_module, col|
-        path_module.construct_parent_id_sql(nil, col, '/', db_type)
+        path_module.construct_parent_id_sql(nil, col, path_module.delimiter, db_type)
       end
       add_cache_column(table, options, :root, :root_id) do |path_module, col|
-        path_module.construct_root_id_sql(nil, col, '/', 'id', db_type)
+        path_module.construct_root_id_sql(nil, col, path_module.delimiter, 'id', db_type)
       end
 
       if options[:counter_cache]
@@ -218,6 +235,12 @@ class AncestryTestDatabase
     return @materialized_path3 if defined?(@materialized_path3)
 
     @materialized_path3 = (ENV["FORMAT"] == "materialized_path3")
+  end
+
+  def self.ltree?
+    return @ltree if defined?(@ltree)
+
+    @ltree = (ENV["FORMAT"] == "ltree")
   end
 
   # Normalize DB env var to match database.yml keys

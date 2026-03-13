@@ -4,7 +4,7 @@ module Ancestry
   # store ancestry as grandparent_id/parent_id/
   # root: a="",id=1    children=#{a}#{id}/ == 1/
   # 3:    a=1/2/,id=3   children=#{a}#{id}/ == 1/2/3/
-  module MaterializedPath3
+  class MaterializedPath3 < MaterializedPath2
     def self.root(_delimiter)
       ""
     end
@@ -15,24 +15,6 @@ module Ancestry
       else
         root
       end
-    end
-
-    def self.child_ancestry_value(ancestry_value, id, delimiter)
-      "#{ancestry_value}#{id}#{delimiter}"
-    end
-
-    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, delimiter, adapter)
-      MaterializedPath.concat(adapter, "#{table_name}.#{ancestry_column}", "#{table_name}.#{primary_key}", "'#{delimiter}'")
-    end
-
-    # mp3: descendants just use LIKE (trailing delimiter prevents false prefix matches)
-    def self.descendants_condition(attr, child_ancestry, _delimiter)
-      attr.matches("#{child_ancestry}%", nil, true)
-    end
-
-    # mp3: indirects match child_ancestry + at least one more segment
-    def self.indirects_condition(attr, child_ancestry, delimiter)
-      attr.matches("#{child_ancestry}%#{delimiter}%", nil, true)
     end
 
     # SQL expression that extracts the root_id from the ancestry column
