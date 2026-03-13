@@ -167,6 +167,7 @@ The `has_ancestry` method supports the following options:
     :ancestry_format       Format for ancestry column (see Ancestry Formats section):
                            :materialized_path   1/2/3, root nodes ancestry=nil (default)
                            :materialized_path2  /1/2/3/, root nodes ancestry=/ (preferred)
+                           :ltree               1.2.3, root nodes ancestry='' (PostgreSQL only)
     :orphan_strategy       How to handle children of a destroyed node:
                            :destroy   All children are destroyed as well (default)
                            :rootify   The children of the destroyed node become root nodes
@@ -424,24 +425,74 @@ ALTER TABLE table
 
 # Ancestry Formats
 
-You can choose from 2 ancestry formats:
+You can choose from the following ancestry formats:
 
 - `:materialized_path` - legacy format (currently the default for backwards compatibility reasons)
 - `:materialized_path2` - newer format. Use this if it is a new column
+- `:materialized_path3` - like mp2 but root is `""` instead of `"/"`
+- `:ltree` - PostgreSQL ltree type with GiST indexing
 
 ```
 :materialized_path    1/2/3,  root nodes ancestry=nil
     descendants SQL: ancestry LIKE '1/2/3/%' OR ancestry = '1/2/3'
 :materialized_path2  /1/2/3/, root nodes ancestry=/
     descendants SQL: ancestry LIKE '/1/2/3/%'
+:materialized_path3  1/2/3/, root nodes ancestry=''
+    descendants SQL: ancestry LIKE '1/2/3/%'
+:ltree               1.2.3, root nodes ancestry=''
+    descendants SQL: ancestry <@ '1.2.3'
 ```
 
 If you are unsure, choose `:materialized_path2`. It allows a not NULL column,
 faster descendant queries, has one less `OR` statement in the queries, and
 the path can be formed easily in a database query for added benefits.
 
+For PostgreSQL users who want native ltree indexing, see [Ltree Format](#ltree-format-postgresql).
+
 There is more discussion in [Internals](#internals) or [Migrating ancestry format](#migrate-ancestry-format)
 For migrating from `materialized_path` to `materialized_path2` see [Ancestry Column](#ancestry-column)
+
+## Ltree Format (PostgreSQL)
+
+The `:ltree` format stores ancestry using PostgreSQL's
+[ltree](https://www.postgresql.org/docs/current/ltree.html) type. This uses
+dot-separated labels (`1.2.3`) and enables GiST-indexed descendant queries
+via the `<@` operator.
+
+### Migration
+
+```ruby
+class CreateTreeNodes < ActiveRecord::Migration[7.0]
+  def change
+    enable_extension 'ltree'
+    create_table :tree_nodes do |t|
+      t.column :ancestry, :ltree, null: false, default: ''
+      t.index :ancestry, using: :gist
+    end
+  end
+end
+```
+
+### Model
+
+```ruby
+class TreeNode < ApplicationRecord
+  has_ancestry ancestry_format: :ltree
+end
+```
+
+### Advantages
+
+- GiST-indexed descendant queries — `<@` operator instead of `LIKE`
+- No collation issues — ltree has its own comparison semantics
+- Native depth via `nlevel()` — no string counting
+- Root extraction via `subpath()` — no string parsing
+
+### Limitations
+
+- PostgreSQL only
+- Requires the `ltree` extension (`enable_extension 'ltree'`)
+- Integer primary keys only (ltree labels are dot-separated integers)
 
 ## Migrating Ancestry Format
 

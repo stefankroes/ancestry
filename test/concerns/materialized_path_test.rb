@@ -5,7 +5,7 @@ require_relative '../environment'
 class MaterializedPathTest < ActiveSupport::TestCase
   def test_ancestry_column_values
     assert true, "this runs if materialized path"
-    return if AncestryTestDatabase.materialized_path2? || AncestryTestDatabase.materialized_path3?
+    return if AncestryTestDatabase.materialized_path2? || AncestryTestDatabase.materialized_path3? || AncestryTestDatabase.ltree?
 
     AncestryTestDatabase.with_model do |model|
       root = model.create!
@@ -39,7 +39,7 @@ class MaterializedPathTest < ActiveSupport::TestCase
 
   def test_ancestry_column_validation
     assert true, "this runs if materialized path"
-    return if AncestryTestDatabase.materialized_path2? || AncestryTestDatabase.materialized_path3?
+    return if AncestryTestDatabase.materialized_path2? || AncestryTestDatabase.materialized_path3? || AncestryTestDatabase.ltree?
 
     AncestryTestDatabase.with_model do |model|
       node = model.create # assuming id == 1
@@ -53,7 +53,7 @@ class MaterializedPathTest < ActiveSupport::TestCase
 
   def test_ancestry_column_validation_fails
     assert true, "this runs if materialized path"
-    return if AncestryTestDatabase.materialized_path2? || AncestryTestDatabase.materialized_path3?
+    return if AncestryTestDatabase.materialized_path2? || AncestryTestDatabase.materialized_path3? || AncestryTestDatabase.ltree?
 
     AncestryTestDatabase.with_model do |model|
       node = model.create
@@ -67,7 +67,7 @@ class MaterializedPathTest < ActiveSupport::TestCase
 
   def test_ancestry_column_validation_string_key
     assert true, "this runs if materialized path"
-    return if AncestryTestDatabase.materialized_path2? || AncestryTestDatabase.materialized_path3?
+    return if AncestryTestDatabase.materialized_path2? || AncestryTestDatabase.materialized_path3? || AncestryTestDatabase.ltree?
 
     AncestryTestDatabase.with_model(:id => :string, :primary_key_format => /[a-z]/) do |model|
       node = model.create(:id => 'z')
@@ -81,7 +81,7 @@ class MaterializedPathTest < ActiveSupport::TestCase
 
   def test_ancestry_column_validation_string_key_fails
     assert true, "this runs if materialized path"
-    return if AncestryTestDatabase.materialized_path2? || AncestryTestDatabase.materialized_path3?
+    return if AncestryTestDatabase.materialized_path2? || AncestryTestDatabase.materialized_path3? || AncestryTestDatabase.ltree?
 
     AncestryTestDatabase.with_model(:id => :string, :primary_key_format => /[a-z]/) do |model|
       node = model.create(:id => 'z')
@@ -95,7 +95,7 @@ class MaterializedPathTest < ActiveSupport::TestCase
 
   def test_ancestry_validation_exclude_self
     assert true, "this runs if materialized path"
-    return if AncestryTestDatabase.materialized_path2? || AncestryTestDatabase.materialized_path3?
+    return if AncestryTestDatabase.materialized_path2? || AncestryTestDatabase.materialized_path3? || AncestryTestDatabase.ltree?
 
     AncestryTestDatabase.with_model do |model|
       parent = model.create!

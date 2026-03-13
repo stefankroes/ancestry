@@ -138,6 +138,8 @@ class ArrangementTest < ActiveSupport::TestCase
           ->(a) { a ? "/#{a}/" : "/" }
         elsif AncestryTestDatabase.materialized_path3?
           ->(a) { a ? "#{a}/" : "" }
+        elsif AncestryTestDatabase.ltree?
+          ->(a) { a ? a.to_s.tr('/', '.') : "" }
         else
           ->(a) { a }
         end

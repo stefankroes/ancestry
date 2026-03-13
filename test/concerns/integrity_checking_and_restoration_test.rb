@@ -12,13 +12,16 @@ class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
       assert_equal 0, model.check_ancestry_integrity!(:report => :list).size
     end
 
-    AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
-      # Check detection of invalid format for ancestry column
-      roots.first.first.update_attribute AncestryTestDatabase.ancestry_column, 'invalid_ancestry'
-      assert_raise Ancestry::AncestryIntegrityException do
-        model.check_ancestry_integrity!
+    unless AncestryTestDatabase.ltree?
+      AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
+        # Check detection of invalid format for ancestry column
+        # (ltree columns reject invalid values at the DB level)
+        roots.first.first.update_attribute AncestryTestDatabase.ancestry_column, 'invalid_ancestry'
+        assert_raise Ancestry::AncestryIntegrityException do
+          model.check_ancestry_integrity!
+        end
+        assert_equal 1, model.check_ancestry_integrity!(:report => :list).size
       end
-      assert_equal 1, model.check_ancestry_integrity!(:report => :list).size
     end
 
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
@@ -52,6 +55,9 @@ class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
   end
 
   def test_integrity_checking_echo
+    assert true # ltree columns reject invalid values at the DB level
+    return if AncestryTestDatabase.ltree?
+
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
       roots.first.first.update_attribute AncestryTestDatabase.ancestry_column, 'invalid_ancestry'
       assert_nothing_raised do
@@ -75,9 +81,12 @@ class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
   def test_integrity_restoration
     width, depth = 3, 3
     # Check that integrity is restored for invalid format for ancestry column
-    AncestryTestDatabase.with_model :width => width, :depth => depth do |model, roots|
-      roots.first.first.update_attribute AncestryTestDatabase.ancestry_column, 'invalid_ancestry'
-      assert_integrity_restoration model
+    # (ltree columns reject invalid values at the DB level)
+    unless AncestryTestDatabase.ltree?
+      AncestryTestDatabase.with_model :width => width, :depth => depth do |model, roots|
+        roots.first.first.update_attribute AncestryTestDatabase.ancestry_column, 'invalid_ancestry'
+        assert_integrity_restoration model
+      end
     end
 
     # Check that integrity is restored for non-existent ancestor
