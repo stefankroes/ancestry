@@ -3,18 +3,18 @@
 module Ancestry
   # Builds a named module with ancestry instance methods.
   # Column names and format module are baked into the method bodies as string literals.
-  # The module can be reused across models with the same (format, column, delimiter) configuration.
+  # The module can be reused across models with the same (format, column) configuration.
   module InstanceMethodsBuilder
     # @param format_module [Module] MaterializedPath or MaterializedPath2
     # @param column [Symbol] the ancestry column name (e.g., :ancestry)
-    # @param delimiter [String] the path delimiter (e.g., "/")
     # @param root [nil, String] the root value (nil for mp1, "/" for mp2)
     # @param depth_cache_column [String, nil] column name for depth cache, or nil
     # @param counter_cache_column [String, nil] column name for counter cache, or nil
     # @param parent_cache_column [String, nil] column name for parent cache, or nil
     # @param root_cache_column [String, nil] column name for root cache, or nil
     # @return [Module] a named module with baked-in instance methods
-    def self.build(format_module, column, delimiter, root, depth_cache_column: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil, parent_association: false, root_association: false)
+    def self.build(format_module, column, root, depth_cache_column: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil, parent_association: false, root_association: false)
+      delimiter = format_module.delimiter
       format_name = format_module.name.split("::").last
       mod_name = :"#{format_name}_#{column}#{"_d#{depth_cache_column}" if depth_cache_column}#{"_c#{counter_cache_column}" if counter_cache_column}#{"_p#{parent_cache_column}" if parent_cache_column}#{"_r#{root_cache_column}" if root_cache_column}#{"_ap" if parent_association}#{"_ar" if root_association}"
 
@@ -576,7 +576,7 @@ module Ancestry
 
     # Generate the ordered_by_ancestry method body based on format
     def self._ordered_by_ancestry_body(format_module, column)
-      if format_module.root(format_module.delimiter) != nil
+      if format_module.root != nil
         <<~BODY.strip
           reorder(Arel::Nodes::Ascending.new(arel_table[:#{column}]), order)
         BODY
