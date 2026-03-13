@@ -72,7 +72,7 @@ class AncestryTestDatabase
 
   def self.ancestry_root
     format_module = Ancestry::HasAncestry.ancestry_format_module(nil)
-    format_module.root(format_module.delimiter)
+    format_module.root
   end
 
   def self.ancestry_collation

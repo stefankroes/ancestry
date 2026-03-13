@@ -5,7 +5,7 @@ module Ancestry
   # root a=nil,id=1   children=id,id/%      == 1, 1/%
   # 3: a=1/2,id=3     children=a/id,a/id/%  == 1/2/3, 1/2/3/%
   class MaterializedPath
-    def self.root(_delimiter)
+    def self.root
       nil
     end
 
