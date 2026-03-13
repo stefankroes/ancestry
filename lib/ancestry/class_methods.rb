@@ -252,10 +252,24 @@ module Ancestry
       end
     end
 
-    def self._rebuild_counter_cache!(klass, column, counter_col)
+    # Rebuild counter cache for all nodes.
+    #
+    # When verbose is true, returns the number of rows that had incorrect
+    # counter values (inspired by counter_culture gem's fix_counts).
+    #
+    # @param verbose [Boolean] when true, count incorrect rows before fixing
+    # @return [Integer, nil] number of corrected rows when verbose, nil otherwise
+    def self._rebuild_counter_cache!(klass, column, counter_col, verbose: false)
       child_sql = klass.child_ancestry_sql
       tbl = klass.table_name
       pk = klass.primary_key
+
+      fixed =
+        if verbose
+          klass.ancestry_base_class.default_scoped.unscope(:where).where(
+            "#{counter_col} != (SELECT COUNT(*) FROM #{tbl} children WHERE children.#{column} = (#{child_sql}))"
+          ).count
+        end
 
       if %w(mysql mysql2).include?(klass.connection.adapter_name.downcase)
         klass.connection.execute %{
@@ -277,6 +291,8 @@ module Ancestry
           )
         }
       end
+
+      fixed
     end
 
     def unscoped_where

@@ -514,8 +514,8 @@ module Ancestry
 
         #{ if counter_cache_column
           <<~RUBY
-            def rebuild_counter_cache!
-              Ancestry::ClassMethods._rebuild_counter_cache!(self, :#{column}, :#{counter_cache_column})
+            def rebuild_counter_cache!(verbose: false)
+              Ancestry::ClassMethods._rebuild_counter_cache!(self, :#{column}, :#{counter_cache_column}, verbose: verbose)
             end
           RUBY
         end}
