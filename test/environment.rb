@@ -230,6 +230,12 @@ class AncestryTestDatabase
     end
   end
 
+  def self.materialized_path?
+    return @materialized_path if defined?(@materialized_path)
+
+    @materialized_path = (ENV["FORMAT"].to_s == "" || ENV["FORMAT"].to_s == "materialized_path")
+  end
+
   def self.materialized_path2?
     return @materialized_path2 if defined?(@materialized_path2)
 
