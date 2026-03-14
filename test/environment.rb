@@ -141,6 +141,8 @@ class AncestryTestDatabase
         path_module.construct_root_id_sql(nil, col, path_module.delimiter, 'id', db_type)
       end
 
+      table.index options[:ancestry_column]
+
       if options[:counter_cache]
         counter_cache_column = options[:counter_cache] == true ? :children_count : options[:counter_cache]
         table.integer counter_cache_column, default: 0, null: false
@@ -197,14 +199,17 @@ class AncestryTestDatabase
     case options[option_key]
     when true
       table.integer default_column
+      table.index default_column
     when :virtual
       path_module = Ancestry::HasAncestry.ancestry_format_module(options[:ancestry_format])
       sql = yield(path_module, options[:ancestry_column] || ancestry_column)
       table.virtual default_column, type: :integer, as: sql, stored: true
+      table.index default_column
     when nil, false
       # no column
     else
       table.integer options[option_key]
+      table.index options[option_key]
     end
   end
 
@@ -223,6 +228,12 @@ class AncestryTestDatabase
     else
       ActiveRecord.version.to_s >= "7.2"
     end
+  end
+
+  def self.materialized_path?
+    return @materialized_path if defined?(@materialized_path)
+
+    @materialized_path = (ENV["FORMAT"].to_s == "" || ENV["FORMAT"].to_s == "materialized_path")
   end
 
   def self.materialized_path2?
