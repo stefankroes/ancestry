@@ -126,26 +126,24 @@ class AncestryTestDatabase
     table_options[:id] = options.delete(:id) if options.key?(:id)
 
     ActiveRecord::Base.connection.create_table 'test_nodes', **table_options do |table|
-      if ltree?
-        table.column options[:ancestry_column], :ltree, **column_options(force_allow_nil: skip_ancestry)
+      if skip_ancestry
+        # Create a plain nullable column for tests that call has_ancestry later
+        if ltree?
+          table.column options[:ancestry_column], :ltree, default: '', null: true
+        else
+          table.send column_type, options[:ancestry_column], **column_options(force_allow_nil: true)
+        end
+        if options[:counter_cache]
+          counter_col = options[:counter_cache] == true ? :children_count : options[:counter_cache]
+          table.integer counter_col, default: 0, null: false
+        end
       else
-        table.send(column_type, options[:ancestry_column], **column_options(force_allow_nil: skip_ancestry))
-      end
-      add_cache_column(table, options, :cache_depth, :ancestry_depth) do |path_module, col|
-        path_module.construct_depth_sql(nil, col, path_module.delimiter)
-      end
-      add_cache_column(table, options, :parent, :parent_id) do |path_module, col|
-        path_module.construct_parent_id_sql(nil, col, path_module.delimiter, db_type)
-      end
-      add_cache_column(table, options, :root, :root_id) do |path_module, col|
-        path_module.construct_root_id_sql(nil, col, path_module.delimiter, 'id', db_type)
-      end
-
-      table.index options[:ancestry_column]
-
-      if options[:counter_cache]
-        counter_cache_column = options[:counter_cache] == true ? :children_count : options[:counter_cache]
-        table.integer counter_cache_column, default: 0, null: false
+        table.ancestry options[:ancestry_column],
+          format: options[:ancestry_format],
+          cache_depth: options[:cache_depth],
+          parent: options[:parent],
+          root: options[:root],
+          counter_cache: options[:counter_cache]
       end
 
       extra_columns&.each do |name, type|
@@ -188,28 +186,6 @@ class AncestryTestDatabase
         node = model.create!(:parent => parent)
         [node, create_test_nodes(model, depth - 1, width, node)]
       end
-    end
-  end
-
-  # Add an integer or virtual column based on the cache option value.
-  # @param option_key [Symbol] the has_ancestry option key (e.g. :cache_depth, :parent)
-  # @param default_column [Symbol] default column name when option is `true`
-  # @yield [path_module, ancestry_column] block returning the SQL expression for virtual columns
-  def self.add_cache_column(table, options, option_key, default_column)
-    case options[option_key]
-    when true
-      table.integer default_column
-      table.index default_column
-    when :virtual
-      path_module = Ancestry::HasAncestry.ancestry_format_module(options[:ancestry_format])
-      sql = yield(path_module, options[:ancestry_column] || ancestry_column)
-      table.virtual default_column, type: :integer, as: sql, stored: true
-      table.index default_column
-    when nil, false
-      # no column
-    else
-      table.integer options[option_key]
-      table.index options[option_key]
     end
   end
 
