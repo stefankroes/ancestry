@@ -9,8 +9,6 @@ module Ancestry
 
     # Update descendants with new ancestry (after update)
     def update_descendants_with_new_ancestry
-      # If enabled and the new ancestry is sane ...
-      # The only way the ancestry could be bad is via `update_attribute` with a bad value
       if !ancestry_callbacks_disabled? && sane_ancestor_ids?
         # ... for each descendant ...
         unscoped_descendants_before_last_save.each do |descendant|
