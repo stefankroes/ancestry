@@ -345,6 +345,21 @@ module Ancestry
           RUBY
         end}
 
+        # Refresh stale ancestry from database before update.
+        # When another node's update_descendants changed this row in the DB,
+        # in-memory dirty tracking still has the old value. This picks the
+        # real DB value and resets dirty tracking so after_update callbacks
+        # (update_descendants, counter_cache) see correct before/after state.
+        def refresh_ancestry_from_database
+          db_value = self.class.unscoped_where { |scope| scope.where(id: id) }.pick(:#{column})
+          if db_value != attribute_in_database(:#{column})
+            new_value = read_attribute(:#{column})
+            write_attribute(:#{column}, db_value)
+            clear_attribute_changes([:#{column}])
+            write_attribute(:#{column}, new_value)
+          end
+        end
+
         # Update descendants with new ancestry using a single SQL statement
         def update_descendants_with_new_ancestry_sql
           if !ancestry_callbacks_disabled? && sane_ancestor_ids?
