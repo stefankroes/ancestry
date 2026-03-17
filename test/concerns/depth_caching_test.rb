@@ -50,11 +50,11 @@ class DepthCachingTest < ActiveSupport::TestCase
 
   def test_rebuild_depth_cache
     AncestryTestDatabase.with_model :depth => 3, :width => 3, :cache_depth => :depth_cache do |model, _roots|
-      model.update_all(:depth_cache => nil)
+      model.update_all(:depth_cache => -1)
 
-      # Assert cache was emptied correctly
+      # Assert cache was corrupted
       model.all.each do |test_node|
-        assert_nil test_node.depth_cache
+        assert_equal(-1, test_node.depth_cache)
       end
 
       # Rebuild cache
@@ -69,11 +69,11 @@ class DepthCachingTest < ActiveSupport::TestCase
 
   def test_rebuild_depth_cache_with_sql
     AncestryTestDatabase.with_model :depth => 3, :width => 3, :cache_depth => :depth_cache do |model, _roots|
-      model.update_all(:depth_cache => nil)
+      model.update_all(:depth_cache => -1)
 
-      # Assert cache was emptied correctly
+      # Assert cache was corrupted
       model.all.each do |test_node|
-        assert_nil test_node.depth_cache
+        assert_equal(-1, test_node.depth_cache)
       end
 
       # Rebuild cache
