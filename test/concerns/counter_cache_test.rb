@@ -15,9 +15,13 @@ class CounterCacheTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |_model, roots|
       parent = roots.first.first
       child = parent.children.first
-      assert_difference 'parent.reload.children_count', -1 do
+
+      # check_descendants + delete + decrement parent
+      assert_queries(3, "destroy leaf with counter cache") do
         child.destroy
       end
+
+      assert_equal 1, parent.reload.children_count
     end
   end
 
@@ -40,11 +44,13 @@ class CounterCacheTest < ActiveSupport::TestCase
       parent2 = roots.last.first
       child = parent1.children.first
 
-      assert_difference 'parent1.reload.children_count', -1 do
-        assert_difference 'parent2.reload.children_count', 1 do
-          child.update parent: parent2
-        end
+      # update + update_descendants + decrement old parent + increment new parent
+      assert_queries(4, "move with counter cache") do
+        child.update parent: parent2
       end
+
+      assert_equal 1, parent1.reload.children_count
+      assert_equal 3, parent2.reload.children_count
     end
   end
 
@@ -83,9 +89,12 @@ class CounterCacheTest < ActiveSupport::TestCase
       parent = roots.first.first
       child = parent.children.first
 
-      assert_difference 'parent.reload.children_count', 0 do
+      # non-ancestry update: just the UPDATE, no ancestry callbacks
+      assert_queries(1, "non-ancestry update") do
         child.update :name => "name2"
       end
+
+      assert_equal 2, parent.reload.children_count
     end
   end
 

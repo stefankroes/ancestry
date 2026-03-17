@@ -12,9 +12,11 @@ class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
 
       assert_equal child.ancestor_ids, parent1.path_ids
 
-      child.parent = parent2
-      assert_equal child.parent_id, parent2.id
-      child.save
+      # update node + update_descendants (select or update depending on strategy)
+      assert_queries(2, "move leaf via parent=") do
+        child.parent = parent2
+        child.save!
+      end
 
       assert_equal child.ancestor_ids, parent2.path_ids
       assert_equal child.parent_id, parent2.id
@@ -34,9 +36,11 @@ class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
 
       assert_equal child.ancestor_ids, parent1.path_ids
 
-      child.parent_id = parent2.id
-      assert_equal child.parent, parent2
-      child.save
+      # find_parent + update node + update_descendants
+      assert_queries(3, "move leaf via parent_id=") do
+        child.parent_id = parent2.id
+        child.save!
+      end
 
       assert_equal child.ancestor_ids, parent2.path_ids
       assert_equal child.parent, parent2
