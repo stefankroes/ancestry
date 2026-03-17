@@ -71,26 +71,28 @@ $ bundle install
 ## Add ancestry column to your table
 
 ```bash
-$ rails g migration add_[ancestry]_to_[table] ancestry:string:index
+$ rails g migration add_ancestry_to_[table]
 ```
 
 ```ruby
-class AddAncestryToTable < ActiveRecord::Migration[6.1]
+class AddAncestryToTable < ActiveRecord::Migration[7.0]
   def change
     change_table(:table) do |t|
-      # postgres
-      t.string "ancestry", collation: 'C', null: false
-      t.index "ancestry"
-      # mysql
-      t.string "ancestry", collation: 'utf8mb4_bin', null: false
-      t.index "ancestry"
+      t.ancestry
     end
   end
 end
 ```
 
-There are additional options for the columns in [Ancestry Database Column](#ancestry-database-column) and
-an explanation for `opclass` and `collation`.
+The `t.ancestry` helper creates the column with the correct type, collation, and indexes
+for your database. It accepts options for [cached columns](#cached-columns) and
+[ancestry formats](#ancestry-formats):
+
+```ruby
+t.ancestry format: :materialized_path2, cache_depth: true, parent: true, counter_cache: true
+```
+
+For manual column setup or advanced options, see [Ancestry Database Column](#ancestry-database-column).
 
 ```bash
 $ rake db:migrate
@@ -312,201 +314,36 @@ dependant upon their original array order.)
 
 # Ancestry Database Column
 
-## Collation Indexes
+The `t.ancestry` migration helper handles column type, collation, and indexes automatically.
+For most applications, `t.ancestry` is all you need.
 
-Sorry, using collation or index operator classes makes this a little complicated. The
-root of the issue is that in order to use indexes, the ancestry column needs to
-compare strings using ascii rules.
-
-It is well known that `LIKE '/1/2/%'` will use an index because the wildcard (i.e.: `%`)
-is on the right hand side of the `LIKE`. While that is true for ascii strings, it is not
-necessarily true for unicode. Since ancestry only uses ascii characters, telling the database
-this constraint will optimize the `LIKE` statements.
-
-## Collation Sorting
-
-As of 2018, standard unicode collation ignores punctuation for sorting. This ignores
-the ancestry delimiter (i.e.: `/`) and returns data in the wrong order. The exception
-being Postgres on a mac, which ignores proper unicode collation and instead uses
-ISO-8859-1 ordering (read: ascii sorting).
-
-Using the proper column storage and indexes will ensure that data is returned from the
-database in the correct order. It will also ensure that developers on Mac or Windows will
-get the same results as linux production servers, if that is your setup.
-
-## Migrating Collation
-
-If you are reading this and want to alter your table to add collation to an existing column,
-remember to drop existing indexes on the `ancestry` column and recreate them.
-
-## ancestry_format materialized_path and nulls
-
-If you are using the legacy `ancestry_format` of `:materialized_path`, then you need to the
-column to allow `nulls`. Change the column create accordingly: `null: true`.
-
-Chances are, you can ignore this section as you most likely want to use `:materialized_path2`.
-
-## Postgres Storage Options
-
-### ascii field collation
-
-The currently suggested way to create a postgres field is using `'C'` collation:
-
-```ruby
-t.string "ancestry", collation: 'C', null: false
-t.index "ancestry"
-```
-
-### ascii index
-
-If you need to use a standard collation (e.g.: `en_US`), then use an ascii index:
-
-```ruby
-t.string "ancestry", null: false
-t.index  "ancestry", opclass: :varchar_pattern_ops
-```
-
-This option is mostly there for users who have an existing ancestry column and are more
-comfortable tweaking indexes rather than altering the ancestry column.
-
-### binary column
-
-When the column is binary, the database doesn't convert strings using locales.
-Rails will convert the strings and send byte arrays to the database.
-At this time, this option is not suggested. The sql is not as readable, and currently
-this does not support the `:sql` update_strategy.
-
-```ruby
-t.binary "ancestry", limit: 3000, null: false
-t.index  "ancestry"
-```
-You may be able to alter the database to gain some readability:
-
-```SQL
-ALTER DATABASE dbname SET bytea_output to 'escape';
-```
-
-## MySQL Storage options
-
-### ascii field collation
-
-The currently suggested way to create a MySQL field is using `'utf8mb4_bin'` collation:
-
-```ruby
-t.string "ancestry", collation: 'utf8mb4_bin', null: false
-t.index "ancestry"
-```
-
-### binary collation
-
-Collation of `binary` acts much the same way as the `binary` column:
-
-```ruby
-t.string "ancestry", collate: 'binary', limit: 3000, null: false
-t.index  "ancestry"
-```
-
-### binary column
-
-```ruby
-t.binary "ancestry", limit: 3000, null: false
-t.index  "ancestry"
-```
-
-### ascii character set
-
-MySQL supports per column character sets. Using a character set of `ascii` will
-set this up.
-
-```SQL
-ALTER TABLE table
-  ADD COLUMN ancestry VARCHAR(2700) CHARACTER SET ascii;
-```
+For manual column setup, database-specific collation options, and migrating collation on
+existing columns, see [Formats and Columns](FORMATS_AND_COLUMNS.md).
 
 # Ancestry Formats
 
 You can choose from the following ancestry formats:
 
-- `:materialized_path` - legacy format (currently the default for backwards compatibility reasons)
-- `:materialized_path2` - newer format. Use this if it is a new column
+- `:materialized_path` - legacy format (default for backwards compatibility)
+- `:materialized_path2` - recommended for new columns
 - `:materialized_path3` - like mp2 but root is `""` instead of `"/"`
 - `:ltree` - PostgreSQL ltree type with GiST indexing
 
-```
-:materialized_path    1/2/3,  root nodes ancestry=nil
-    descendants SQL: ancestry LIKE '1/2/3/%' OR ancestry = '1/2/3'
-:materialized_path2  /1/2/3/, root nodes ancestry=/
-    descendants SQL: ancestry LIKE '/1/2/3/%'
-:materialized_path3  1/2/3/, root nodes ancestry=''
-    descendants SQL: ancestry LIKE '1/2/3/%'
-:ltree               1.2.3, root nodes ancestry=''
-    descendants SQL: ancestry <@ '1.2.3'
-```
+If you are unsure, choose `:materialized_path2`. It allows a `NOT NULL` column and
+faster descendant queries (one less `OR` condition).
 
-If you are unsure, choose `:materialized_path2`. It allows a not NULL column,
-faster descendant queries, has one less `OR` statement in the queries, and
-the path can be formed easily in a database query for added benefits.
-
-For PostgreSQL users who want native ltree indexing, see [Ltree Format](#ltree-format-postgresql).
-
-There is more discussion in [Internals](#internals) or [Migrating ancestry format](#migrate-ancestry-format)
-For migrating from `materialized_path` to `materialized_path2` see [Ancestry Column](#ancestry-column)
-
-## Ltree Format (PostgreSQL)
-
-The `:ltree` format stores ancestry using PostgreSQL's
-[ltree](https://www.postgresql.org/docs/current/ltree.html) type. This uses
-dot-separated labels (`1.2.3`) and enables GiST-indexed descendant queries
-via the `<@` operator.
-
-### Migration
+For PostgreSQL users who want native indexing, `:ltree` uses the `<@` operator with
+GiST indexes — no collation configuration needed:
 
 ```ruby
-class CreateTreeNodes < ActiveRecord::Migration[7.0]
-  def change
-    enable_extension 'ltree'
-    create_table :tree_nodes do |t|
-      t.column :ancestry, :ltree, null: false, default: ''
-      t.index :ancestry, using: :gist
-    end
-  end
+enable_extension 'ltree'
+create_table :tree_nodes do |t|
+  t.ancestry format: :ltree
 end
 ```
 
-### Model
-
-```ruby
-class TreeNode < ApplicationRecord
-  has_ancestry ancestry_format: :ltree
-end
-```
-
-### Advantages
-
-- GiST-indexed descendant queries — `<@` operator instead of `LIKE`
-- No collation issues — ltree has its own comparison semantics
-- Native depth via `nlevel()` — no string counting
-- Root extraction via `subpath()` — no string parsing
-
-### Limitations
-
-- PostgreSQL only
-- Requires the `ltree` extension (`enable_extension 'ltree'`)
-- Integer primary keys only (ltree labels are dot-separated integers)
-
-## Migrating Ancestry Format
-
-To migrate from `materialized_path` to `materialized_path2`:
-
-```ruby
-klass = YourModel
-# set all child nodes (wrap existing path with delimiters)
-klass.where.not(ancestry: nil).update_all("ancestry = CONCAT('/', ancestry, '/')")
-# set all root nodes
-klass.where(ancestry: nil).update_all("ancestry = '/'")
-
-change_column_null klass.table_name, :ancestry, false
-```
+For detailed format comparison, migration between formats, and database-specific
+column options, see [Formats and Columns](FORMATS_AND_COLUMNS.md).
 
 # Migrating from plugin that uses parent_id column
 
@@ -608,10 +445,18 @@ computes these columns automatically, they support eager loading and joins witho
 
 ## Migration
 
-Add the columns you need:
+Cache columns can be added with `t.ancestry` when creating the table:
 
 ```ruby
-class AddDepthCacheToTable < ActiveRecord::Migration[6.1]
+create_table :table do |t|
+  t.ancestry cache_depth: true, parent: true
+end
+```
+
+Or added to an existing table manually:
+
+```ruby
+class AddDepthCacheToTable < ActiveRecord::Migration[7.0]
   def change
     change_table(:table) do |t|
       t.integer "ancestry_depth", default: 0
