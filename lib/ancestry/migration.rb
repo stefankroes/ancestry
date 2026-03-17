@@ -9,9 +9,14 @@ module Ancestry
     #     t.ancestry
     #   end
     #
-    # @example With format and cache columns
+    # @example With cache columns
     #   create_table :nodes do |t|
     #     t.ancestry format: :materialized_path2, cache_depth: true, parent: true, counter_cache: true
+    #   end
+    #
+    # @example With virtual cache columns
+    #   create_table :nodes do |t|
+    #     t.ancestry format: :materialized_path2, cache_depth: :virtual, parent: :virtual
     #   end
     #
     # @param column [Symbol] ancestry column name (default: :ancestry)
@@ -23,7 +28,6 @@ module Ancestry
     # @param counter_cache [Boolean] add children_count integer column
     def ancestry(column = :ancestry, format: nil, collation: nil, cache_depth: false, parent: false, root: false, counter_cache: false)
       format ||= Ancestry.default_ancestry_format
-      format_module = Ancestry::HasAncestry.ancestry_format_module(format)
       table_name = self.name # table name from TableDefinition
 
       # Add the ancestry column with appropriate type and options
@@ -54,34 +58,62 @@ module Ancestry
       end
 
       # Add cache columns
-      add_ancestry_cache_column(cache_depth, :ancestry_depth, column, default: 0, null: false) do |col|
-        format_module.construct_depth_sql(nil, col, format_module.delimiter)
+      ancestry_cache_columns(column, format, cache_depth: cache_depth, parent: parent, root: root, counter_cache: counter_cache)
+    end
+
+    # Add virtual cache columns derived from an existing ancestry column.
+    # Use this when adding virtual columns to a table that already has ancestry.
+    #
+    # @example Add virtual columns to existing table
+    #   change_table :nodes do |t|
+    #     t.ancestry_virtual format: :materialized_path2, cache_depth: true, parent: true
+    #   end
+    #
+    # @param column [Symbol] ancestry column name (default: :ancestry)
+    # @param format [Symbol] ancestry format (required — needed to generate SQL expressions)
+    # @param cache_depth [Boolean] add virtual ancestry_depth column
+    # @param parent [Boolean] add virtual parent_id column
+    # @param root [Boolean] add virtual root_id column
+    def ancestry_virtual(column = :ancestry, format: nil, cache_depth: false, parent: false, root: false)
+      format ||= Ancestry.default_ancestry_format
+      # Promote true to :virtual — everything from this method is virtual
+      cache_depth = :virtual if cache_depth == true
+      parent = :virtual if parent == true
+      root = :virtual if root == true
+
+      ancestry_cache_columns(column, format, cache_depth: cache_depth, parent: parent, root: root, counter_cache: false)
+    end
+
+    private
+
+    def ancestry_cache_columns(column, format, cache_depth:, parent:, root:, counter_cache:)
+      format_module = Ancestry::HasAncestry.ancestry_format_module(format)
+
+      add_ancestry_cache_column(cache_depth, :ancestry_depth, default: 0, null: false) do
+        format_module.construct_depth_sql(nil, column, format_module.delimiter)
       end
 
-      add_ancestry_cache_column(parent, :parent_id, column, default: nil, null: true) do |col|
-        format_module.construct_parent_id_sql(nil, col, format_module.delimiter, detect_adapter)
+      add_ancestry_cache_column(parent, :parent_id, default: nil, null: true) do
+        format_module.construct_parent_id_sql(nil, column, format_module.delimiter, detect_adapter)
       end
 
-      add_ancestry_cache_column(root, :root_id, column, default: nil, null: true) do |col|
-        format_module.construct_root_id_sql(nil, col, format_module.delimiter, 'id', detect_adapter)
+      add_ancestry_cache_column(root, :root_id, default: nil, null: true) do
+        format_module.construct_root_id_sql(nil, column, format_module.delimiter, 'id', detect_adapter)
       end
 
-      # Counter cache
       if counter_cache
         counter_col = counter_cache == true ? :children_count : counter_cache
         integer counter_col, default: 0, null: false
       end
     end
 
-    private
-
-    def add_ancestry_cache_column(value, default_column, ancestry_column, default: 0, null: false)
+    def add_ancestry_cache_column(value, default_column, default: 0, null: false)
       case value
       when true
         integer default_column, default: default, null: null
         index default_column
       when :virtual
-        sql = yield(ancestry_column)
+        sql = yield
         virtual default_column, type: :integer, as: sql, stored: true
         index default_column
       when false, nil then nil # no column

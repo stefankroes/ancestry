@@ -8,13 +8,13 @@ module Ancestry
         raise Ancestry::AncestryException, I18n.t("ancestry.option_must_be_hash")
       end
 
-      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format, :parent, :root, :associations]
+      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format, :format, :parent, :root, :associations]
       if (key = extra_keys.first)
         raise Ancestry::AncestryException, I18n.t("ancestry.unknown_option", key: key.inspect, value: options[key].inspect)
       end
 
-      ancestry_format = options[:ancestry_format] || Ancestry.default_ancestry_format
-      if ![:materialized_path, :materialized_path2, :materialized_path3, :ltree].include?(ancestry_format)
+      ancestry_format = options[:ancestry_format] || options[:format] || Ancestry.default_ancestry_format
+      if ![:materialized_path, :materialized_path2, :materialized_path3, :ltree, :array].include?(ancestry_format)
         raise Ancestry::AncestryException, I18n.t("ancestry.unknown_format", value: ancestry_format)
       end
 
@@ -208,6 +208,8 @@ module Ancestry
         Ancestry::MaterializedPath3
       when :ltree
         Ancestry::Ltree
+      when :array
+        Ancestry::MaterializedPathArray
       else
         Ancestry::MaterializedPath
       end

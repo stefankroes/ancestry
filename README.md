@@ -170,6 +170,7 @@ The `has_ancestry` method supports the following options:
                            :materialized_path   1/2/3, root nodes ancestry=nil (default)
                            :materialized_path2  /1/2/3/, root nodes ancestry=/ (preferred)
                            :ltree               1.2.3, root nodes ancestry='' (PostgreSQL only)
+                           :array               {1,2,3}, root nodes ancestry={} (PostgreSQL only)
     :orphan_strategy       How to handle children of a destroyed node:
                            :destroy   All children are destroyed as well (default)
                            :rootify   The children of the destroyed node become root nodes
@@ -328,17 +329,24 @@ You can choose from the following ancestry formats:
 - `:materialized_path2` - recommended for new columns
 - `:materialized_path3` - like mp2 but root is `""` instead of `"/"`
 - `:ltree` - PostgreSQL ltree type with GiST indexing
+- `:array` - PostgreSQL integer array. No string parsing, native array operations
 
 If you are unsure, choose `:materialized_path2`. It allows a `NOT NULL` column and
 faster descendant queries (one less `OR` condition).
 
-For PostgreSQL users who want native indexing, `:ltree` uses the `<@` operator with
-GiST indexes — no collation configuration needed:
+For PostgreSQL users who want native indexing, `:ltree` and `:array` avoid string
+parsing and collation issues entirely:
 
 ```ruby
+# ltree — GiST-indexed <@ operator
 enable_extension 'ltree'
 create_table :tree_nodes do |t|
   t.ancestry format: :ltree
+end
+
+# array — integer[], GIN-indexed @> containment
+create_table :tree_nodes do |t|
+  t.ancestry format: :array
 end
 ```
 
