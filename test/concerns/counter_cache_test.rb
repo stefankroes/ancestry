@@ -44,8 +44,8 @@ class CounterCacheTest < ActiveSupport::TestCase
       parent2 = roots.last.first
       child = parent1.children.first
 
-      # update + update_descendants + decrement old parent + increment new parent
-      assert_queries(4, "move with counter cache") do
+      # refresh_ancestry + update + update_descendants + decrement old parent + increment new parent
+      assert_queries(5, "move with counter cache") do
         child.update parent: parent2
       end
 
