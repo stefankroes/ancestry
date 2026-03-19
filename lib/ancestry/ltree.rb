@@ -13,6 +13,13 @@ module Ancestry
       '.'
     end
 
+    # Ltree is always PostgreSQL with integer IDs — always cast to integer
+    def self.parse(obj, _root, _delimiter, _integer_pk)
+      return [] if obj.nil? || obj == ""
+
+      obj.split('.').map!(&:to_i)
+    end
+
     def self.child_ancestry_value(ancestry_value, id, _delimiter)
       ancestry_value.blank? ? id.to_s : "#{ancestry_value}.#{id}"
     end
