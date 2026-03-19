@@ -13,10 +13,21 @@ module Ancestry
     # @param parent_cache_column [String, nil] column name for parent cache, or nil
     # @param root_cache_column [String, nil] column name for root cache, or nil
     # @return [Module] a named module with baked-in instance methods
-    def self.build(format_module, column, root, depth_cache_column: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil, parent_association: false, root_association: false)
+    def self.build(format_module, column, root, primary_key: :id, depth_cache_column: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil, parent_association: false, root_association: false)
       delimiter = format_module.delimiter
+      pk = primary_key
       format_name = format_module.name.split("::").last
-      mod_name = :"#{format_name}_#{column}#{"_d#{depth_cache_column}" if depth_cache_column}#{"_c#{counter_cache_column}" if counter_cache_column}#{"_p#{parent_cache_column}" if parent_cache_column}#{"_r#{root_cache_column}" if root_cache_column}#{"_ap" if parent_association}#{"_ar" if root_association}"
+      mod_name = [
+        format_name,
+        column,
+        ("pk#{pk}" unless pk == :id),
+        ("d#{depth_cache_column}" if depth_cache_column),
+        ("c#{counter_cache_column}" if counter_cache_column),
+        ("p#{parent_cache_column}" if parent_cache_column),
+        ("r#{root_cache_column}" if root_cache_column),
+        ("ap" if parent_association),
+        ("ar" if root_association),
+      ].compact.join("_").to_sym
 
       if Ancestry.const_defined?(mod_name, false)
         return Ancestry.const_get(mod_name, false)
@@ -176,7 +187,7 @@ module Ancestry
         #{ if parent_association
           <<~RUBY
             def child_ids
-              children.pluck(self.class.primary_key)
+              children.pluck(:#{pk})
             end
 
             def has_children?
@@ -196,7 +207,7 @@ module Ancestry
             end
 
             def child_ids
-              children.pluck(self.class.primary_key)
+              children.pluck(:#{pk})
             end
 
             def has_children?
@@ -218,15 +229,15 @@ module Ancestry
         end
 
         def leaf_ids(depth_options = {})
-          leaves(depth_options).pluck(self.class.primary_key)
+          leaves(depth_options).pluck(:#{pk})
         end
 
         def siblings
-          self.class.ancestry_base_class.siblings_of(self).where.not(self.class.primary_key => id)
+          self.class.ancestry_base_class.siblings_of(self).where.not(:#{pk} => id)
         end
 
         def sibling_ids
-          siblings.pluck(self.class.primary_key)
+          siblings.pluck(:#{pk})
         end
 
         def has_siblings?
@@ -244,7 +255,7 @@ module Ancestry
         end
 
         def descendant_ids(depth_options = {})
-          descendants(depth_options).pluck(self.class.primary_key)
+          descendants(depth_options).pluck(:#{pk})
         end
 
         def indirects(depth_options = {})
@@ -252,7 +263,7 @@ module Ancestry
         end
 
         def indirect_ids(depth_options = {})
-          indirects(depth_options).pluck(self.class.primary_key)
+          indirects(depth_options).pluck(:#{pk})
         end
 
         def subtree(depth_options = {})
@@ -260,7 +271,7 @@ module Ancestry
         end
 
         def subtree_ids(depth_options = {})
-          subtree(depth_options).pluck(self.class.primary_key)
+          subtree(depth_options).pluck(:#{pk})
         end
 
         # Parent
@@ -286,7 +297,7 @@ module Ancestry
           <<~RUBY
             def parent
               if has_parent?
-                unscoped_where { |scope| scope.find_by(scope.primary_key => parent_id) }
+                unscoped_where { |scope| scope.find_by(:#{pk} => parent_id) }
               end
             end
           RUBY
@@ -304,7 +315,7 @@ module Ancestry
           <<~RUBY
             def root
               if has_parent?
-                unscoped_where { |scope| scope.find_by(scope.primary_key => root_id) } || self
+                unscoped_where { |scope| scope.find_by(:#{pk} => root_id) } || self
               else
                 self
               end
@@ -351,7 +362,7 @@ module Ancestry
         # real DB value and resets dirty tracking so after_update callbacks
         # (update_descendants, counter_cache) see correct before/after state.
         def refresh_ancestry_from_database
-          db_value = self.class.unscoped_where { |scope| scope.where(id: id) }.pick(:#{column})
+          db_value = self.class.unscoped_where { |scope| scope.where(:#{pk} => #{pk}) }.pick(:#{column})
           if db_value != attribute_in_database(:#{column})
             new_value = read_attribute(:#{column})
             write_attribute(:#{column}, db_value)
@@ -429,12 +440,12 @@ module Ancestry
 
         def ancestors_of(object)
           node = to_node(object)
-          where(arel_table[primary_key].in(node.ancestor_ids))
+          where(arel_table[:#{pk}].in(node.ancestor_ids))
         end
 
         def inpath_of(object)
           node = to_node(object)
-          where(arel_table[primary_key].in(node.path_ids))
+          where(arel_table[:#{pk}].in(node.path_ids))
         end
 
         def children_of(object)
@@ -467,7 +478,7 @@ module Ancestry
 
         def subtree_of(object)
           node = to_node(object)
-          descendants_of(node).or(where(arel_table[primary_key].eq(node.id)))
+          descendants_of(node).or(where(arel_table[:#{pk}].eq(node.#{pk})))
         end
 
         def siblings_of(object)
@@ -492,7 +503,7 @@ module Ancestry
         end
 
         def child_ancestry_sql
-          #{format_module}.child_ancestry_sql(table_name, #{column.inspect}, primary_key, "#{delimiter}", connection.adapter_name.downcase)
+          #{format_module}.child_ancestry_sql(table_name, #{column.inspect}, :#{pk}, "#{delimiter}", connection.adapter_name.downcase)
         end
 
         def ancestry_depth_sql
@@ -572,7 +583,7 @@ module Ancestry
         #{ if root_cache_column
           <<~RUBY
             def ancestry_root_id_sql
-              @ancestry_root_id_sql ||= #{format_module}.construct_root_id_sql(table_name, #{column.inspect}, "#{delimiter}", primary_key, connection.adapter_name.downcase)
+              @ancestry_root_id_sql ||= #{format_module}.construct_root_id_sql(table_name, #{column.inspect}, "#{delimiter}", :#{pk}, connection.adapter_name.downcase)
             end
 
             def rebuild_root_id_cache!
