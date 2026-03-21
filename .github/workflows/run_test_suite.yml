@@ -70,6 +70,9 @@ jobs:
           - activerecord: 81
             format: materialized_path
             ruby: "4.0" # Latest Ruby
+          - activerecord: 81
+            format: materialized_path3
+            ruby: "3.4"
 
     env:
       # for the pg cli (psql, pg_isready) and possibly rails
