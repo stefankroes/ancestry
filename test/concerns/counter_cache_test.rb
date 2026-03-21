@@ -215,10 +215,10 @@ class CounterCacheTest < ActiveSupport::TestCase
 
   # --- Duplicate destroy edge cases ---
   # Rails wraps destroy in a transaction. When DELETE affects 0 rows, Rails
-  # rolls back so decrement_counter is undone. On Rails < 6.1, the
+  # rolls back so decrement_counter is undone. On Rails < 7.1, the
   # @_trigger_destroy_callback guard in decrease_parent_counter_cache is
   # needed to prevent same-object double-decrement (can be removed when
-  # minimum Rails is 6.1+).
+  # minimum Rails is 7.1+).
   def test_counter_cache_same_object_destroy_twice
     AncestryTestDatabase.with_model :depth => 2, :width => 2, :counter_cache => true do |_model, roots|
       parent = roots.first.first
@@ -228,12 +228,12 @@ class CounterCacheTest < ActiveSupport::TestCase
       child.destroy
       assert_equal 1, parent.reload.children_count
       child.destroy
-      if ActiveRecord::VERSION::MAJOR > 6 || (ActiveRecord::VERSION::MAJOR == 6 && ActiveRecord::VERSION::MINOR >= 1)
+      if ActiveRecord::VERSION::STRING >= "7.1"
         assert_equal 1, parent.reload.children_count,
           "same object destroyed twice should not double-decrement"
       else
         assert_equal 0, parent.reload.children_count,
-          "Rails 6.0: same object destroy fires callbacks twice"
+          "Rails < 7.1: same object destroy fires callbacks twice"
       end
     end
   end

@@ -404,6 +404,7 @@ module Ancestry
             end
 
             def decrease_parent_counter_cache
+              # TODO: remove when minimum Rails is 7.1+ (transaction rollback handles this)
               return if defined?(@_trigger_destroy_callback) && !@_trigger_destroy_callback
               return if ancestry_callbacks_disabled?
               self.class.ancestry_base_class.decrement_counter :#{counter_cache_column}, parent_id
