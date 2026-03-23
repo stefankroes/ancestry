@@ -14,7 +14,6 @@ module Ancestry
     # @param root_cache_column [String, nil] column name for root cache, or nil
     # @return [Module] a named module with baked-in instance methods
     def self.build(format_module, column, root, primary_key: :id, depth_cache_column: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil, parent_association: false, root_association: false)
-      delimiter = format_module.delimiter
       pk = primary_key
       format_name = format_module.name.split("::").last
       mod_name = [
@@ -46,29 +45,29 @@ module Ancestry
         alias has_parent? ancestors?
 
         def ancestor_ids=(value)
-          write_attribute(:#{column}, #{format_module}.generate(value, "#{delimiter}", #{root.inspect}))
+          write_attribute(:#{column}, #{format_module}.generate(value, #{root.inspect}))
           #{"ancestry_sync_parent_cache(#{parent_cache_column.inspect}, value)" if parent_cache_column || parent_association}
           #{"ancestry_sync_root_cache(#{root_cache_column.inspect}, value)" if root_cache_column || root_association}
         end
 
         def ancestor_ids
-          #{format_module}.parse(read_attribute(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?)
+          #{format_module}.parse(read_attribute(:#{column}), #{root.inspect}, self.class.primary_key_is_an_integer?)
         end
 
         def ancestor_ids_in_database
-          #{format_module}.parse(attribute_in_database(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?)
+          #{format_module}.parse(attribute_in_database(:#{column}), #{root.inspect}, self.class.primary_key_is_an_integer?)
         end
 
         def ancestor_ids_before_last_save
-          #{format_module}.parse(attribute_before_last_save(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?)
+          #{format_module}.parse(attribute_before_last_save(:#{column}), #{root.inspect}, self.class.primary_key_is_an_integer?)
         end
 
         def parent_id_in_database
-          #{format_module}.parse(attribute_in_database(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?).last
+          #{format_module}.parse(attribute_in_database(:#{column}), #{root.inspect}, self.class.primary_key_is_an_integer?).last
         end
 
         def parent_id_before_last_save
-          #{format_module}.parse(attribute_before_last_save(:#{column}), #{root.inspect}, "#{delimiter}", self.class.primary_key_is_an_integer?).last
+          #{format_module}.parse(attribute_before_last_save(:#{column}), #{root.inspect}, self.class.primary_key_is_an_integer?).last
         end
 
         # optimization - better to go directly to column and avoid parsing
@@ -79,7 +78,7 @@ module Ancestry
         def child_ancestry
           raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")) if new_record?
 
-          #{format_module}.child_ancestry_value(attribute_in_database(:#{column}), id, "#{delimiter}")
+          #{format_module}.child_ancestry_value(attribute_in_database(:#{column}), id)
         end
 
         def child_ancestry_before_last_save
@@ -87,7 +86,7 @@ module Ancestry
             raise Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")
           end
 
-          #{format_module}.child_ancestry_value(attribute_before_last_save(:#{column}), id, "#{delimiter}")
+          #{format_module}.child_ancestry_value(attribute_before_last_save(:#{column}), id)
         end
 
         def ancestry_changed?
@@ -441,7 +440,7 @@ module Ancestry
 
         def indirects_of(object)
           node = to_node(object)
-          where(#{format_module}.indirects_condition(arel_table[:#{column}], node.child_ancestry, "#{delimiter}"))
+          where(#{format_module}.indirects_condition(arel_table[:#{column}], node.child_ancestry))
         end
 
         def descendants_of(object)
@@ -449,7 +448,7 @@ module Ancestry
         end
 
         def descendants_by_ancestry(ancestry)
-          #{format_module}.descendants_condition(arel_table[:#{column}], ancestry, "#{delimiter}")
+          #{format_module}.descendants_condition(arel_table[:#{column}], ancestry)
         end
 
         def descendant_conditions(object)
@@ -489,19 +488,19 @@ module Ancestry
         end
 
         def child_ancestry_sql
-          #{format_module}.child_ancestry_sql(table_name, #{column.inspect}, :#{pk}, "#{delimiter}", connection.adapter_name.downcase)
+          #{format_module}.child_ancestry_sql(table_name, #{column.inspect}, :#{pk}, connection.adapter_name.downcase)
         end
 
         def ancestry_depth_sql
-          @ancestry_depth_sql ||= #{format_module}.construct_depth_sql(table_name, #{column.inspect}, "#{delimiter}")
+          @ancestry_depth_sql ||= #{format_module}.construct_depth_sql(table_name, #{column.inspect})
         end
 
         def generate_ancestry(ancestor_ids)
-          #{format_module}.generate(ancestor_ids, "#{delimiter}", #{root.inspect})
+          #{format_module}.generate(ancestor_ids, #{root.inspect})
         end
 
         def parse_ancestry_column(obj)
-          #{format_module}.parse(obj, #{root.inspect}, "#{delimiter}", primary_key_is_an_integer?)
+          #{format_module}.parse(obj, #{root.inspect}, primary_key_is_an_integer?)
         end
 
         def ancestry_depth_change(old_value, new_value)
@@ -513,7 +512,7 @@ module Ancestry
         end
 
         def ancestry_validation_options(ancestry_primary_key_format)
-          #{format_module}.validation_options(ancestry_primary_key_format, "#{delimiter}")
+          #{format_module}.validation_options(ancestry_primary_key_format)
         end
 
         def sort_by_ancestry(nodes, &block)
@@ -553,7 +552,7 @@ module Ancestry
         #{ if parent_cache_column
           <<~RUBY
             def ancestry_parent_id_sql
-              @ancestry_parent_id_sql ||= #{format_module}.construct_parent_id_sql(table_name, #{column.inspect}, "#{delimiter}", connection.adapter_name.downcase)
+              @ancestry_parent_id_sql ||= #{format_module}.construct_parent_id_sql(table_name, #{column.inspect}, connection.adapter_name.downcase)
             end
 
             def rebuild_parent_id_cache!
@@ -569,7 +568,7 @@ module Ancestry
         #{ if root_cache_column
           <<~RUBY
             def ancestry_root_id_sql
-              @ancestry_root_id_sql ||= #{format_module}.construct_root_id_sql(table_name, #{column.inspect}, "#{delimiter}", :#{pk}, connection.adapter_name.downcase)
+              @ancestry_root_id_sql ||= #{format_module}.construct_root_id_sql(table_name, #{column.inspect}, :#{pk}, connection.adapter_name.downcase)
             end
 
             def rebuild_root_id_cache!

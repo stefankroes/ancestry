@@ -13,22 +13,22 @@ module Ancestry
       nil
     end
 
-    def self.generate(ancestor_ids, _delimiter, _root)
+    def self.generate(ancestor_ids, _root = [])
       ancestor_ids.presence || []
     end
 
-    def self.parse(obj, _root, _delimiter, _integer_pk)
+    def self.parse(obj, _root = [], _integer_pk = false)
       obj.presence || []
     end
 
-    def self.child_ancestry_value(ancestry_value, id, _delimiter)
+    def self.child_ancestry_value(ancestry_value, id)
       (ancestry_value.presence || []) + [id]
     end
 
     # Arel condition: descendants have child_ancestry contained in their ancestry
     # Uses @> (array containment) which is GIN-indexable
     # Ordering is guaranteed by ancestry structure — no positional check needed
-    def self.descendants_condition(attr, child_ancestry, _delimiter)
+    def self.descendants_condition(attr, child_ancestry)
       table_name = attr.relation.name
       column_name = attr.name
       col = "#{table_name}.#{column_name}"
@@ -37,7 +37,7 @@ module Ancestry
     end
 
     # Arel condition: indirects (descendants excluding direct children)
-    def self.indirects_condition(attr, child_ancestry, _delimiter)
+    def self.indirects_condition(attr, child_ancestry)
       table_name = attr.relation.name
       column_name = attr.name
       col = "#{table_name}.#{column_name}"
@@ -61,7 +61,7 @@ module Ancestry
       end
     end
 
-    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, _delimiter, _adapter)
+    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, adapter)
       col = "#{table_name}.#{ancestry_column}"
       pk = "#{table_name}.#{primary_key}"
       "#{col} || ARRAY[#{pk}]::integer[]"
@@ -69,7 +69,7 @@ module Ancestry
 
     # SQL expression that extracts the root_id from the ancestry column
     # Array: ancestry is '{}' (root, returns id) or '{1,2,3}' (root_id=1)
-    def self.construct_root_id_sql(table_name, ancestry_column, _delimiter, primary_key, _adapter)
+    def self.construct_root_id_sql(table_name, ancestry_column, primary_key, _adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       pk = table_name ? "#{table_name}.#{primary_key}" : primary_key.to_s
       "CASE WHEN #{col} = '{}' THEN #{pk} ELSE #{col}[1] END"
@@ -77,18 +77,18 @@ module Ancestry
 
     # SQL expression that extracts the parent_id from the ancestry column
     # Array: ancestry is '{}' (root) or '{1,2,3}' (parent_id=3)
-    def self.construct_parent_id_sql(table_name, ancestry_column, _delimiter, _adapter)
+    def self.construct_parent_id_sql(table_name, ancestry_column, adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       "CASE WHEN #{col} = '{}' THEN NULL ELSE #{col}[array_length(#{col}, 1)] END"
     end
 
     # SQL expression for depth: number of elements in ancestry array
-    def self.construct_depth_sql(table_name, ancestry_column, _ancestry_delimiter)
+    def self.construct_depth_sql(table_name, ancestry_column)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       "CASE WHEN #{col} = '{}' THEN 0 ELSE array_length(#{col}, 1) END"
     end
 
-    def self.validation_options(_primary_key_format, _delimiter)
+    def self.validation_options(_primary_key_format = nil)
       nil
     end
   end

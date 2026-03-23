@@ -6,38 +6,50 @@ module Ancestry
   # 3:    a=/1/2/,id=3 children=#{a}#{id}/% == /1/2/3/%
   class MaterializedPath2 < MaterializedPath
     def self.root
-      delimiter
+      DELIMITER
     end
 
-    def self.generate(ancestor_ids, delimiter, root)
+    # mp2 has leading delimiter: "/1/2/3/" → split gives ["", "1", "2", "3"]
+    # [1..] skips the leading empty string (2x faster than delete_if(&:blank?))
+    def self.parse(obj, root = DELIMITER, integer_pk = false)
+      return [] if obj.nil? || obj == root
+
+      obj_ids = obj.split(DELIMITER)[1..]
+      integer_pk ? obj_ids.map!(&:to_i) : obj_ids
+    end
+
+    # delimiter wraps: /1/2/3/
+    def self.generate(ancestor_ids, root = DELIMITER)
       if ancestor_ids.present? && ancestor_ids.any?
-        "#{delimiter}#{ancestor_ids.join(delimiter)}#{delimiter}"
+        "/#{ancestor_ids.join(DELIMITER)}/"
       else
         root
       end
     end
 
-    def self.child_ancestry_value(ancestry_value, id, delimiter)
-      "#{ancestry_value}#{id}#{delimiter}"
+    # trailing delimiter: /1/2/ + 3 + / → /1/2/3/
+    def self.child_ancestry_value(ancestry_value, id)
+      "#{ancestry_value}#{id}/"
     end
 
-    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, delimiter, adapter)
-      concat(adapter, "#{table_name}.#{ancestry_column}", "#{table_name}.#{primary_key}", "'#{delimiter}'")
+    # trailing delimiter: col || pk || '/'
+    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, adapter)
+      concat(adapter, "#{table_name}.#{ancestry_column}", "#{table_name}.#{primary_key}", "'/'")
     end
 
     # mp2: descendants just use LIKE (trailing delimiter prevents false prefix matches)
-    def self.descendants_condition(attr, child_ancestry, _delimiter)
+    def self.descendants_condition(attr, child_ancestry)
       attr.matches("#{child_ancestry}%", nil, true)
     end
 
-    # mp2: indirects match child_ancestry + at least one more segment
-    def self.indirects_condition(attr, child_ancestry, delimiter)
-      attr.matches("#{child_ancestry}%#{delimiter}%", nil, true)
+    # mp2: indirects match child_ancestry + at least one more /segment/
+    def self.indirects_condition(attr, child_ancestry)
+      attr.matches("#{child_ancestry}%/%", nil, true)
     end
 
     # SQL expression that extracts the root_id from the ancestry column
     # MP2: ancestry is "/" (root, returns id) or "/1/2/3/" (root_id=1)
-    def self.construct_root_id_sql(table_name, ancestry_column, _delimiter, primary_key, adapter)
+    def self.construct_root_id_sql(table_name, ancestry_column, primary_key, adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       pk = table_name ? "#{table_name}.#{primary_key}" : primary_key.to_s
       if %w(mysql mysql2).include?(adapter)
@@ -51,7 +63,7 @@ module Ancestry
 
     # SQL expression that extracts the parent_id from the ancestry column
     # MP2: ancestry is "/" (root) or "/1/2/3/" (parent_id=3)
-    def self.construct_parent_id_sql(table_name, ancestry_column, _delimiter, adapter)
+    def self.construct_parent_id_sql(table_name, ancestry_column, adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       if %w(mysql mysql2).include?(adapter)
         "CASE WHEN #{col} = '/' THEN NULL ELSE CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(#{col}, '/', -2), '/', 1) AS UNSIGNED) END"
@@ -61,16 +73,16 @@ module Ancestry
       end
     end
 
-    def self.construct_depth_sql(table_name, ancestry_column, ancestry_delimiter)
+    # delimiter counted: depth = number of delimiters - 1
+    def self.construct_depth_sql(table_name, ancestry_column)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
-      tmp = %{(LENGTH(#{col}) - LENGTH(REPLACE(#{col},'#{ancestry_delimiter}','')))}
-      tmp += "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
-      "(#{tmp} -1)"
+      "(LENGTH(#{col}) - LENGTH(REPLACE(#{col},'/','')) -1)"
     end
 
-    def self.validation_options(primary_key_format, delimiter)
+    # delimiter in regex: /\A\/(id\/)*\z/
+    def self.validation_options(primary_key_format)
       {
-        format: {with: /\A#{Regexp.escape(delimiter)}(#{primary_key_format}#{Regexp.escape(delimiter)})*\z/.freeze},
+        format: {with: /\A\/(#{primary_key_format}\/)*\z/.freeze},
         allow_nil: false
       }
     end

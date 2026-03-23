@@ -90,15 +90,15 @@ module Ancestry
       format_module = Ancestry::HasAncestry.ancestry_format_module(format)
 
       add_ancestry_cache_column(cache_depth, :ancestry_depth, default: 0, null: false) do
-        format_module.construct_depth_sql(nil, column, format_module.delimiter)
+        format_module.construct_depth_sql(nil, column)
       end
 
       add_ancestry_cache_column(parent, :parent_id, default: nil, null: true) do
-        format_module.construct_parent_id_sql(nil, column, format_module.delimiter, detect_adapter)
+        format_module.construct_parent_id_sql(nil, column, detect_adapter)
       end
 
       add_ancestry_cache_column(root, :root_id, default: nil, null: true) do
-        format_module.construct_root_id_sql(nil, column, format_module.delimiter, 'id', detect_adapter)
+        format_module.construct_root_id_sql(nil, column, 'id', detect_adapter)
       end
 
       if counter_cache
