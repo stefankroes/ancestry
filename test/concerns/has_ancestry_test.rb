@@ -51,13 +51,9 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
           root2.save!
         end
       end
-      # root1 is under root2 (from first move), root2 is under root3 (from second move).
-      # root1's subtree is 13 nodes (1 + 3 + 9). Moving root1 to root removes all 13
-      # from root3's descendants and from root2's descendants.
-      root1_subtree_size = root1.reload.subtree.size
       assert_no_difference 'root1.descendants.size' do
-        assert_difference 'root2.descendants.size', -root1_subtree_size do
-          assert_difference 'root3.descendants.size', -root1_subtree_size do
+        assert_difference 'root2.descendants.size', -root1.subtree.size do
+          assert_difference 'root3.descendants.size', -root1.subtree.size do
             root1.parent = nil
             root1.save!
           end

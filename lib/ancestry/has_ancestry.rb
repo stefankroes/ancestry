@@ -136,9 +136,6 @@ module Ancestry
       # Validate descendants' depths don't exceed max depth when moving them
       validate :ancestry_depth_of_descendants, if: :ancestry_changed?
 
-      # Refresh stale ancestry from database before update (fixes cascading move bug)
-      before_update :refresh_ancestry_from_database, if: :ancestry_changed?, unless: :ancestry_callbacks_disabled?
-
       # Update descendants with new ancestry after update
       if update_strategy == :sql
         after_update :update_descendants_with_new_ancestry_sql, if: :ancestry_changed?
