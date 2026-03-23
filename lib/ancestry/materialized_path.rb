@@ -15,7 +15,7 @@ module Ancestry
       DELIMITER
     end
 
-    def self.generate(ancestor_ids, _delimiter = nil, root = nil)
+    def self.generate(ancestor_ids, root = nil)
       if ancestor_ids.present? && ancestor_ids.any?
         ancestor_ids.join(DELIMITER)
       else
@@ -23,24 +23,24 @@ module Ancestry
       end
     end
 
-    def self.parse(obj, root = nil, _delimiter = nil, integer_pk = false)
+    def self.parse(obj, root = nil, integer_pk = false)
       return [] if obj.nil? || obj == root
 
       obj_ids = obj.split(DELIMITER)
       integer_pk ? obj_ids.map!(&:to_i) : obj_ids
     end
 
-    def self.child_ancestry_value(ancestry_value, id, _delimiter = nil)
+    def self.child_ancestry_value(ancestry_value, id)
       [ancestry_value, id].compact.join(DELIMITER)
     end
 
     # Arel condition: descendants have ancestry matching child_ancestry or starting with child_ancestry/
-    def self.descendants_condition(attr, child_ancestry, _delimiter = nil)
+    def self.descendants_condition(attr, child_ancestry)
       attr.matches("#{child_ancestry}/%", nil, true).or(attr.eq(child_ancestry))
     end
 
     # Arel condition: indirects have ancestry matching child_ancestry/*/
-    def self.indirects_condition(attr, child_ancestry, _delimiter = nil)
+    def self.indirects_condition(attr, child_ancestry)
       attr.matches("#{child_ancestry}/%", nil, true)
     end
 
@@ -59,7 +59,7 @@ module Ancestry
       Arel.sql(replace_sql)
     end
 
-    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, _delimiter = nil, adapter)
+    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, adapter)
       pk_sql = concat(adapter, "#{table_name}.#{primary_key}")
       full_sql = concat(adapter, "#{table_name}.#{ancestry_column}", "'#{DELIMITER}'", "#{table_name}.#{primary_key}")
       %{
@@ -71,7 +71,7 @@ module Ancestry
 
     # SQL expression that extracts the root_id from the ancestry column
     # MP1: ancestry is NULL (root, returns id) or "1/2/3" (root_id=1)
-    def self.construct_root_id_sql(table_name, ancestry_column, _delimiter = nil, primary_key, adapter)
+    def self.construct_root_id_sql(table_name, ancestry_column, primary_key, adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       pk = table_name ? "#{table_name}.#{primary_key}" : primary_key.to_s
       if %w(mysql mysql2).include?(adapter)
@@ -85,7 +85,7 @@ module Ancestry
 
     # SQL expression that extracts the parent_id from the ancestry column
     # MP1: ancestry is NULL (root) or "1/2/3" (parent_id=3)
-    def self.construct_parent_id_sql(table_name, ancestry_column, _delimiter = nil, adapter)
+    def self.construct_parent_id_sql(table_name, ancestry_column, adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       if %w(mysql mysql2).include?(adapter)
         "CASE WHEN #{col} IS NULL THEN NULL ELSE CAST(SUBSTRING_INDEX(#{col}, '/', -1) AS UNSIGNED) END"
@@ -94,12 +94,12 @@ module Ancestry
       end
     end
 
-    def self.construct_depth_sql(table_name, ancestry_column, _delimiter = nil)
+    def self.construct_depth_sql(table_name, ancestry_column)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       "(CASE WHEN #{col} IS NULL THEN 0 ELSE 1 + (LENGTH(#{col}) - LENGTH(REPLACE(#{col},'#{DELIMITER}',''))) END)"
     end
 
-    def self.validation_options(primary_key_format, _delimiter = nil)
+    def self.validation_options(primary_key_format)
       {
         format: {with: /\A#{primary_key_format}(\/#{primary_key_format})*\z/.freeze},
         allow_nil: true

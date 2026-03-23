@@ -11,7 +11,7 @@ module Ancestry
 
     # mp2 has leading delimiter: "/1/2/3/" → split gives ["", "1", "2", "3"]
     # [1..] skips the leading empty string (2x faster than delete_if(&:blank?))
-    def self.parse(obj, root = DELIMITER, _delimiter = nil, integer_pk = false)
+    def self.parse(obj, root = DELIMITER, integer_pk = false)
       return [] if obj.nil? || obj == root
 
       obj_ids = obj.split(DELIMITER)[1..]
@@ -19,7 +19,7 @@ module Ancestry
     end
 
     # delimiter wraps: /1/2/3/
-    def self.generate(ancestor_ids, _delimiter = nil, root = DELIMITER)
+    def self.generate(ancestor_ids, root = DELIMITER)
       if ancestor_ids.present? && ancestor_ids.any?
         "/#{ancestor_ids.join(DELIMITER)}/"
       else
@@ -28,28 +28,28 @@ module Ancestry
     end
 
     # trailing delimiter: /1/2/ + 3 + / → /1/2/3/
-    def self.child_ancestry_value(ancestry_value, id, _delimiter = nil)
+    def self.child_ancestry_value(ancestry_value, id)
       "#{ancestry_value}#{id}/"
     end
 
     # trailing delimiter: col || pk || '/'
-    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, _delimiter = nil, adapter)
+    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, adapter)
       concat(adapter, "#{table_name}.#{ancestry_column}", "#{table_name}.#{primary_key}", "'/'")
     end
 
     # mp2: descendants just use LIKE (trailing delimiter prevents false prefix matches)
-    def self.descendants_condition(attr, child_ancestry, _delimiter = nil)
+    def self.descendants_condition(attr, child_ancestry)
       attr.matches("#{child_ancestry}%", nil, true)
     end
 
     # mp2: indirects match child_ancestry + at least one more /segment/
-    def self.indirects_condition(attr, child_ancestry, _delimiter = nil)
+    def self.indirects_condition(attr, child_ancestry)
       attr.matches("#{child_ancestry}%/%", nil, true)
     end
 
     # SQL expression that extracts the root_id from the ancestry column
     # MP2: ancestry is "/" (root, returns id) or "/1/2/3/" (root_id=1)
-    def self.construct_root_id_sql(table_name, ancestry_column, _delimiter = nil, primary_key, adapter)
+    def self.construct_root_id_sql(table_name, ancestry_column, primary_key, adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       pk = table_name ? "#{table_name}.#{primary_key}" : primary_key.to_s
       if %w(mysql mysql2).include?(adapter)
@@ -63,7 +63,7 @@ module Ancestry
 
     # SQL expression that extracts the parent_id from the ancestry column
     # MP2: ancestry is "/" (root) or "/1/2/3/" (parent_id=3)
-    def self.construct_parent_id_sql(table_name, ancestry_column, _delimiter = nil, adapter)
+    def self.construct_parent_id_sql(table_name, ancestry_column, adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       if %w(mysql mysql2).include?(adapter)
         "CASE WHEN #{col} = '/' THEN NULL ELSE CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(#{col}, '/', -2), '/', 1) AS UNSIGNED) END"
@@ -74,13 +74,13 @@ module Ancestry
     end
 
     # delimiter counted: depth = number of delimiters - 1
-    def self.construct_depth_sql(table_name, ancestry_column, _delimiter = nil)
+    def self.construct_depth_sql(table_name, ancestry_column)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       "(LENGTH(#{col}) - LENGTH(REPLACE(#{col},'/','')) -1)"
     end
 
     # delimiter in regex: /\A\/(id\/)*\z/
-    def self.validation_options(primary_key_format, _delimiter = nil)
+    def self.validation_options(primary_key_format)
       {
         format: {with: /\A\/(#{primary_key_format}\/)*\z/.freeze},
         allow_nil: false
