@@ -47,20 +47,23 @@ module Ancestry
       node_ids = Set.new(nodes.map(&:id))
       index = Hash.new { |h, k| h[k] = {} }
 
-      nodes.each_with_object({}) do |node, arranged|
-        index[node.parent_id][node] = children = index[node.id]
-        if node.parent_id.nil?
-          arranged[node] = children
-        elsif !node_ids.include?(node.parent_id)
-          case orphan_strategy
-          when :destroy
-             # All children are destroyed as well (default)
-          when :adopt
-            raise ArgumentError, "Not Implemented"
-          when :rootify
+      if orphan_strategy == :rootify
+        nodes.each_with_object({}) do |node, arranged|
+          index[node.parent_id][node] = children = index[node.id]
+          arranged[node] = children unless node_ids.include?(node.parent_id)
+        end
+      else
+        nodes.each_with_object({}) do |node, arranged|
+          index[node.parent_id][node] = children = index[node.id]
+          if node.parent_id.nil?
             arranged[node] = children
-          when :restrict
-            raise Ancestry::AncestryException, I18n.t("ancestry.cannot_delete_descendants")
+          elsif !node_ids.include?(node.parent_id)
+            case orphan_strategy
+            when :destroy
+              # silently drop orphaned nodes and their children
+            when :restrict
+              raise Ancestry::AncestryException, I18n.t("ancestry.cannot_delete_descendants")
+            end
           end
         end
       end
