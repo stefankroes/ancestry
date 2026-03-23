@@ -9,9 +9,18 @@ module Ancestry
       ""
     end
 
-    def self.generate(ancestor_ids, delimiter, root)
+    # mp3 has trailing delimiter only: "1/2/3/" → split gives ["1", "2", "3"] (clean)
+    def self.parse(obj, root = "", _delimiter = nil, integer_pk = false)
+      return [] if obj.nil? || obj == root
+
+      obj_ids = obj.split(DELIMITER)
+      integer_pk ? obj_ids.map!(&:to_i) : obj_ids
+    end
+
+    # trailing delimiter: 1/2/3/
+    def self.generate(ancestor_ids, _delimiter = nil, root = "")
       if ancestor_ids.present? && ancestor_ids.any?
-        "#{ancestor_ids.join(delimiter)}#{delimiter}"
+        "#{ancestor_ids.join(DELIMITER)}/"
       else
         root
       end
@@ -19,7 +28,7 @@ module Ancestry
 
     # SQL expression that extracts the root_id from the ancestry column
     # MP3: ancestry is "" (root, returns id) or "1/2/3/" (root_id=1)
-    def self.construct_root_id_sql(table_name, ancestry_column, _delimiter, primary_key, adapter)
+    def self.construct_root_id_sql(table_name, ancestry_column, _delimiter = nil, primary_key, adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       pk = table_name ? "#{table_name}.#{primary_key}" : primary_key.to_s
       if %w(mysql mysql2).include?(adapter)
@@ -33,7 +42,7 @@ module Ancestry
 
     # SQL expression that extracts the parent_id from the ancestry column
     # MP3: ancestry is "" (root) or "1/2/3/" (parent_id=3)
-    def self.construct_parent_id_sql(table_name, ancestry_column, _delimiter, adapter)
+    def self.construct_parent_id_sql(table_name, ancestry_column, _delimiter = nil, adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       if %w(mysql mysql2).include?(adapter)
         "CASE WHEN #{col} = '' THEN NULL ELSE CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(#{col}, '/', -2), '/', 1) AS UNSIGNED) END"
@@ -43,16 +52,16 @@ module Ancestry
       end
     end
 
-    def self.construct_depth_sql(table_name, ancestry_column, ancestry_delimiter)
+    # delimiter counted: depth = number of delimiters (no -1, no +1 — trailing / matches depth)
+    def self.construct_depth_sql(table_name, ancestry_column, _delimiter = nil)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
-      tmp = %{(LENGTH(#{col}) - LENGTH(REPLACE(#{col},'#{ancestry_delimiter}','')))}
-      tmp += "/#{ancestry_delimiter.size}" if ancestry_delimiter.size > 1
-      "(#{tmp})"
+      "(LENGTH(#{col}) - LENGTH(REPLACE(#{col},'/','')))"
     end
 
-    def self.validation_options(primary_key_format, delimiter)
+    # delimiter in regex: /\A(id\/)*\z/
+    def self.validation_options(primary_key_format, _delimiter = nil)
       {
-        format: {with: /\A(#{primary_key_format}#{Regexp.escape(delimiter)})*\z/.freeze},
+        format: {with: /\A(#{primary_key_format}\/)*\z/.freeze},
         allow_nil: false
       }
     end
