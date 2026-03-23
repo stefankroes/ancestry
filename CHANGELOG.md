@@ -18,11 +18,9 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 ### Breaking Changes
 
-* Fix: cascading moves (moving a node whose ancestry was changed by a prior move in the
-  same request) no longer orphan descendants. A `before_update` callback now refreshes
-  stale in-memory ancestry from the database before `update_descendants` runs. The
-  `update_descendants` callback remains `after_update` — existing callback ordering is
-  preserved. [#735](https://github.com/stefankroes/ancestry/pull/735)
+* Reverted: cascading move fix (#735) rolled back due to ~25% write performance
+  regression. The fix added a `before_update` SELECT per reparent. Working on a
+  zero-cost approach.
 * `ancestry_column` and `ancestry_delimiter` were deprecated, but have been officially removed.
 * `depth_cache_column`, `counter_cache_column`, and `touch_ancestors` class variables have been removed.
 * `MaterializedPathPg` (internal module) has been removed.
