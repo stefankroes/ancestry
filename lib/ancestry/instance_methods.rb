@@ -51,7 +51,7 @@ module Ancestry
 
       descendants.each do |descendant|
         descendant.without_ancestry_callbacks do
-          descendant.update_attribute :ancestor_ids, (descendant.ancestor_ids.delete_if { |x| x == id })
+          descendant.update_attribute :ancestor_ids, descendant.ancestor_ids - [id]
         end
       end
     end

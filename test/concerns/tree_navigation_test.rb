@@ -277,6 +277,83 @@ class TreeNavigationTest < ActiveSupport::TestCase
     end
   end
 
+  # --- ancestor_ids cache invalidation ---
+
+  def test_ancestor_ids_after_parent_assignment
+    AncestryTestDatabase.with_model do |model|
+      root1 = model.create!
+      root2 = model.create!
+      child = model.create!(parent: root1)
+
+      assert_equal [root1.id], child.ancestor_ids
+      child.parent = root2
+      assert_equal [root2.id], child.ancestor_ids
+    end
+  end
+
+  def test_ancestor_ids_after_parent_id_assignment
+    AncestryTestDatabase.with_model do |model|
+      root1 = model.create!
+      root2 = model.create!
+      child = model.create!(parent: root1)
+
+      assert_equal [root1.id], child.ancestor_ids
+      child.parent_id = root2.id
+      assert_equal [root2.id], child.ancestor_ids
+    end
+  end
+
+  def test_ancestor_ids_after_ancestor_ids_assignment
+    AncestryTestDatabase.with_model do |model|
+      root1 = model.create!
+      root2 = model.create!
+      child = model.create!(parent: root1)
+
+      assert_equal [root1.id], child.ancestor_ids
+      child.ancestor_ids = [root2.id]
+      assert_equal [root2.id], child.ancestor_ids
+    end
+  end
+
+  def test_ancestor_ids_after_reload
+    AncestryTestDatabase.with_model do |model|
+      root1 = model.create!
+      root2 = model.create!
+      child = model.create!(parent: root1)
+
+      assert_equal [root1.id], child.ancestor_ids
+
+      # Change in DB without going through this object
+      model.where(id: child.id).update_all(
+        AncestryTestDatabase.ancestry_column => model.find(root2.id).child_ancestry
+      )
+
+      # Stale until reload
+      assert_equal [root1.id], child.ancestor_ids
+      child.reload
+      assert_equal [root2.id], child.ancestor_ids
+    end
+  end
+
+  def test_derived_methods_reflect_parent_change
+    AncestryTestDatabase.with_model do |model|
+      root = model.create!
+      mid = model.create!(parent: root)
+      child = model.create!(parent: mid)
+
+      assert_equal mid.id, child.parent_id
+      assert_equal root.id, child.root_id
+      assert_equal 2, child.depth
+      assert_equal [root.id, mid.id, child.id], child.path_ids
+
+      child.parent = root
+      assert_equal root.id, child.parent_id
+      assert_equal root.id, child.root_id
+      assert_equal 1, child.depth
+      assert_equal [root.id, child.id], child.path_ids
+    end
+  end
+
   private
 
   def assert_attribute(node, attribute_name, value, db: :value, exists: :value)

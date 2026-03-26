@@ -5,9 +5,12 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 ## Version [Unreleased]
 
+* Cache `ancestor_ids` to avoid re-parsing on `parent_id`, `root_id`, `depth`, `path_ids` [#743](https://github.com/stefankroes/ancestry/pull/743)
+* Optimize `ancestor_ids` parsing [#740](https://github.com/stefankroes/ancestry/pull/740)
+* Optimize `arrange_nodes` specifically default `:rootify` path [#741](https://github.com/stefankroes/ancestry/pull/741)
 * Introduce `ancestry_format: :array` for PostgreSQL `integer[]` ancestry columns [#736](https://github.com/stefankroes/ancestry/pull/736)
 * Introduce `has_ancestry format:` as alias for `ancestry_format:` [#736](https://github.com/stefankroes/ancestry/pull/736)
-* Introduce `t.ancestry` migration helper and `FORMATS_AND_COLUMNS.md` [#734](https://github.com/stefankroes/ancestry/pull/734)
+* Introduce `t.ancestry` migration helper [#734](https://github.com/stefankroes/ancestry/pull/734)
 * Introduce virtual columns for `parent_id`, `root_id`, and `depth` [#727](https://github.com/stefankroes/ancestry/pull/727)
 * Introduce `belongs_to :parent`, `belongs_to :root`, `has_many :children` associations [#723](https://github.com/stefankroes/ancestry/pull/723) (thx @brocktimus)
 * Introduce `parent` and `root` caching in a physical column [#721](https://github.com/stefankroes/ancestry/pull/721)

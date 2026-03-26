@@ -45,13 +45,19 @@ module Ancestry
         alias has_parent? ancestors?
 
         def ancestor_ids=(value)
+          @_ancestor_ids = value.freeze
           write_attribute(:#{column}, #{format_module}.generate(value, #{root.inspect}))
           #{"ancestry_sync_parent_cache(#{parent_cache_column.inspect}, value)" if parent_cache_column || parent_association}
           #{"ancestry_sync_root_cache(#{root_cache_column.inspect}, value)" if root_cache_column || root_association}
         end
 
         def ancestor_ids
-          #{format_module}.parse(read_attribute(:#{column}), #{root.inspect}, self.class.primary_key_is_an_integer?)
+          @_ancestor_ids ||= #{format_module}.parse(read_attribute(:#{column}), #{root.inspect}, self.class.primary_key_is_an_integer?).freeze
+        end
+
+        def reload(*)
+          @_ancestor_ids = nil
+          super
         end
 
         def ancestor_ids_in_database
