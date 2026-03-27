@@ -113,6 +113,7 @@ module Ancestry
       # This extends ClassMethods (scopes, helpers) and includes instance methods
       generated_mod = Ancestry::InstanceMethodsBuilder.build(
         format_module, column, root,
+        integer_pk: integer_pk,
         depth_cache_column: depth_cache_column,
         counter_cache_column: counter_cache_column,
         parent_cache_column: parent_cache_column,

@@ -13,13 +13,14 @@ module Ancestry
       nil
     end
 
-    def self.generate(ancestor_ids, _root = [])
-      ancestor_ids.presence || []
+    def self.generate(ancestor_ids)
+      ancestor_ids.presence || root
     end
 
-    def self.parse(obj, _root = [], _integer_pk = false)
+    def self.parse(obj)
       obj.presence || []
     end
+    class << self; alias parse_integer parse; end
 
     def self.child_ancestry_value(ancestry_value, id)
       (ancestry_value.presence || []) + [id]

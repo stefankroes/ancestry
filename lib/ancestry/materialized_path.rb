@@ -15,7 +15,7 @@ module Ancestry
       DELIMITER
     end
 
-    def self.generate(ancestor_ids, root = nil)
+    def self.generate(ancestor_ids)
       if ancestor_ids.present? && ancestor_ids.any?
         ancestor_ids.join(DELIMITER)
       else
@@ -23,11 +23,16 @@ module Ancestry
       end
     end
 
-    def self.parse(obj, root = nil, integer_pk = false)
+    def self.parse(obj)
       return [] if obj.nil? || obj == root
 
-      obj_ids = obj.split(DELIMITER)
-      integer_pk ? obj_ids.map!(&:to_i) : obj_ids
+      obj.split(DELIMITER)
+    end
+
+    def self.parse_integer(obj)
+      return [] if obj.nil? || obj == root
+
+      obj.split(DELIMITER).map!(&:to_i)
     end
 
     def self.child_ancestry_value(ancestry_value, id)
