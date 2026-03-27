@@ -22,7 +22,7 @@ module Ancestry
 
       column = options[:ancestry_column] || :ancestry
 
-      primary_key_format = options[:primary_key_format].presence || Ancestry.default_primary_key_format
+      primary_key_format, integer_pk = resolve_primary_key_format(options[:primary_key_format].presence || Ancestry.default_primary_key_format)
 
       # Save self as base class (for STI)
       class_variable_set('@@ancestry_base_class', self)
@@ -113,6 +113,7 @@ module Ancestry
       # This extends ClassMethods (scopes, helpers) and includes instance methods
       generated_mod = Ancestry::InstanceMethodsBuilder.build(
         format_module, column, root,
+        integer_pk: integer_pk,
         depth_cache_column: depth_cache_column,
         counter_cache_column: counter_cache_column,
         parent_cache_column: parent_cache_column,
@@ -194,6 +195,20 @@ module Ancestry
       return super if defined?(super)
 
       has_ancestry(*args)
+    end
+
+    PRIMARY_KEY_FORMATS = {
+      integer: ['[0-9]+', true],
+      uuid:    ['[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}', false],
+      string:  ['[a-zA-Z0-9_-]+', false],
+    }.freeze
+
+    # Resolve primary_key_format to [regex_string, integer_pk]
+    def resolve_primary_key_format(value)
+      return PRIMARY_KEY_FORMATS[value] if PRIMARY_KEY_FORMATS.key?(value)
+
+      # Infer from custom regex: if it can match a letter, it's not integer-only
+      [value, !Regexp.new(value).match?("a")]
     end
 
     def self.ancestry_format_module(ancestry_format)

@@ -23,23 +23,24 @@ for tree queries.
 
 ### Choosing a Format
 
-**`:materialized_path2`** is recommended for most applications:
+**`:materialized_path2`** is recommended for new applications:
 
 - `NOT NULL` column — no nil handling
 - Trailing delimiter eliminates the `OR` in descendant queries (faster)
 - Path can be constructed in SQL (useful for generated columns)
 
+**`:materialized_path3`** is like mp2 but uses `""` (empty string) for root nodes
+instead of `"/"`. Otherwise identical.
+
 **`:materialized_path`** is the legacy default. It uses `nil` for root nodes, which
 requires `NULL` columns and an extra `OR` condition in descendant queries. Kept for
 backward compatibility.
 
-**`:materialized_path3`** is like mp2 but uses `""` (empty string) for root nodes
-instead of `"/"`. Slightly simpler root handling.
-
 **`:ltree`** uses PostgreSQL's native [ltree](https://www.postgresql.org/docs/current/ltree.html)
 type with GiST indexing. Descendant queries use the `<@` operator instead of `LIKE`,
 and depth/path extraction use native functions (`nlevel()`, `subpath()`). Requires the
-`ltree` extension and PostgreSQL.
+`ltree` extension and PostgreSQL. Not compatible with UUID primary keys (ltree labels
+only allow `[A-Za-z0-9_]`).
 
 ### Format Details
 
@@ -91,7 +92,7 @@ Grandchild:  ancestry = "1.2"
 - Column is `NOT NULL`, type is `ltree`
 - Descendant query: `ancestry <@ '1.2'` (GiST-indexed)
 - `nlevel(ancestry)` for depth, `subpath()` for path extraction
-- Integer primary keys only (ltree labels must be alphanumeric)
+- Integer primary keys only (ltree labels must be alphanumeric, no hyphens)
 
 #### `:array` (PostgreSQL only)
 
@@ -109,133 +110,60 @@ Grandchild:  ancestry = {1,2}
 - Indexes: btree (equality, ordering) + GIN (containment queries)
 - Integer primary keys only
 
-## Collation and Indexes
+## UUID Primary Keys
 
-### Why Collation Matters
-
-The string-based ancestry formats (mp1, mp2, mp3) use `LIKE 'prefix%'` for descendant
-queries. For the database to use a btree index on `LIKE`, it must know the column uses
-simple byte ordering — not locale-aware Unicode collation.
-
-The problem: standard Unicode collation (as of 2018) **ignores punctuation for sorting**.
-This means the `/` delimiter in ancestry paths is ignored, causing:
-
-1. **Wrong query results** — `LIKE` may match incorrect rows
-2. **Index not used** — the query planner falls back to sequential scan
-
-Since ancestry only uses ASCII characters (`0-9`, `/`, `.`), telling the database to use
-binary/ascii collation fixes both issues.
-
-### What `t.ancestry` Does Automatically
-
-The `t.ancestry` migration helper detects your database and sets the correct collation:
-
-| Database | Collation | Why |
-|----------|-----------|-----|
-| PostgreSQL | `'C'` | POSIX byte ordering, fastest for ASCII |
-| MySQL | `'utf8mb4_bin'` | Binary comparison within utf8mb4 charset |
-| SQLite | _(none)_ | SQLite uses binary comparison by default |
-
-It also creates the appropriate index:
-
-| Format | Index type |
-|--------|-----------|
-| String formats | btree (default) |
-| `:ltree` | GiST |
-
-### Disabling Automatic Collation
-
-If you need a specific collation (or none), pass `collation: false` or a string:
+Use `primary_key_format: :uuid` with any string-based format (mp1, mp2, mp3):
 
 ```ruby
-t.ancestry collation: false                # no collation set
-t.ancestry collation: 'en_US.utf8'         # specific collation
+has_ancestry primary_key_format: :uuid
 ```
+
+The ancestry column is always a `string` — it stores paths like `"uuid1/uuid2/uuid3"`.
+Do not use a `uuid` typed column for ancestry.
+
+Available format symbols: `:integer` (default), `:uuid`, `:string`. These set the
+validation regex and optimize parsing automatically.
+
+Note: `:ltree` and `:array` formats are not compatible with UUID primary keys.
+
+## Collation
+
+String-based formats need collation set correctly to use indexes for `LIKE` queries.
 
 ## Manual Column Setup
 
-If you cannot use `t.ancestry` (e.g., adding ancestry to an existing table via
-`ALTER TABLE`), set up the column manually.
+If you cannot use `t.ancestry` (e.g., adding ancestry to an existing table),
+set up the column manually.
 
 ### PostgreSQL
 
-**Option A: C collation (recommended)**
-
 ```ruby
+# C collation ensures LIKE uses the btree index
 t.string "ancestry", collation: 'C', null: false
 t.index "ancestry"
 ```
 
-The `'C'` collation uses POSIX byte ordering. This is the simplest and fastest option.
-
-**Option B: ascii index with standard collation**
-
-If you need to keep a locale-aware collation on the column (e.g., for application-level
-sorting), use an operator class on the index instead:
+Some users have had success with `optclass`, though collation `'C'` is preferred.
 
 ```ruby
 t.string "ancestry", null: false
-t.index  "ancestry", opclass: :varchar_pattern_ops
-```
-
-The `varchar_pattern_ops` operator class tells PostgreSQL to use byte-wise comparison
-for this index only, without changing the column's collation.
-
-**Option C: binary column**
-
-```ruby
-t.binary "ancestry", limit: 3000, null: false
-t.index  "ancestry"
-```
-
-Binary columns bypass locale entirely, but SQL output is less readable and the `:sql`
-update strategy is not supported. You may improve readability with:
-
-```sql
-ALTER DATABASE dbname SET bytea_output TO 'escape';
+t.index "ancestry", opclass: :varchar_pattern_ops
 ```
 
 ### MySQL
-
-**Option A: utf8mb4_bin collation (recommended)**
 
 ```ruby
 t.string "ancestry", collation: 'utf8mb4_bin', null: false
 t.index "ancestry"
 ```
 
-**Option B: binary collation**
-
-```ruby
-t.string "ancestry", collation: 'binary', limit: 3000, null: false
-t.index  "ancestry"
-```
-
-**Option C: binary column**
-
-```ruby
-t.binary "ancestry", limit: 3000, null: false
-t.index  "ancestry"
-```
-
-**Option D: ascii character set (SQL only)**
-
-```sql
-ALTER TABLE table_name
-  ADD COLUMN ancestry VARCHAR(2700) CHARACTER SET ascii;
-```
-
-MySQL supports per-column character sets. The `ascii` charset is single-byte and
-sorts correctly for ancestry paths.
-
 ### SQLite
 
 ```ruby
+# SQLite uses binary comparison by default — no collation needed
 t.string "ancestry", null: false
 t.index "ancestry"
 ```
-
-SQLite uses binary comparison by default — no collation configuration needed.
 
 ### Ltree (PostgreSQL)
 
@@ -245,7 +173,7 @@ t.column "ancestry", :ltree, null: false, default: ''
 t.index "ancestry", using: :gist
 ```
 
-Or simply use `t.ancestry format: :ltree`, which does all of this.
+Or use `t.ancestry format: :ltree`, which does all of this.
 
 ## Migrating Collation
 
@@ -264,24 +192,6 @@ end
 
 ## Migrating Between Formats
 
-### From `:materialized_path` to `:materialized_path2`
-
-```ruby
-klass = YourModel
-# Wrap existing paths with delimiters: "1/2/3" → "/1/2/3/"
-klass.where.not(ancestry: nil).update_all("ancestry = CONCAT('/', ancestry, '/')")
-# Convert root nodes: nil → "/"
-klass.where(ancestry: nil).update_all("ancestry = '/'")
-# Disallow nulls now that all roots have a value
-change_column_null klass.table_name, :ancestry, false
-```
-
-Then update your model:
-
-```ruby
-has_ancestry ancestry_format: :materialized_path2
-```
-
 ### From `:materialized_path` to `:materialized_path3`
 
 ```ruby
@@ -290,6 +200,17 @@ klass = YourModel
 klass.where.not(ancestry: nil).update_all("ancestry = CONCAT(ancestry, '/')")
 # Convert root nodes: nil → ""
 klass.where(ancestry: nil).update_all("ancestry = ''")
+change_column_null klass.table_name, :ancestry, false
+```
+
+### From `:materialized_path` to `:materialized_path2`
+
+```ruby
+klass = YourModel
+# Wrap existing paths with delimiters: "1/2/3" → "/1/2/3/"
+klass.where.not(ancestry: nil).update_all("ancestry = CONCAT('/', ancestry, '/')")
+# Convert root nodes: nil → "/"
+klass.where(ancestry: nil).update_all("ancestry = '/'")
 change_column_null klass.table_name, :ancestry, false
 ```
 

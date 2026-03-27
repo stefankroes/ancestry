@@ -10,15 +10,20 @@ module Ancestry
     end
 
     # mp3 has trailing delimiter only: "1/2/3/" → split gives ["1", "2", "3"] (clean)
-    def self.parse(obj, root = "", integer_pk = false)
+    def self.parse(obj)
       return [] if obj.nil? || obj == root
 
-      obj_ids = obj.split(DELIMITER)
-      integer_pk ? obj_ids.map!(&:to_i) : obj_ids
+      obj.split(DELIMITER)
+    end
+
+    def self.parse_integer(obj)
+      return [] if obj.nil? || obj == root
+
+      obj.split(DELIMITER).map!(&:to_i)
     end
 
     # trailing delimiter: 1/2/3/
-    def self.generate(ancestor_ids, root = "")
+    def self.generate(ancestor_ids)
       if ancestor_ids.present? && ancestor_ids.any?
         "#{ancestor_ids.join(DELIMITER)}/"
       else

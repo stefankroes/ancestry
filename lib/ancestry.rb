@@ -19,7 +19,7 @@ I18n.load_path += Dir[File.join(File.expand_path(File.dirname(__FILE__)),
 module Ancestry
   @@default_update_strategy = :ruby
   @@default_ancestry_format = :materialized_path
-  @@default_primary_key_format = '[0-9]+'
+  @@default_primary_key_format = :integer
 
   # @!default_update_strategy
   #   @return [Symbol] the default strategy for updating ancestry
@@ -64,12 +64,11 @@ module Ancestry
   end
 
   # @!default_primary_key_format
-  #   @return [Symbol] the regular expression representing the primary key
+  #   @return [Symbol, String] the primary key format for ancestry validation
   #
-  # The value represents the way the id looks for validation
-  #
-  #    '[0-9]+' (default) for integer ids
-  #    '[-A-Fa-f0-9]{36}'    for uuids (though you can find other regular expressions)
+  #    :integer (default) for integer ids
+  #    :uuid    for UUIDs
+  #    :string  for alphanumeric string ids
   def self.default_primary_key_format
     @@default_primary_key_format
   end

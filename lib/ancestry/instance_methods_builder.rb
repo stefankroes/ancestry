@@ -13,13 +13,15 @@ module Ancestry
     # @param parent_cache_column [String, nil] column name for parent cache, or nil
     # @param root_cache_column [String, nil] column name for root cache, or nil
     # @return [Module] a named module with baked-in instance methods
-    def self.build(format_module, column, root, primary_key: :id, depth_cache_column: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil, parent_association: false, root_association: false)
+    def self.build(format_module, column, root, primary_key: :id, integer_pk: nil, depth_cache_column: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil, parent_association: false, root_association: false)
       pk = primary_key
+      parse_method = integer_pk ? :parse_integer : :parse
       format_name = format_module.name.split("::").last
       mod_name = [
         format_name,
         column,
         ("pk#{pk}" unless pk == :id),
+        ("ipk" if integer_pk),
         ("d#{depth_cache_column}" if depth_cache_column),
         ("c#{counter_cache_column}" if counter_cache_column),
         ("p#{parent_cache_column}" if parent_cache_column),
@@ -35,8 +37,6 @@ module Ancestry
       mod = Module.new
       Ancestry.const_set(mod_name, mod)
 
-      # Note: primary_key_is_an_integer? requires DB introspection so it cannot be
-      # baked in at module definition time. It is resolved lazily via self.class.
       mod.class_eval <<~RUBY, __FILE__, __LINE__ + 1
         # optimization - better to go directly to column and avoid parsing
         def ancestors?
@@ -46,13 +46,13 @@ module Ancestry
 
         def ancestor_ids=(value)
           @_ancestor_ids = value.freeze
-          write_attribute(:#{column}, #{format_module}.generate(value, #{root.inspect}))
+          write_attribute(:#{column}, #{format_module}.generate(value))
           #{"ancestry_sync_parent_cache(#{parent_cache_column.inspect}, value)" if parent_cache_column || parent_association}
           #{"ancestry_sync_root_cache(#{root_cache_column.inspect}, value)" if root_cache_column || root_association}
         end
 
         def ancestor_ids
-          @_ancestor_ids ||= #{format_module}.parse(read_attribute(:#{column}), #{root.inspect}, self.class.primary_key_is_an_integer?).freeze
+          @_ancestor_ids ||= #{format_module}.#{parse_method}(read_attribute(:#{column})).freeze
         end
 
         def reload(*)
@@ -61,19 +61,19 @@ module Ancestry
         end
 
         def ancestor_ids_in_database
-          #{format_module}.parse(attribute_in_database(:#{column}), #{root.inspect}, self.class.primary_key_is_an_integer?)
+          #{format_module}.#{parse_method}(attribute_in_database(:#{column}))
         end
 
         def ancestor_ids_before_last_save
-          #{format_module}.parse(attribute_before_last_save(:#{column}), #{root.inspect}, self.class.primary_key_is_an_integer?)
+          #{format_module}.#{parse_method}(attribute_before_last_save(:#{column}))
         end
 
         def parent_id_in_database
-          #{format_module}.parse(attribute_in_database(:#{column}), #{root.inspect}, self.class.primary_key_is_an_integer?).last
+          #{format_module}.#{parse_method}(attribute_in_database(:#{column})).last
         end
 
         def parent_id_before_last_save
-          #{format_module}.parse(attribute_before_last_save(:#{column}), #{root.inspect}, self.class.primary_key_is_an_integer?).last
+          #{format_module}.#{parse_method}(attribute_before_last_save(:#{column})).last
         end
 
         # optimization - better to go directly to column and avoid parsing
@@ -502,15 +502,11 @@ module Ancestry
         end
 
         def generate_ancestry(ancestor_ids)
-          #{format_module}.generate(ancestor_ids, #{root.inspect})
-        end
-
-        def parse_ancestry_column(obj)
-          #{format_module}.parse(obj, #{root.inspect}, primary_key_is_an_integer?)
+          #{format_module}.generate(ancestor_ids)
         end
 
         def ancestry_depth_change(old_value, new_value)
-          parse_ancestry_column(new_value).size - parse_ancestry_column(old_value).size
+          #{format_module}.#{parse_method}(new_value).size - #{format_module}.#{parse_method}(old_value).size
         end
 
         def ancestry_primary_key_format

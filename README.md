@@ -193,9 +193,10 @@ The `has_ancestry` method supports the following options:
                            true     Cache root id in 'root_id' and define
                                     belongs_to :root association
                            :virtual Use a database generated column with association
-    :primary_key_format    Regular expression that matches the format of the primary key:
-                           '[0-9]+'            integer ids (default)
-                           '[-A-Fa-f0-9]{36}'  UUIDs
+    :primary_key_format    Format of the primary key:
+                           :integer  integer ids (default)
+                           :uuid     UUIDs
+                           :string   alphanumeric string ids
     :touch                 Touch the ancestors of a node when it changes:
                            false  don't invalid nested key-based caches (default)
                            true   touch all ancestors of previous and new parents
