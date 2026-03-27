@@ -486,7 +486,7 @@ module Ancestry
         end
 
         def ordered_by_ancestry(order = nil)
-          #{_ordered_by_ancestry_body(format_module, column)}
+          reorder(#{format_module}.ordered_by_ancestry(arel_table[:#{column}], connection.adapter_name.downcase), order)
         end
 
         def ordered_by_ancestry_and(order)
@@ -585,28 +585,6 @@ module Ancestry
       RUBY
 
       mod
-    end
-
-    # Generate the ordered_by_ancestry method body based on format
-    def self._ordered_by_ancestry_body(format_module, column)
-      if format_module.root != nil
-        <<~BODY.strip
-          reorder(Arel::Nodes::Ascending.new(arel_table[:#{column}]), order)
-        BODY
-      else
-        <<~BODY.strip
-          if %w(mysql mysql2 sqlite sqlite3).include?(connection.adapter_name.downcase)
-            reorder(arel_table[:#{column}], order)
-          elsif %w(postgresql oracleenhanced).include?(connection.adapter_name.downcase) && ActiveRecord::VERSION::STRING >= "6.1"
-            reorder(Arel::Nodes::Ascending.new(arel_table[:#{column}]).nulls_first, order)
-          else
-            reorder(
-              Arel::Nodes::Ascending.new(Arel::Nodes::NamedFunction.new('COALESCE', [arel_table[:#{column}], Arel.sql("''")])),
-              order
-            )
-          end
-        BODY
-      end
     end
   end
 end
