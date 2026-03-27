@@ -84,6 +84,11 @@ module Ancestry
       "(LENGTH(#{col}) - LENGTH(REPLACE(#{col},'/','')) -1)"
     end
 
+    # mp2/mp3 roots are NOT NULL — simple ascending sort
+    def self.ordered_by_ancestry(arel_column, _adapter)
+      Arel::Nodes::Ascending.new(arel_column)
+    end
+
     # delimiter in regex: /\A\/(id\/)*\z/
     def self.validation_options(primary_key_format)
       {

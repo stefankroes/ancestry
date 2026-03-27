@@ -89,6 +89,10 @@ module Ancestry
       "CASE WHEN #{col} = '{}' THEN 0 ELSE array_length(#{col}, 1) END"
     end
 
+    def self.ordered_by_ancestry(arel_column, _adapter)
+      Arel::Nodes::Ascending.new(arel_column)
+    end
+
     def self.validation_options(_primary_key_format = nil)
       nil
     end

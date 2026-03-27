@@ -104,6 +104,17 @@ module Ancestry
       "(CASE WHEN #{col} IS NULL THEN 0 ELSE 1 + (LENGTH(#{col}) - LENGTH(REPLACE(#{col},'#{DELIMITER}',''))) END)"
     end
 
+    # mp1 roots are NULL — need NULLS FIRST or COALESCE to sort roots before children
+    def self.ordered_by_ancestry(arel_column, adapter)
+      if %w(mysql mysql2 sqlite sqlite3).include?(adapter)
+        Arel::Nodes::Ascending.new(arel_column)
+      elsif ActiveRecord::VERSION::STRING >= "6.1"
+        Arel::Nodes::Ascending.new(arel_column).nulls_first
+      else
+        Arel::Nodes::Ascending.new(Arel::Nodes::NamedFunction.new('COALESCE', [arel_column, Arel.sql("''")]))
+      end
+    end
+
     def self.validation_options(primary_key_format)
       {
         format: {with: /\A#{primary_key_format}(\/#{primary_key_format})*\z/.freeze},
