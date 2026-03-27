@@ -5,6 +5,7 @@ a nice looking [Changelog](http://keepachangelog.com).
 
 ## Version [Unreleased]
 
+* Introduce `primary_key_format: :uuid` (and `:string`, `:integer`) for simpler UUID support [#744](https://github.com/stefankroes/ancestry/pull/744)
 * Cache `ancestor_ids` to avoid re-parsing on `parent_id`, `root_id`, `depth`, `path_ids` [#743](https://github.com/stefankroes/ancestry/pull/743)
 * Optimize `ancestor_ids` parsing [#740](https://github.com/stefankroes/ancestry/pull/740)
 * Optimize `arrange_nodes` specifically default `:rootify` path [#741](https://github.com/stefankroes/ancestry/pull/741)
