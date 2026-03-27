@@ -128,18 +128,6 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
     end
   end
 
-  def test_primary_key_is_an_integer
-    AncestryTestDatabase.with_model(extra_columns: {string_id: :string}) do |model|
-      model.primary_key = :string_id
-
-      assert !model.primary_key_is_an_integer?
-    end
-
-    AncestryTestDatabase.with_model do |model|
-      assert model.primary_key_is_an_integer?
-    end
-  end
-
   def test_validate_descendants_depth
     AncestryTestDatabase.with_model depth: 3, width: 3, cache_depth: true do |model, roots|
       model.validates :ancestry_depth, numericality: { less_than_or_equal_to: 2 }

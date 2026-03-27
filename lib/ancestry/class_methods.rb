@@ -301,14 +301,5 @@ module Ancestry
     def unscoped_where
       yield ancestry_base_class.default_scoped.unscope(:where)
     end
-
-    ANCESTRY_UNCAST_TYPES = [:string, :uuid, :text].freeze
-    def primary_key_is_an_integer?
-      if defined?(@primary_key_is_an_integer)
-        @primary_key_is_an_integer
-      else
-        @primary_key_is_an_integer = !ANCESTRY_UNCAST_TYPES.include?(type_for_attribute(primary_key).type)
-      end
-    end
   end
 end
