@@ -15,13 +15,17 @@ module Ancestry
       DELIMITER
     end
 
-    # Ltree is always PostgreSQL with integer IDs — always cast to integer
     def self.parse(obj)
+      return [] if obj.nil? || obj == root
+
+      obj.split(DELIMITER)
+    end
+
+    def self.parse_integer(obj)
       return [] if obj.nil? || obj == root
 
       obj.split(DELIMITER).map!(&:to_i)
     end
-    class << self; alias parse_integer parse; end
 
     def self.generate(ancestor_ids)
       if ancestor_ids.present? && ancestor_ids.any?

@@ -18,9 +18,13 @@ module Ancestry
     end
 
     def self.parse(obj)
+      arr = obj.presence || []
+      arr.map(&:to_s)
+    end
+
+    def self.parse_integer(obj)
       obj.presence || []
     end
-    class << self; alias parse_integer parse; end
 
     def self.child_ancestry_value(ancestry_value, id)
       (ancestry_value.presence || []) + [id]
