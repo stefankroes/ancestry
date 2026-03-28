@@ -95,17 +95,18 @@ module Ancestry
       end
     end
 
-    def tree_view(column, data = nil)
+    def tree_view(column, data = nil, &block)
+      block ||= method(:puts)
       data ||= arrange
       data.each do |parent, children|
         if parent.depth == 0
-          puts parent[column]
+          block.call parent[column]
         else
           num = parent.depth - 1
           indent = "   " * num
-          puts " #{"|" if parent.depth > 1}#{indent}|_ #{parent[column]}"
+          block.call " #{"|" if parent.depth > 1}#{indent}|_ #{parent[column]}"
         end
-        tree_view(column, children) if children
+        tree_view(column, children, &block) if children
       end
     end
 

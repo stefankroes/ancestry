@@ -9,10 +9,6 @@ module Ancestry
       []
     end
 
-    def self.delimiter
-      nil
-    end
-
     def self.generate(ancestor_ids)
       ancestor_ids.presence || root
     end
@@ -51,6 +47,11 @@ module Ancestry
     end
 
     # SQL to replace old ancestry prefix with new ancestry prefix in descendants
+    #
+    # Note: blank branches are currently unreachable — the only caller
+    # (update_descendants_with_new_ancestry_sql) passes path_ids which always
+    # includes self, so old/new ancestry are never blank. Kept for completeness
+    # in case SQL orphan strategies use this in the future.
     def self.replace_ancestry_sql(column, old_ancestry, new_ancestry, _klass)
       old_len = old_ancestry.size
       if old_ancestry.empty? && new_ancestry.empty?

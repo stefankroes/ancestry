@@ -4,10 +4,7 @@ require_relative '../environment'
 
 class MaterializedPathTest < ActiveSupport::TestCase
   def test_ancestry_column_values
-    assert true, "this runs if materialized path"
-    return unless AncestryTestDatabase.materialized_path?
-
-    AncestryTestDatabase.with_model do |model|
+    AncestryTestDatabase.with_model(ancestry_format: :materialized_path) do |model|
       root = model.create!
       node = model.new
 
@@ -38,12 +35,9 @@ class MaterializedPathTest < ActiveSupport::TestCase
   end
 
   def test_ancestry_column_validation
-    assert true, "this runs if materialized path"
-    return unless AncestryTestDatabase.materialized_path?
-
-    AncestryTestDatabase.with_model do |model|
+    AncestryTestDatabase.with_model(ancestry_format: :materialized_path) do |model|
       node = model.create # assuming id == 1
-      ['3', '10/2', '9/4/30', AncestryTestDatabase.ancestry_root].each do |value|
+      ['3', '10/2', '9/4/30', nil].each do |value|
         node.send :write_attribute, AncestryTestDatabase.ancestry_column, value
         assert node.sane_ancestor_ids?
         assert node.valid?
@@ -52,10 +46,7 @@ class MaterializedPathTest < ActiveSupport::TestCase
   end
 
   def test_ancestry_column_validation_fails
-    assert true, "this runs if materialized path"
-    return unless AncestryTestDatabase.materialized_path?
-
-    AncestryTestDatabase.with_model do |model|
+    AncestryTestDatabase.with_model(ancestry_format: :materialized_path) do |model|
       node = model.create
       ['a', 'a/b', '-34'].each do |value|
         node.send :write_attribute, AncestryTestDatabase.ancestry_column, value
@@ -66,12 +57,9 @@ class MaterializedPathTest < ActiveSupport::TestCase
   end
 
   def test_ancestry_column_validation_string_key
-    assert true, "this runs if materialized path"
-    return unless AncestryTestDatabase.materialized_path?
-
-    AncestryTestDatabase.with_model(:id => :string, :primary_key_format => /[a-z]/) do |model|
+    AncestryTestDatabase.with_model(:id => :string, :primary_key_format => /[a-z]/, ancestry_format: :materialized_path) do |model|
       node = model.create(:id => 'z')
-      ['a', 'a/b', 'a/b/c', AncestryTestDatabase.ancestry_root].each do |value|
+      ['a', 'a/b', 'a/b/c', nil].each do |value|
         node.send :write_attribute, AncestryTestDatabase.ancestry_column, value
         assert node.sane_ancestor_ids?
         assert node.valid?
@@ -80,10 +68,7 @@ class MaterializedPathTest < ActiveSupport::TestCase
   end
 
   def test_ancestry_column_validation_string_key_fails
-    assert true, "this runs if materialized path"
-    return unless AncestryTestDatabase.materialized_path?
-
-    AncestryTestDatabase.with_model(:id => :string, :primary_key_format => /[a-z]/) do |model|
+    AncestryTestDatabase.with_model(:id => :string, :primary_key_format => /[a-z]/, ancestry_format: :materialized_path) do |model|
       node = model.create(:id => 'z')
       ['1', '1/2', 'a-b/c'].each do |value|
         node.send :write_attribute, AncestryTestDatabase.ancestry_column, value
@@ -94,10 +79,7 @@ class MaterializedPathTest < ActiveSupport::TestCase
   end
 
   def test_ancestry_validation_exclude_self
-    assert true, "this runs if materialized path"
-    return unless AncestryTestDatabase.materialized_path?
-
-    AncestryTestDatabase.with_model do |model|
+    AncestryTestDatabase.with_model(ancestry_format: :materialized_path) do |model|
       parent = model.create!
       child = parent.children.create!
       assert_raise ActiveRecord::RecordInvalid do

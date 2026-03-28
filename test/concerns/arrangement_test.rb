@@ -275,6 +275,18 @@ class ArrangementTest < ActiveSupport::TestCase
     end
   end
 
+  def test_arrange_nodes_orphan_strategy_destroy_keeps_roots
+    AncestryTestDatabase.with_model do |model|
+      n1 = model.create!
+      n2 = model.create!(parent: n1)
+      n3 = model.create!
+
+      # n2's parent (n1) is missing — dropped. n3 is a root — kept.
+      result = model.arrange_nodes([n2, n3], orphan_strategy: :destroy)
+      assert_equal({n3 => {}}, result)
+    end
+  end
+
   def test_arrange_nodes_orphan_strategy_restrict
     AncestryTestDatabase.with_model do |model|
       n1 = model.create!
@@ -295,6 +307,22 @@ class ArrangementTest < ActiveSupport::TestCase
       # default behavior: orphans become roots
       result = model.arrange_nodes([n2])
       assert_equal({n2 => {}}, result)
+    end
+  end
+
+  def test_tree_view
+    AncestryTestDatabase.with_model(extra_columns: {name: :string}) do |model|
+      root = model.create!(name: "root")
+      child = model.create!(name: "child", parent: root)
+      model.create!(name: "grandchild", parent: child)
+
+      lines = []
+      model.tree_view(:name) { |line| lines << line }
+
+      assert_equal 3, lines.size
+      assert_equal "root", lines[0]
+      assert_match(/\|_ child/, lines[1])
+      assert_match(/\|_ grandchild/, lines[2])
     end
   end
 end
