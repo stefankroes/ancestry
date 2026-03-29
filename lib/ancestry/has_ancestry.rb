@@ -8,7 +8,7 @@ module Ancestry
         raise Ancestry::AncestryException, I18n.t("ancestry.option_must_be_hash")
       end
 
-      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :update_strategy, :ancestry_format, :format, :parent, :root, :associations]
+      extra_keys = options.keys - [:ancestry_column, :orphan_strategy, :cache_depth, :depth_cache_column, :touch, :counter_cache, :primary_key_format, :primary_key, :update_strategy, :ancestry_format, :format, :parent, :root, :associations]
       if (key = extra_keys.first)
         raise Ancestry::AncestryException, I18n.t("ancestry.unknown_option", key: key.inspect, value: options[key].inspect)
       end
@@ -27,6 +27,18 @@ module Ancestry
       # Save self as base class (for STI)
       class_variable_set('@@ancestry_base_class', self)
       cattr_reader :ancestry_base_class, instance_reader: false
+
+      # Define the column used to identify nodes in ancestry paths
+      # ActiveRecord::VERSION::STRING < "7.2" hits DB for primary_key, so fall back to :id
+      pk = if options[:primary_key]
+        options[:primary_key]
+      elsif ActiveRecord::VERSION::STRING >= "7.2"
+        primary_key
+      else
+        :id
+      end
+      class_variable_set('@@primary_ancestry_key', pk.to_sym)
+      cattr_reader :primary_ancestry_key, instance_reader: false
 
       # Include instance methods
       include Ancestry::InstanceMethods
@@ -113,6 +125,7 @@ module Ancestry
       # This extends ClassMethods (scopes, helpers) and includes instance methods
       generated_mod = Ancestry::InstanceMethodsBuilder.build(
         format_module, column, root,
+        primary_key: primary_ancestry_key,
         integer_pk: integer_pk,
         depth_cache_column: depth_cache_column,
         counter_cache_column: counter_cache_column,

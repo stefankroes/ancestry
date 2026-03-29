@@ -2,6 +2,14 @@
 
 module Ancestry
   module InstanceMethods
+    def ancestry_id
+      read_attribute(self.class.primary_ancestry_key)
+    end
+
+    def ancestry_id_before_last_save
+      attribute_before_last_save(self.class.primary_ancestry_key)
+    end
+
     # Validate that descendants' depths don't exceed max depth when moving them
     # Called from generated ancestry_depth_of_descendants with baked column names
     def validate_depth_of_descendants(depth_cache_column, depth_change)
@@ -29,7 +37,7 @@ module Ancestry
 
     # Sync root cache column and reset association after ancestry change
     def ancestry_sync_root_cache(root_cache_column, value, association_name = :root)
-      write_attribute(root_cache_column, value.first || id) if root_cache_column
+      write_attribute(root_cache_column, value.first || ancestry_id) if root_cache_column
       association(association_name).reset if association_cached?(association_name)
     end
 
@@ -38,7 +46,7 @@ module Ancestry
       if association(association_name).loaded?
         association(association_name).target
       else
-        unscoped_where { |scope| scope.find_by(scope.primary_key => parent_id) }
+        unscoped_where { |scope| scope.find_by(scope.primary_ancestry_key => parent_id) }
       end
     end
 
@@ -47,14 +55,14 @@ module Ancestry
       if association(association_name).loaded?
         association(association_name).target || self
       else
-        unscoped_where { |scope| scope.find_by(scope.primary_key => root_id) } || self
+        unscoped_where { |scope| scope.find_by(scope.primary_ancestry_key => root_id) } || self
       end
     end
 
     # Add root cache update to SQL update clause for descendants
     def add_root_cache_to_update_clause(update_clause, root_cache_column)
-      old_root_id = ancestor_ids_before_last_save.first || id_before_last_save
-      new_root_id = ancestor_ids.first || id
+      old_root_id = ancestor_ids_before_last_save.first || ancestry_id_before_last_save
+      new_root_id = ancestor_ids.first || ancestry_id
       if old_root_id != new_root_id
         update_clause[root_cache_column] = new_root_id
       end
@@ -85,7 +93,7 @@ module Ancestry
     # works with after save context (hence before_last_save)
     def unscoped_current_and_previous_ancestors
       unscoped_where do |scope|
-        scope.where(scope.primary_key => (ancestor_ids + ancestor_ids_before_last_save).uniq)
+        scope.where(scope.primary_ancestry_key => (ancestor_ids + ancestor_ids_before_last_save).uniq)
       end
     end
 
