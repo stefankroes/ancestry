@@ -177,7 +177,13 @@ class AncestryTestDatabase
         model.send :default_scope, lambda { model.where(default_scope_params) }
       end
 
+      if options[:ancestry_format]
+        model.reset_column_information
+      end
       model.has_ancestry options unless skip_ancestry
+      if options[:ancestry_format]
+        model.reset_column_information
+      end
 
       if depth > 0
         yield model, create_test_nodes(model, depth, width)
