@@ -115,7 +115,7 @@ unless docker_task_requested
   # task :doc => :yard
 end
 
-namespace :docker do
+namespace :container do
   desc "Build the development image (prefers podman, falls back to docker)"
   task :build do
     sh "#{container_engine} build -t #{container_image} ."
@@ -130,4 +130,15 @@ namespace :docker do
   task :shell => :build do
     sh "#{container_engine} run --rm -it -v #{container_mount} -w /app #{container_image} bash"
   end
+end
+
+namespace :docker do
+  desc "Alias for container:build"
+  task :build => "container:build"
+
+  desc "Alias for container:test"
+  task :test => "container:test"
+
+  desc "Alias for container:shell"
+  task :shell => "container:shell"
 end
