@@ -5,7 +5,10 @@ source 'https://rubygems.org'
 gemspec
 
 gem "activerecord", "~> 7.2"
-gem "sqlite3", "~> 1.6.9"
+
+if ENV["BUNDLE_INSTALL_SQLITE3"] == "1"
+  gem "sqlite3", "~> 1.6.9"
+end
 
 if ENV["BUNDLE_INSTALL_MYSQL"] == "1"
   gem "mysql2"

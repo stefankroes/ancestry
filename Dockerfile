@@ -4,6 +4,7 @@ FROM docker.io/library/ruby:3.3-slim
 
 ENV APP_ROOT=/app \
     BUNDLE_PATH=/usr/local/bundle \
+    BUNDLE_INSTALL_SQLITE3=1 \
     BUNDLE_INSTALL_MYSQL=1 \
     BUNDLE_INSTALL_POSTGRES=1
 
