@@ -33,12 +33,20 @@ EOF
   s.homepage = 'https://github.com/stefankroes/ancestry'
   s.license  = 'MIT'
 
+  docker_artifacts = Dir[
+    'Dockerfile*',
+    '.dockerignore',
+    'docker-compose.y*ml',
+    'compose.y*ml',
+    'docker/**/*'
+  ]
+
   s.files = Dir[
     "{lib}/**/*",
     'CHANGELOG.md',
     'MIT-LICENSE',
     'README.md'
-  ]
+  ] - docker_artifacts
   s.require_paths = ["lib"]
 
   s.required_ruby_version = '>= 2.5'

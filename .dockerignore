@@ -1,0 +1,12 @@
+.git
+pkg
+coverage
+log
+tmp
+vendor
+vendor/bundle
+*.gem
+.bundle
+.DS_Store
+compose*.yml
+docker-compose*.yml
