@@ -61,6 +61,7 @@ jobs:
           - activerecord: 72
             format: materialized_path
             ruby: "3.3"
+            mysql: true
           - activerecord: 81
             format: materialized_path2
             ruby: "3.4"
@@ -72,6 +73,9 @@ jobs:
             ruby: "4.0" # Latest Ruby
           - activerecord: 81
             format: materialized_path3
+            ruby: "3.4"
+          - activerecord: 81
+            format: array
             ruby: "3.4"
 
     env:
@@ -86,6 +90,7 @@ jobs:
       # for rails tests (from matrix)
       BUNDLE_GEMFILE: gemfiles/gemfile_${{ matrix.activerecord }}.gemfile
       FORMAT: ${{ matrix.format }}
+      ANCESTRY_COLUMN: ancestry_alt
     steps:
       - name: checkout code
         uses: actions/checkout@v6
@@ -99,13 +104,13 @@ jobs:
           bundler-cache: true
 
       - name: run sqlite tests
-        if: matrix.format != 'ltree'
+        if: matrix.format != 'ltree' && matrix.format != 'array'
         env:
           DB: sqlite3
         run: |
           bundle exec rake
       - name: run sqlite tests (UPDATE_STRATEGY=sql)
-        if: matrix.format != 'ltree'
+        if: matrix.format != 'ltree' && matrix.format != 'array'
         env:
           DB: sqlite3
           UPDATE_STRATEGY: sql
@@ -122,28 +127,21 @@ jobs:
           UPDATE_STRATEGY: sql
         run: |
           bundle exec rake
-      - name: run pg tests (ANCESTRY_COLUMN=ancestry_alt)
-        env:
-          DB: pg
-          ANCESTRY_COLUMN: ancestry_alt
-        run: |
-          bundle exec rake
-      - name: run pg tests (UPDATE_STRATEGY=sql ANCESTRY_COLUMN=ancestry_alt)
-        env:
-          DB: pg
-          ANCESTRY_COLUMN: ancestry_alt
-          UPDATE_STRATEGY: sql
-        run: |
-          bundle exec rake
-          FORMAT=${{ matrix.format }} UPDATE_STRATEGY=sql bundle exec rake
       - name: run mysql tests
-        if: matrix.format != 'ltree'
+        if: matrix.mysql
         env:
           DB: mysql2
         run: |
           bundle exec rake
+      - name: run mysql tests (UPDATE_STRATEGY=sql)
+        if: matrix.mysql
+        env:
+          DB: mysql2
+          UPDATE_STRATEGY: sql
+        run: |
+          bundle exec rake
       - name: run mysql tests (ANCESTRY_COLUMN_TYPE=binary)
-        if: matrix.format != 'ltree'
+        if: matrix.mysql
         env:
           DB: mysql2
           ANCESTRY_COLUMN_TYPE: binary

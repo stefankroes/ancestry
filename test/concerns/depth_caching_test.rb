@@ -102,6 +102,37 @@ class DepthCachingTest < ActiveSupport::TestCase
     end
   end
 
+  def test_depth_caching_after_subtree_movement_sql
+    AncestryTestDatabase.with_model :depth => 6, :width => 1, :cache_depth => :depth_cache, :update_strategy => :sql do |model, _roots|
+      node = model.at_depth(3).first
+      node.update(:parent => model.roots.first)
+      assert_equal(1, node.depth_cache)
+      node.descendants.each do |descendant|
+        assert_equal(descendant.depth, descendant.depth_cache)
+      end
+    end
+  end
+
+  def test_depth_and_root_cache_after_cross_tree_move_sql
+    AncestryTestDatabase.with_model :depth => 4, :width => 2, :cache_depth => :depth_cache, :root => true, :update_strategy => :sql do |model, _roots|
+      node = model.at_depth(1).first
+      old_root_id = node.read_attribute(:root_id)
+      new_parent = model.roots.where.not(id: old_root_id).first
+
+      node.update!(:parent => new_parent)
+      node.reload
+
+      assert_equal 1, node.depth_cache
+      assert_equal new_parent.id, node.read_attribute(:root_id)
+      node.descendants.each do |descendant|
+        assert_equal descendant.depth, descendant.depth_cache,
+          "depth_cache mismatch for descendant #{descendant.id}"
+        assert_equal new_parent.id, descendant.read_attribute(:root_id),
+          "root_id mismatch for descendant #{descendant.id}"
+      end
+    end
+  end
+
   def test_depth_cache_after_lateral_move
     AncestryTestDatabase.with_model :depth => 3, :width => 2, :cache_depth => :depth_cache do |model, roots|
       # Move a depth-2 node to a different depth-1 parent (same depth, depth_change == 0)
@@ -115,6 +146,22 @@ class DepthCachingTest < ActiveSupport::TestCase
           "depth_cache should be unchanged for descendant #{descendant.id}"
       end
     end
+  end
+
+  def test_depth_cache_column_deprecated_option
+    # depth_cache_column is deprecated in favor of cache_depth.
+    # Passing both triggers the deprecation warning but uses depth_cache_column as the name.
+    # with_model always creates 'ancestry_depth', so we use that name to avoid a mismatch.
+    old_behavior = Ancestry.deprecator.behavior
+    Ancestry.deprecator.behavior = :silence
+    AncestryTestDatabase.with_model(cache_depth: true, depth_cache_column: :ancestry_depth) do |model|
+      root = model.create!
+      child = model.create!(parent: root)
+      assert_equal 0, root.ancestry_depth
+      assert_equal 1, child.ancestry_depth
+    end
+  ensure
+    Ancestry.deprecator.behavior = old_behavior
   end
 
   # we are already testing generate and parse against static values

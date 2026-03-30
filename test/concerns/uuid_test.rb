@@ -13,6 +13,7 @@ class UuidTest < ActiveSupport::TestCase
 
   def with_uuid_model(**options)
     skip "ltree labels do not support hyphens (UUID format)" if AncestryTestDatabase.ltree?
+    skip "array format only supports integer values" if AncestryTestDatabase.array?
     AncestryTestDatabase.with_model(**UUID_OPTIONS, **options) do |model|
       model.before_create { self.id = SecureRandom.uuid if id.blank? }
       yield model

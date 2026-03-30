@@ -9,32 +9,35 @@ module Ancestry
       []
     end
 
-    def self.delimiter
-      nil
-    end
-
     def self.generate(ancestor_ids)
       ancestor_ids.presence || root
     end
 
     def self.parse(obj)
+      arr = obj.presence || []
+      arr.map(&:to_s)
+    end
+
+    def self.parse_integer(obj)
       obj.presence || []
     end
-    class << self; alias parse_integer parse; end
 
     def self.child_ancestry_value(ancestry_value, id)
       (ancestry_value.presence || []) + [id]
     end
 
-    # Arel condition: descendants have child_ancestry contained in their ancestry
-    # Uses @> (array containment) which is GIN-indexable
-    # Ordering is guaranteed by ancestry structure — no positional check needed
+    # Arel condition: descendants have ancestry starting with child_ancestry prefix
+    # Uses slice comparison (ancestry[1:N] = ARRAY[...]) for correct prefix matching.
+    # @> containment is faster (GIN-indexable) but order-independent — it returns
+    # incorrect results during cascading moves when ancestry is being rewritten
+    # (same root cause as the stale ancestry bug #735/#739).
     def self.descendants_condition(attr, child_ancestry)
       table_name = attr.relation.name
       column_name = attr.name
       col = "#{table_name}.#{column_name}"
+      len = child_ancestry.size
       ids = child_ancestry.join(',')
-      Arel.sql("#{col} @> ARRAY[#{ids}]::integer[]")
+      Arel.sql("#{col}[1:#{len}] = ARRAY[#{ids}]::integer[]")
     end
 
     # Arel condition: indirects (descendants excluding direct children)
@@ -42,11 +45,17 @@ module Ancestry
       table_name = attr.relation.name
       column_name = attr.name
       col = "#{table_name}.#{column_name}"
+      len = child_ancestry.size
       ids = child_ancestry.join(',')
-      Arel.sql("#{col} @> ARRAY[#{ids}]::integer[] AND array_length(#{col}, 1) > #{child_ancestry.size}")
+      Arel.sql("#{col}[1:#{len}] = ARRAY[#{ids}]::integer[] AND array_length(#{col}, 1) > #{len}")
     end
 
     # SQL to replace old ancestry prefix with new ancestry prefix in descendants
+    #
+    # Note: blank branches are currently unreachable — the only caller
+    # (update_descendants_with_new_ancestry_sql) passes path_ids which always
+    # includes self, so old/new ancestry are never blank. Kept for completeness
+    # in case SQL orphan strategies use this in the future.
     def self.replace_ancestry_sql(column, old_ancestry, new_ancestry, _klass)
       old_len = old_ancestry.size
       if old_ancestry.empty? && new_ancestry.empty?

@@ -4,10 +4,7 @@ require_relative '../environment'
 
 class MaterializedPath3Test < ActiveSupport::TestCase
   def test_ancestry_column_mp3
-    assert true, "this runs if materialized path3"
-    return unless AncestryTestDatabase.materialized_path3?
-
-    AncestryTestDatabase.with_model do |model|
+    AncestryTestDatabase.with_model(ancestry_format: :materialized_path3) do |model|
       root = model.create!
       node = model.new
 
@@ -38,12 +35,9 @@ class MaterializedPath3Test < ActiveSupport::TestCase
   end
 
   def test_ancestry_column_validation
-    assert true, "this runs if materialized path3"
-    return unless AncestryTestDatabase.materialized_path3?
-
-    AncestryTestDatabase.with_model do |model|
+    AncestryTestDatabase.with_model(ancestry_format: :materialized_path3) do |model|
       node = model.create # assuming id == 1
-      ['3/', '10/2/', '9/4/30/', AncestryTestDatabase.ancestry_root].each do |value|
+      ['3/', '10/2/', '9/4/30/', ''].each do |value|
         node.send :write_attribute, AncestryTestDatabase.ancestry_column, value
         assert node.sane_ancestor_ids?
         assert node.valid?
@@ -52,10 +46,7 @@ class MaterializedPath3Test < ActiveSupport::TestCase
   end
 
   def test_ancestry_column_validation_fails
-    assert true, "this runs if materialized path3"
-    return unless AncestryTestDatabase.materialized_path3?
-
-    AncestryTestDatabase.with_model do |model|
+    AncestryTestDatabase.with_model(ancestry_format: :materialized_path3) do |model|
       node = model.create
       ['a/', 'a/b/', '-34/'].each do |value|
         node.send :write_attribute, AncestryTestDatabase.ancestry_column, value
@@ -66,12 +57,9 @@ class MaterializedPath3Test < ActiveSupport::TestCase
   end
 
   def test_ancestry_column_validation_string_key
-    assert true, "this runs if materialized path3"
-    return unless AncestryTestDatabase.materialized_path3?
-
-    AncestryTestDatabase.with_model(:id => :string, :primary_key_format => /[a-z]/) do |model|
+    AncestryTestDatabase.with_model(:id => :string, :primary_key_format => /[a-z]/, ancestry_format: :materialized_path3) do |model|
       node = model.create(:id => 'z')
-      ['a/', 'a/b/', 'a/b/c/', AncestryTestDatabase.ancestry_root].each do |value|
+      ['a/', 'a/b/', 'a/b/c/', ''].each do |value|
         node.send :write_attribute, AncestryTestDatabase.ancestry_column, value
         assert node.valid?
       end
@@ -79,10 +67,7 @@ class MaterializedPath3Test < ActiveSupport::TestCase
   end
 
   def test_ancestry_column_validation_string_key_fails
-    assert true, "this runs if materialized path3"
-    return unless AncestryTestDatabase.materialized_path3?
-
-    AncestryTestDatabase.with_model(:id => :string, :primary_key_format => /[a-z]/) do |model|
+    AncestryTestDatabase.with_model(:id => :string, :primary_key_format => /[a-z]/, ancestry_format: :materialized_path3) do |model|
       node = model.create(:id => 'z')
       ['1/', '1/2/', 'a-b/c/'].each do |value|
         node.send :write_attribute, AncestryTestDatabase.ancestry_column, value
@@ -92,16 +77,30 @@ class MaterializedPath3Test < ActiveSupport::TestCase
   end
 
   def test_ancestry_validation_exclude_self
-    assert true, "this runs if materialized path3"
-    return unless AncestryTestDatabase.materialized_path3?
-
-    AncestryTestDatabase.with_model do |model|
+    AncestryTestDatabase.with_model(ancestry_format: :materialized_path3) do |model|
       parent = model.create!
       child = parent.children.create!
       assert_raise ActiveRecord::RecordInvalid do
         parent.parent = child
         refute parent.sane_ancestor_ids?
         parent.save!
+      end
+    end
+  end
+
+  def test_update_strategy_sql
+    AncestryTestDatabase.with_model(ancestry_format: :materialized_path3, depth: 3, width: 1, update_strategy: :sql) do |model, _roots|
+      node = model.at_depth(1).first
+      root = model.roots.first
+      new_root = model.create!
+
+      node.update!(parent: new_root)
+
+      node.descendants.each do |descendant|
+        assert descendant.ancestor_ids.include?(new_root.id),
+          "descendant #{descendant.id} should include new root"
+        refute descendant.ancestor_ids.include?(root.id),
+          "descendant #{descendant.id} should not include old root"
       end
     end
   end

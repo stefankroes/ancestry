@@ -1,4 +1,5 @@
 [![Gitter](https://badges.gitter.im/Join+Chat.svg)](https://gitter.im/stefankroes/ancestry?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![CI](https://github.com/stefankroes/ancestry/actions/workflows/run_test_suite.yml/badge.svg)](https://github.com/stefankroes/ancestry/actions/workflows/run_test_suite.yml)
 
 # Ancestry
 

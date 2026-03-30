@@ -15,13 +15,17 @@ module Ancestry
       DELIMITER
     end
 
-    # Ltree is always PostgreSQL with integer IDs — always cast to integer
     def self.parse(obj)
+      return [] if obj.nil? || obj == root
+
+      obj.split(DELIMITER)
+    end
+
+    def self.parse_integer(obj)
       return [] if obj.nil? || obj == root
 
       obj.split(DELIMITER).map!(&:to_i)
     end
-    class << self; alias parse_integer parse; end
 
     def self.generate(ancestor_ids)
       if ancestor_ids.present? && ancestor_ids.any?
@@ -52,6 +56,11 @@ module Ancestry
     # SQL to replace old ancestry prefix with new ancestry prefix in descendants
     # Uses ltree || operator which handles dot-joining automatically
     # CASE handles children (ancestry = old_ancestry) where subpath would be out of bounds
+    #
+    # Note: blank branches are currently unreachable — the only caller
+    # (update_descendants_with_new_ancestry_sql) passes path_ids which always
+    # includes self, so old/new ancestry are never blank. Kept for completeness
+    # in case SQL orphan strategies use this in the future.
     def self.replace_ancestry_sql(column, old_ancestry, new_ancestry, _klass)
       old_len = "nlevel('#{old_ancestry}')"
       if old_ancestry.blank? && new_ancestry.blank?
