@@ -26,15 +26,18 @@ module Ancestry
       (ancestry_value.presence || []) + [id]
     end
 
-    # Arel condition: descendants have child_ancestry contained in their ancestry
-    # Uses @> (array containment) which is GIN-indexable
-    # Ordering is guaranteed by ancestry structure — no positional check needed
+    # Arel condition: descendants have ancestry starting with child_ancestry prefix
+    # Uses slice comparison (ancestry[1:N] = ARRAY[...]) for correct prefix matching.
+    # @> containment is faster (GIN-indexable) but order-independent — it returns
+    # incorrect results during cascading moves when ancestry is being rewritten
+    # (same root cause as the stale ancestry bug #735/#739).
     def self.descendants_condition(attr, child_ancestry)
       table_name = attr.relation.name
       column_name = attr.name
       col = "#{table_name}.#{column_name}"
+      len = child_ancestry.size
       ids = child_ancestry.join(',')
-      Arel.sql("#{col} @> ARRAY[#{ids}]::integer[]")
+      Arel.sql("#{col}[1:#{len}] = ARRAY[#{ids}]::integer[]")
     end
 
     # Arel condition: indirects (descendants excluding direct children)
@@ -42,8 +45,9 @@ module Ancestry
       table_name = attr.relation.name
       column_name = attr.name
       col = "#{table_name}.#{column_name}"
+      len = child_ancestry.size
       ids = child_ancestry.join(',')
-      Arel.sql("#{col} @> ARRAY[#{ids}]::integer[] AND array_length(#{col}, 1) > #{child_ancestry.size}")
+      Arel.sql("#{col}[1:#{len}] = ARRAY[#{ids}]::integer[] AND array_length(#{col}, 1) > #{len}")
     end
 
     # SQL to replace old ancestry prefix with new ancestry prefix in descendants
