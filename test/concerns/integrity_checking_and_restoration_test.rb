@@ -55,8 +55,8 @@ class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
   end
 
   def test_integrity_checking_echo
-    assert true # ltree columns reject invalid values at the DB level
-    return if AncestryTestDatabase.ltree?
+    # ltree and array columns reject invalid values at the DB level (type constraint)
+    skip "DB enforces column type" if AncestryTestDatabase.ltree? || AncestryTestDatabase.array?
 
     AncestryTestDatabase.with_model :width => 3, :depth => 3 do |model, roots|
       roots.first.first.update_attribute AncestryTestDatabase.ancestry_column, 'invalid_ancestry'

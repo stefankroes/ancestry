@@ -152,12 +152,16 @@ class DepthCachingTest < ActiveSupport::TestCase
     # depth_cache_column is deprecated in favor of cache_depth.
     # Passing both triggers the deprecation warning but uses depth_cache_column as the name.
     # with_model always creates 'ancestry_depth', so we use that name to avoid a mismatch.
+    old_behavior = Ancestry.deprecator.behavior
+    Ancestry.deprecator.behavior = :silence
     AncestryTestDatabase.with_model(cache_depth: true, depth_cache_column: :ancestry_depth) do |model|
       root = model.create!
       child = model.create!(parent: root)
       assert_equal 0, root.ancestry_depth
       assert_equal 1, child.ancestry_depth
     end
+  ensure
+    Ancestry.deprecator.behavior = old_behavior
   end
 
   # we are already testing generate and parse against static values

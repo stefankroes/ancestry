@@ -30,7 +30,7 @@ class LtreeTest < ActiveSupport::TestCase
   # DB tests — require PostgreSQL with ltree extension
 
   def test_ancestry_column_ltree
-    return unless AncestryTestDatabase.postgres?
+    skip "requires PostgreSQL" unless AncestryTestDatabase.postgres?
 
     AncestryTestDatabase.with_model(ancestry_format: :ltree) do |model|
       root = model.create!
@@ -63,7 +63,7 @@ class LtreeTest < ActiveSupport::TestCase
   end
 
   def test_update_strategy_sql
-    return unless AncestryTestDatabase.postgres?
+    skip "requires PostgreSQL" unless AncestryTestDatabase.postgres?
 
     AncestryTestDatabase.with_model(ancestry_format: :ltree, depth: 3, width: 1, update_strategy: :sql) do |model, _roots|
       node = model.at_depth(1).first
@@ -82,7 +82,7 @@ class LtreeTest < ActiveSupport::TestCase
   end
 
   def test_move_root_to_child_and_back_sql
-    return unless AncestryTestDatabase.postgres?
+    skip "requires PostgreSQL" unless AncestryTestDatabase.postgres?
 
     AncestryTestDatabase.with_model(ancestry_format: :ltree, depth: 2, width: 2, update_strategy: :sql) do |model, _roots|
       root = model.roots.first
@@ -103,7 +103,7 @@ class LtreeTest < ActiveSupport::TestCase
   end
 
   def test_ancestry_validation_exclude_self
-    return unless AncestryTestDatabase.postgres?
+    skip "requires PostgreSQL" unless AncestryTestDatabase.postgres?
 
     AncestryTestDatabase.with_model(ancestry_format: :ltree) do |model|
       parent = model.create!

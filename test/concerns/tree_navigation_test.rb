@@ -273,6 +273,7 @@ class TreeNavigationTest < ActiveSupport::TestCase
       end
 
       node11.update(:parent => node2)
+      assert_equal [node2.id], node11.reload.ancestor_ids
     end
   end
 

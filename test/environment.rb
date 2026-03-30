@@ -41,7 +41,7 @@ class AncestryTestDatabase
       Ancestry.default_update_strategy = ENV["UPDATE_STRATEGY"] == "sql" ? :sql : :ruby
       Ancestry.default_ancestry_format = ENV["FORMAT"].to_sym if ENV["FORMAT"].present?
 
-      if ltree? && postgres?
+      if postgres?
         ActiveRecord::Base.connection.execute("CREATE EXTENSION IF NOT EXISTS ltree")
       end
 

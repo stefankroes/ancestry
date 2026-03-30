@@ -30,7 +30,7 @@ class ArrayTest < ActiveSupport::TestCase
   # DB tests — require PostgreSQL (integer[] column type)
 
   def test_ancestry_column_array
-    return unless AncestryTestDatabase.postgres?
+    skip "requires PostgreSQL 7.0+" unless AncestryTestDatabase.postgres? && ActiveRecord::VERSION::STRING >= "7.0"
 
     AncestryTestDatabase.with_model(ancestry_format: :array) do |model|
       root = model.create!
@@ -48,7 +48,7 @@ class ArrayTest < ActiveSupport::TestCase
   end
 
   def test_update_strategy_sql
-    return unless AncestryTestDatabase.postgres?
+    skip "requires PostgreSQL 7.0+" unless AncestryTestDatabase.postgres? && ActiveRecord::VERSION::STRING >= "7.0"
 
     AncestryTestDatabase.with_model(ancestry_format: :array, depth: 3, width: 1, update_strategy: :sql) do |model, _roots|
       node = model.at_depth(1).first
@@ -67,7 +67,7 @@ class ArrayTest < ActiveSupport::TestCase
   end
 
   def test_move_root_to_child_and_back_sql
-    return unless AncestryTestDatabase.postgres?
+    skip "requires PostgreSQL 7.0+" unless AncestryTestDatabase.postgres? && ActiveRecord::VERSION::STRING >= "7.0"
 
     AncestryTestDatabase.with_model(ancestry_format: :array, depth: 2, width: 2, update_strategy: :sql) do |model, _roots|
       root = model.roots.first
@@ -88,7 +88,7 @@ class ArrayTest < ActiveSupport::TestCase
   end
 
   def test_ancestry_validation_exclude_self
-    return unless AncestryTestDatabase.postgres?
+    skip "requires PostgreSQL 7.0+" unless AncestryTestDatabase.postgres? && ActiveRecord::VERSION::STRING >= "7.0"
 
     AncestryTestDatabase.with_model(ancestry_format: :array) do |model|
       parent = model.create!
@@ -98,6 +98,25 @@ class ArrayTest < ActiveSupport::TestCase
         refute parent.sane_ancestor_ids?
         parent.save!
       end
+    end
+  end
+
+  def test_reparent_across_trees
+    skip "requires PostgreSQL 7.0+" unless AncestryTestDatabase.postgres? && ActiveRecord::VERSION::STRING >= "7.0"
+
+    AncestryTestDatabase.with_model(ancestry_format: :array, depth: 3, width: 3) do |model, roots|
+      root1, root2, root3 = roots.map(&:first)
+
+      root1.update!(parent: root2)
+      root2.update!(parent: root3)
+
+      expected_before = root3.descendants.size
+      root1_subtree = root1.subtree.size
+
+      root1.update!(parent: nil)
+
+      assert_equal expected_before - root1_subtree, root3.descendants.size,
+        "root3 should lose root1's subtree after root1 moves to root"
     end
   end
 end
