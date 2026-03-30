@@ -132,6 +132,11 @@ namespace :container do
   end
 end
 
+namespace :test do
+  desc "Build the container image and run the test suite inside it"
+  task :compose => "container:test"
+end
+
 namespace :docker do
   desc "Alias for container:build"
   task :build => "container:build"
