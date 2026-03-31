@@ -494,7 +494,7 @@ module Ancestry
         end
 
         def child_ancestry_sql
-          #{format_module}.child_ancestry_sql(table_name, #{column.inspect}, :#{pk}, connection.adapter_name.downcase)
+          #{format_module}.child_ancestry_sql(table_name, #{column.inspect}, :#{pk}, connection.adapter_name.downcase, integer_pk: #{integer_pk.inspect})
         end
 
         def ancestry_depth_sql

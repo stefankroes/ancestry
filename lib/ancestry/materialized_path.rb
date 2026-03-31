@@ -64,7 +64,7 @@ module Ancestry
       Arel.sql(replace_sql)
     end
 
-    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, adapter)
+    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, adapter, integer_pk: true)
       pk_sql = concat(adapter, "#{table_name}.#{primary_key}")
       full_sql = concat(adapter, "#{table_name}.#{ancestry_column}", "'#{DELIMITER}'", "#{table_name}.#{primary_key}")
       %{
