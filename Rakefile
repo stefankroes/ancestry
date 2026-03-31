@@ -26,6 +26,43 @@ def container_mount
   "#{Dir.pwd}:/app#{suffix}"
 end
 
+def compose_command
+  @compose_command ||= begin
+    if container_engine == "podman" && system("podman compose version > /dev/null 2>&1")
+      "podman compose"
+    elsif system("docker compose version > /dev/null 2>&1")
+      "docker compose"
+    elsif system("podman-compose version > /dev/null 2>&1")
+      "podman-compose"
+    else
+      abort("Install `podman compose`, `docker compose`, or `podman-compose` to run compose tasks.")
+    end
+  end
+end
+
+def compose_file_for(target)
+  ENV.fetch("COMPOSE_FILE", File.join("docker", "compose.#{target}.yml"))
+end
+
+def compose_exec(target, command, service: "app", tty: false)
+  tty_flag = tty ? "" : "-T "
+  escaped_command = command.gsub("'", %q('"'"'))
+  sh "#{compose_command} -f #{compose_file_for(target)} exec #{tty_flag}#{service} bash -lc '#{escaped_command}'"
+end
+
+def compose_build(target)
+  sh "#{compose_command} -f #{compose_file_for(target)} build app"
+end
+
+def compose_up(target, *services)
+  service_list = services.join(" ")
+  sh "#{compose_command} -f #{compose_file_for(target)} up -d #{service_list}".strip
+end
+
+def compose_project_teardown(target)
+  sh "#{compose_command} -f #{compose_file_for(target)} down --remove-orphans --volumes"
+end
+
 unless docker_task_requested
   desc 'Default: run unit tests.'
   task :default => :test
@@ -132,9 +169,102 @@ namespace :container do
   end
 end
 
+namespace :compose do
+  desc "Build the SQLite compose app image"
+  task :build_sqlite do
+    compose_build("sqlite")
+  end
+
+  desc "Build the PostgreSQL compose app image"
+  task :build_pg do
+    compose_build("pg")
+  end
+
+  desc "Build the MySQL compose app image"
+  task :build_mysql do
+    compose_build("mysql")
+  end
+
+  desc "Start the PostgreSQL compose project"
+  task :up_pg => :build_pg do
+    compose_up("pg", "postgres", "app")
+  end
+
+  desc "Start the MySQL compose project"
+  task :up_mysql => :build_mysql do
+    compose_up("mysql", "mysql", "app")
+  end
+
+  desc "Stop the SQLite compose project"
+  task :down_sqlite do
+    compose_project_teardown("sqlite")
+  end
+
+  desc "Stop the PostgreSQL compose project"
+  task :down_pg do
+    compose_project_teardown("pg")
+  end
+
+  desc "Stop the MySQL compose project"
+  task :down_mysql do
+    compose_project_teardown("mysql")
+  end
+
+  desc "Open a shell in the SQLite compose app container"
+  task :shell_sqlite => :build_sqlite do
+    compose_up("sqlite", "app")
+    compose_exec("sqlite", "bash", tty: true)
+  end
+
+  desc "Open a shell in the PostgreSQL compose app container"
+  task :shell_pg => :up_pg do
+    compose_exec("pg", "bash", tty: true)
+  end
+
+  desc "Open a shell in the MySQL compose app container"
+  task :shell_mysql => :up_mysql do
+    compose_exec("mysql", "bash", tty: true)
+  end
+
+  desc "Run the SQLite test suite in the compose app container"
+  task :test_sqlite => :build_sqlite do
+    begin
+      compose_up("sqlite", "app")
+      compose_exec("sqlite", "bundle exec rake test")
+    ensure
+      compose_project_teardown("sqlite")
+    end
+  end
+
+  desc "Run the PostgreSQL test suite in the compose app container"
+  task :test_pg => :up_pg do
+    begin
+      compose_exec("pg", "DB=pg bundle exec rake db:create test")
+    ensure
+      compose_project_teardown("pg")
+    end
+  end
+
+  desc "Run the MySQL test suite in the compose app container"
+  task :test_mysql => :up_mysql do
+    begin
+      compose_exec("mysql", "DB=mysql bundle exec rake db:create test")
+    ensure
+      compose_project_teardown("mysql")
+    end
+  end
+
+  desc "Run SQLite, PostgreSQL, and MySQL tests via compose"
+  task :test do
+    Rake::Task["compose:test_sqlite"].invoke
+    Rake::Task["compose:test_pg"].invoke
+    Rake::Task["compose:test_mysql"].invoke
+  end
+end
+
 namespace :test do
-  desc "Build the container image and run the test suite inside it"
-  task :compose => "container:test"
+  desc "Build the compose app image, start databases, and run SQLite/PostgreSQL/MySQL tests"
+  task :compose => "compose:test"
 end
 
 namespace :docker do

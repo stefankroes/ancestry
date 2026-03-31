@@ -1,0 +1,32 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        BUNDLE_INSTALL_POSTGRES: "1"
+    image: ancestry-dev:pg
+    working_dir: /app
+    command: ["sleep", "infinity"]
+    volumes:
+      - ..:/app:Z
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: docker.io/library/postgres:16
+    environment:
+      POSTGRES_DB: ancestry_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ancestry_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 12

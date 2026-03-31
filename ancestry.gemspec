@@ -36,8 +36,6 @@ EOF
   docker_artifacts = Dir[
     'Dockerfile*',
     '.dockerignore',
-    'docker-compose.y*ml',
-    'compose.y*ml',
     'docker/**/*'
   ]
 

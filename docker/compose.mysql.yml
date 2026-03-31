@@ -1,0 +1,32 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        BUNDLE_INSTALL_MYSQL: "1"
+    image: ancestry-dev:mysql
+    working_dir: /app
+    command: ["sleep", "infinity"]
+    volumes:
+      - ..:/app:Z
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: password
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: docker.io/library/mysql:8.0
+    environment:
+      MYSQL_DATABASE: ancestry_test
+      MYSQL_ROOT_PASSWORD: password
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -ppassword --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20

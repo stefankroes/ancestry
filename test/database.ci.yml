@@ -5,18 +5,18 @@ sqlite3:
 pg:
   adapter: postgresql
   database: ancestry_test
-  host: 127.0.0.1
-  port: 5432
-  username: postgres
-  password: password
+  host: <%= ENV.fetch("POSTGRES_HOST", "127.0.0.1") %>
+  port: <%= ENV.fetch("POSTGRES_PORT", "5432") %>
+  username: <%= ENV.fetch("POSTGRES_USER", "postgres") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "password") %>
   min_messages: WARNING
 mysql2: &mysql
   adapter: mysql2
   database: ancestry_test
-  host: 127.0.0.1
-  port: 3306
-  username: root
-  password: password
+  host: <%= ENV.fetch("MYSQL_HOST", "127.0.0.1") %>
+  port: <%= ENV.fetch("MYSQL_PORT", "3306") %>
+  username: <%= ENV.fetch("MYSQL_USER", "root") %>
+  password: <%= ENV.fetch("MYSQL_PASSWORD", "password") %>
   encoding: utf8
 mysql:
   <<: *mysql
