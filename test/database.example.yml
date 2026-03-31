@@ -19,3 +19,9 @@ mysql2:
   database: ancestry_test
   username: ancestry
   password: ancestry
+trilogy:
+  adapter: trilogy
+  host: localhost
+  database: ancestry_test
+  username: ancestry
+  password: ancestry

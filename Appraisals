@@ -7,6 +7,10 @@
   appraise "gemfile-#{ar_version.split('.').first(2).join}" do
     gem 'activerecord', "~> #{ar_version}"
     # so we are targeting the ruby version indirectly through active record
+    # trilogy adapter is built into Rails 7.1+; older versions need the gem
+    if ar_version < "7.1"
+      gem "activerecord-trilogy-adapter"
+    end
     if ar_version < "7.0"
       gem "sqlite3", "~> 1.6.9"
     elsif ar_version < "8.0"
