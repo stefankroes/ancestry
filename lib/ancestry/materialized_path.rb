@@ -79,7 +79,7 @@ module Ancestry
     def self.construct_root_id_sql(table_name, ancestry_column, primary_key, adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       pk = table_name ? "#{table_name}.#{primary_key}" : primary_key.to_s
-      if %w(mysql mysql2).include?(adapter)
+      if %w(mysql mysql2 trilogy).include?(adapter)
         "CASE WHEN #{col} IS NULL THEN #{pk} ELSE CAST(SUBSTRING_INDEX(#{col}, '/', 1) AS UNSIGNED) END"
       elsif %w(pg postgresql postgis).include?(adapter)
         "CASE WHEN #{col} IS NULL THEN #{pk} ELSE CAST(SUBSTR(#{col}, 1, STRPOS(#{col}||'/', '/')-1) AS INTEGER) END"
@@ -92,7 +92,7 @@ module Ancestry
     # MP1: ancestry is NULL (root) or "1/2/3" (parent_id=3)
     def self.construct_parent_id_sql(table_name, ancestry_column, adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
-      if %w(mysql mysql2).include?(adapter)
+      if %w(mysql mysql2 trilogy).include?(adapter)
         "CASE WHEN #{col} IS NULL THEN NULL ELSE CAST(SUBSTRING_INDEX(#{col}, '/', -1) AS UNSIGNED) END"
       else
         "CASE WHEN #{col} IS NULL THEN NULL ELSE CAST(SUBSTR(#{col}, LENGTH(RTRIM(#{col}, REPLACE(#{col}, '/', ''))) + 1) AS INTEGER) END"
@@ -106,7 +106,7 @@ module Ancestry
 
     # mp1 roots are NULL — need NULLS FIRST or COALESCE to sort roots before children
     def self.ordered_by_ancestry(arel_column, adapter)
-      if %w(mysql mysql2 sqlite sqlite3).include?(adapter)
+      if %w(mysql mysql2 trilogy sqlite sqlite3).include?(adapter)
         Arel::Nodes::Ascending.new(arel_column)
       elsif ActiveRecord::VERSION::STRING >= "6.1"
         Arel::Nodes::Ascending.new(arel_column).nulls_first

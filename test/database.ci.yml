@@ -20,3 +20,6 @@ mysql2: &mysql
   encoding: utf8
 mysql:
   <<: *mysql
+trilogy:
+  <<: *mysql
+  adapter: trilogy

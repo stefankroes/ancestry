@@ -275,7 +275,7 @@ module Ancestry
           ).count
         end
 
-      if %w(mysql mysql2).include?(klass.connection.adapter_name.downcase)
+      if %w(mysql mysql2 trilogy).include?(klass.connection.adapter_name.downcase)
         klass.connection.execute %{
           UPDATE #{tbl} AS dest
           LEFT JOIN (
