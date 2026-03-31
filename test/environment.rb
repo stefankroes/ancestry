@@ -153,6 +153,7 @@ class AncestryTestDatabase
       else
         table.ancestry options[:ancestry_column],
           format: options[:ancestry_format],
+          primary_key_format: options[:primary_key_format],
           cache_depth: options[:cache_depth],
           parent: options[:parent],
           root: options[:root],

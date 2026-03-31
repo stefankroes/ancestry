@@ -74,7 +74,7 @@ module Ancestry
       end
     end
 
-    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, adapter)
+    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, adapter, integer_pk: true)
       col = "#{table_name}.#{ancestry_column}"
       pk = "#{table_name}.#{primary_key}"
       "CASE WHEN #{col} = '' THEN #{pk}::text::ltree ELSE #{col} || #{pk}::text::ltree END"
