@@ -239,7 +239,7 @@ namespace :compose do
   desc "Run the PostgreSQL test suite in the compose app container"
   task :test_pg => :up_pg do
     begin
-      compose_exec("pg", "DB=pg bundle exec rake db:create test")
+      compose_exec("pg", "DB=pg bundle exec rake test")
     ensure
       compose_project_teardown("pg")
     end
@@ -248,7 +248,7 @@ namespace :compose do
   desc "Run the MySQL test suite in the compose app container"
   task :test_mysql => :up_mysql do
     begin
-      compose_exec("mysql", "DB=mysql bundle exec rake db:create test")
+      compose_exec("mysql", "DB=mysql bundle exec rake test")
     ensure
       compose_project_teardown("mysql")
     end
