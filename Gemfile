@@ -6,7 +6,7 @@ gemspec
 
 gem "activerecord", "~> 7.2"
 
-if ENV["BUNDLE_INSTALL_PG"] == "1" || File.basename($PROGRAM_NAME) == "appraisal"
+if ENV["BUNDLE_INSTALL_POSTGRES"] == "1" || File.basename($PROGRAM_NAME) == "appraisal"
   gem "pg"
 end
 
