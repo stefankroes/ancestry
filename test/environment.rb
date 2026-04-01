@@ -154,6 +154,7 @@ class AncestryTestDatabase
       else
         table.ancestry options[:ancestry_column],
           format: options[:ancestry_format],
+          primary_key_format: options[:primary_key_format],
           cache_depth: options[:cache_depth],
           parent: options[:parent],
           root: options[:root],
@@ -214,7 +215,7 @@ class AncestryTestDatabase
   end
 
   def self.mysql?
-    db_type == "mysql2"
+    db_type == "mysql2" || db_type == "trilogy"
   end
 
   # SQLite virtual columns require Rails 7.2+ (PR #49346), PG/MySQL require 7.0+
@@ -262,6 +263,7 @@ class AncestryTestDatabase
     when "sqlite", "sqlite3" then "sqlite3"
     when "pg", "postgresql"  then "pg"
     when "mysql", "mysql2"   then "mysql2"
+    when "trilogy"            then "trilogy"
     else
       ENV["DB"]
     end

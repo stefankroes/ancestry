@@ -38,7 +38,7 @@ module Ancestry
     end
 
     # trailing delimiter: col || pk || '/'
-    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, adapter)
+    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, adapter, integer_pk: true)
       concat(adapter, "#{table_name}.#{ancestry_column}", "#{table_name}.#{primary_key}", "'/'")
     end
 
@@ -57,7 +57,7 @@ module Ancestry
     def self.construct_root_id_sql(table_name, ancestry_column, primary_key, adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
       pk = table_name ? "#{table_name}.#{primary_key}" : primary_key.to_s
-      if %w(mysql mysql2).include?(adapter)
+      if %w(mysql mysql2 trilogy).include?(adapter)
         "CASE WHEN #{col} = '/' THEN #{pk} ELSE CAST(SUBSTRING_INDEX(SUBSTRING(#{col}, 2), '/', 1) AS UNSIGNED) END"
       elsif %w(pg postgresql postgis).include?(adapter)
         "CASE WHEN #{col} = '/' THEN #{pk} ELSE CAST(SUBSTR(#{col}, 2, STRPOS(SUBSTR(#{col},2), '/')-1) AS INTEGER) END"
@@ -70,7 +70,7 @@ module Ancestry
     # MP2: ancestry is "/" (root) or "/1/2/3/" (parent_id=3)
     def self.construct_parent_id_sql(table_name, ancestry_column, adapter)
       col = table_name ? "#{table_name}.#{ancestry_column}" : ancestry_column.to_s
-      if %w(mysql mysql2).include?(adapter)
+      if %w(mysql mysql2 trilogy).include?(adapter)
         "CASE WHEN #{col} = '/' THEN NULL ELSE CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(#{col}, '/', -2), '/', 1) AS UNSIGNED) END"
       else
         trimmed = "RTRIM(#{col},'/')"

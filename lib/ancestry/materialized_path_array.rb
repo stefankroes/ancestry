@@ -26,6 +26,15 @@ module Ancestry
       (ancestry_value.presence || []) + [id]
     end
 
+    # Build ARRAY[...] literal with proper quoting and cast for the given values
+    def self.array_literal(values)
+      if values.first.is_a?(Integer)
+        "ARRAY[#{values.join(',')}]::integer[]"
+      else
+        "ARRAY[#{values.map { |v| "'#{v}'" }.join(',')}]::varchar[]"
+      end
+    end
+
     # Arel condition: descendants have ancestry starting with child_ancestry prefix
     # Uses slice comparison (ancestry[1:N] = ARRAY[...]) for correct prefix matching.
     # @> containment is faster (GIN-indexable) but order-independent — it returns
@@ -36,8 +45,7 @@ module Ancestry
       column_name = attr.name
       col = "#{table_name}.#{column_name}"
       len = child_ancestry.size
-      ids = child_ancestry.join(',')
-      Arel.sql("#{col}[1:#{len}] = ARRAY[#{ids}]::integer[]")
+      Arel.sql("#{col}[1:#{len}] = #{array_literal(child_ancestry)}")
     end
 
     # Arel condition: indirects (descendants excluding direct children)
@@ -46,8 +54,7 @@ module Ancestry
       column_name = attr.name
       col = "#{table_name}.#{column_name}"
       len = child_ancestry.size
-      ids = child_ancestry.join(',')
-      Arel.sql("#{col}[1:#{len}] = ARRAY[#{ids}]::integer[] AND array_length(#{col}, 1) > #{len}")
+      Arel.sql("#{col}[1:#{len}] = #{array_literal(child_ancestry)} AND array_length(#{col}, 1) > #{len}")
     end
 
     # SQL to replace old ancestry prefix with new ancestry prefix in descendants
@@ -61,20 +68,19 @@ module Ancestry
       if old_ancestry.empty? && new_ancestry.empty?
         Arel.sql("#{column}")
       elsif old_ancestry.empty?
-        new_ids = new_ancestry.join(',')
-        Arel.sql("ARRAY[#{new_ids}]::integer[] || #{column}")
+        Arel.sql("#{array_literal(new_ancestry)} || #{column}")
       elsif new_ancestry.empty?
         Arel.sql("#{column}[#{old_len + 1}:]")
       else
-        new_ids = new_ancestry.join(',')
-        Arel.sql("ARRAY[#{new_ids}]::integer[] || #{column}[#{old_len + 1}:]")
+        Arel.sql("#{array_literal(new_ancestry)} || #{column}[#{old_len + 1}:]")
       end
     end
 
-    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, adapter)
+    def self.child_ancestry_sql(table_name, ancestry_column, primary_key, adapter, integer_pk: true)
       col = "#{table_name}.#{ancestry_column}"
       pk = "#{table_name}.#{primary_key}"
-      "#{col} || ARRAY[#{pk}]::integer[]"
+      cast = integer_pk ? "::integer[]" : "::varchar[]"
+      "#{col} || ARRAY[#{pk}]#{cast}"
     end
 
     # SQL expression that extracts the root_id from the ancestry column

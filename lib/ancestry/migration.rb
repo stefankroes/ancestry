@@ -26,7 +26,7 @@ module Ancestry
     # @param parent [Boolean, :virtual] add parent_id integer column
     # @param root [Boolean, :virtual] add root_id integer column
     # @param counter_cache [Boolean] add children_count integer column
-    def ancestry(column = :ancestry, format: nil, collation: nil, cache_depth: false, parent: false, root: false, counter_cache: false)
+    def ancestry(column = :ancestry, format: nil, collation: nil, primary_key_format: nil, cache_depth: false, parent: false, root: false, counter_cache: false)
       format ||= Ancestry.default_ancestry_format
       table_name = self.name # table name from TableDefinition
 
@@ -35,7 +35,8 @@ module Ancestry
       when :ltree
         self.column column, :ltree, default: '', null: false
       when :array
-        integer column, array: true, default: [], null: false
+        col_type = (primary_key_format.nil? || primary_key_format == :integer) ? :integer : :string
+        send col_type, column, array: true, default: [], null: false
       else
         not_null = format != :materialized_path
         opts = { null: !not_null }

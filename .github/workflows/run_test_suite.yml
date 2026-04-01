@@ -147,3 +147,9 @@ jobs:
           ANCESTRY_COLUMN_TYPE: binary
         run: |
           bundle exec rake
+      - name: run trilogy tests
+        if: matrix.mysql
+        env:
+          DB: trilogy
+        run: |
+          bundle exec rake
