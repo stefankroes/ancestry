@@ -453,8 +453,8 @@ module Ancestry
           where(descendant_conditions(object))
         end
 
-        def descendants_by_ancestry(ancestry)
-          #{format_module}.descendants_condition(arel_table[:#{column}], ancestry)
+        def descendants_by_ancestry(child_ancestry)
+          #{format_module}.descendants_condition(arel_table[:#{column}], child_ancestry)
         end
 
         def descendant_conditions(object)

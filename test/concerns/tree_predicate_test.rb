@@ -40,4 +40,17 @@ class TreePredicateTest < ActiveSupport::TestCase
       end
     end
   end
+
+  def test_indirect_of
+    AncestryTestDatabase.with_model do |model|
+      root = model.create!
+      child = model.create!(:parent => root)
+      grandchild = model.create!(:parent => child)
+
+      assert grandchild.indirect_of?(root), "grandchild is an indirect descendant of root"
+      refute child.indirect_of?(root), "child is direct, not indirect"
+      refute root.indirect_of?(root), "node is not indirect of itself"
+      refute root.indirect_of?(grandchild), "root is not indirect of grandchild"
+    end
+  end
 end

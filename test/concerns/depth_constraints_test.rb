@@ -89,4 +89,65 @@ class DepthConstraintsTest < ActiveSupport::TestCase
       assert_equal [node5, leaf],                leaf.path(:after_depth => -2)
     end
   end
+
+  def test_leaves_with_depth_constraints
+    AncestryTestDatabase.with_model :depth => 4, :width => 2, :cache_depth => true do |model, _roots|
+      root = model.roots.first
+
+      # leaves at depth 3 (the bottom of this tree)
+      all_leaves = root.leaves
+      assert all_leaves.count > 0
+
+      # depth constraints should filter the leaves
+      assert_equal all_leaves.count, root.leaves(:at_depth => 3).count
+      assert_equal 0,                root.leaves(:before_depth => 1).count
+      assert_equal all_leaves.count, root.leaves(:from_depth => 2).count
+      assert_equal 0,                root.leaves(:after_depth => 3).count
+      assert_equal all_leaves.count, root.leaves(:to_depth => 3).count
+    end
+  end
+
+  def test_chained_depth_scopes_on_descendants
+    AncestryTestDatabase.with_model :depth => 4, :width => 2, :cache_depth => true do |model, _roots|
+      root = model.roots.first
+
+      # chained: from_depth(1).to_depth(2) should give depths 1 and 2
+      chained = root.descendants.from_depth(1).to_depth(2)
+      chained.each do |node|
+        assert node.depth >= 1 && node.depth <= 2, "expected depth 1..2, got #{node.depth}"
+      end
+      assert chained.count > 0
+    end
+  end
+
+  def test_chained_depth_scopes_on_subtree
+    AncestryTestDatabase.with_model :depth => 4, :width => 2, :cache_depth => true do |model, _roots|
+      root = model.roots.first
+
+      chained = root.subtree.at_depth(2)
+      chained.each do |node|
+        assert_equal 2, node.depth
+      end
+      assert chained.count > 0
+    end
+  end
+
+  def test_combined_depth_options_in_hash
+    AncestryTestDatabase.with_model :depth => 4, :width => 2, :cache_depth => true do |model, _roots|
+      root = model.roots.first
+
+      # pass both from_depth and to_depth in one options hash
+      constrained = root.descendants(:from_depth => 1, :to_depth => 2)
+      constrained.each do |node|
+        assert node.depth >= 1 && node.depth <= 2, "expected depth 1..2, got #{node.depth}"
+      end
+      assert constrained.count > 0
+
+      # subtree with combined constraints
+      constrained = root.subtree(:from_depth => 0, :to_depth => 1)
+      constrained.each do |node|
+        assert node.depth >= 0 && node.depth <= 1
+      end
+    end
+  end
 end
