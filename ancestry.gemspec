@@ -33,12 +33,6 @@ EOF
   s.homepage = 'https://github.com/stefankroes/ancestry'
   s.license  = 'MIT'
 
-  docker_artifacts = Dir[
-    'Dockerfile*',
-    '.dockerignore',
-    'docker/**/*'
-  ]
-
   s.files = Dir[
     "{lib}/**/*",
     'CHANGELOG.md',
