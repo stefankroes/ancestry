@@ -38,7 +38,7 @@ EOF
     'CHANGELOG.md',
     'MIT-LICENSE',
     'README.md'
-  ] - docker_artifacts
+  ]
   s.require_paths = ["lib"]
 
   s.required_ruby_version = '>= 2.5'
