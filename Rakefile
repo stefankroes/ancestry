@@ -256,9 +256,13 @@ namespace :compose do
 
   desc "Run SQLite, PostgreSQL, and MySQL tests via compose"
   task :test do
-    Rake::Task["compose:test_sqlite"].invoke
-    Rake::Task["compose:test_pg"].invoke
-    Rake::Task["compose:test_mysql"].invoke
+    if ENV["DB"]
+      Rake::Task["compose:test_#{ENV["DB"]}"].invoke
+    else
+      Rake::Task["compose:test_sqlite"].invoke
+      Rake::Task["compose:test_pg"].invoke
+      Rake::Task["compose:test_mysql"].invoke
+    end
   end
 end
 
