@@ -129,4 +129,31 @@ class ScopesTest < ActiveSupport::TestCase
       assert true, "this should not throw an exception"
     end
   end
+
+  def test_inpath_of
+    AncestryTestDatabase.with_model do |model|
+      root = model.create!
+      child = model.create!(:parent => root)
+      grandchild = model.create!(:parent => child)
+
+      assert_equal [root, child, grandchild], model.inpath_of(grandchild).ordered_by_ancestry.to_a
+      assert_equal [root, child, grandchild], model.inpath_of(grandchild.id).ordered_by_ancestry.to_a
+      assert_equal [root], model.inpath_of(root).to_a
+    end
+  end
+
+  def test_leaves_of
+    AncestryTestDatabase.with_model do |model|
+      root = model.create!
+      child1 = model.create!(:parent => root)
+      child2 = model.create!(:parent => root)
+      grandchild = model.create!(:parent => child1)
+
+      leaves = model.leaves_of(root).order(:id).to_a
+      assert_equal [child2, grandchild].sort_by(&:id), leaves.sort_by(&:id)
+
+      # leaves_of a leaf returns empty
+      assert_empty model.leaves_of(grandchild)
+    end
+  end
 end

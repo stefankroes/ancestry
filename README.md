@@ -1,4 +1,3 @@
-[![Gitter](https://badges.gitter.im/Join+Chat.svg)](https://gitter.im/stefankroes/ancestry?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![CI](https://github.com/stefankroes/ancestry/actions/workflows/run_test_suite.yml/badge.svg)](https://github.com/stefankroes/ancestry/actions/workflows/run_test_suite.yml)
 
 # Ancestry
@@ -6,72 +5,35 @@
 ## Overview
 
 Ancestry is a gem that allows rails ActiveRecord models to be organized as
-a tree structure (or hierarchy). It employs the materialized path pattern
-which allows operations to be performed efficiently.
+a tree structure (or hierarchy). It employs the materialized path pattern —
+one column, no extra tables, single-query reads. [Benchmarks](https://github.com/kbrock/tree-bench)
+show it outperforms alternatives on most single-node operations.
 
 # Features
 
-There are a few common ways of storing hierarchical data in a database:
-materialized path, closure tree table, adjacency lists, nested sets, and adjacency list with recursive queries.
+Ancestry uses the **materialized path** pattern: each record stores its ancestor
+chain in a single column (e.g. `1/2/3/`). No additional tables needed.
 
-## Features from Materialized Path
-
-- Store hierarchy in an easy to understand format. (e.g.: `/1/2/3/`)
-- Store hierarchy in the original table with no additional tables.
-- Single SQL queries for relations (`ancestors`, `parent`, `root`, `children`, `siblings`, `descendants`)
-- Single query for creating records.
-- Moving/deleting nodes only affect child nodes (rather than updating all nodes in the tree)
-
-## Features from Ancestry gem Implementation
-
-- relations are implemented as `scopes`
-- some relations can be implemented as ActiveRecord associations
-- `STI` support
-- Arrangement of subtrees into hashes
-- Multiple strategies for querying materialized_path
-- Multiple strategies for dealing with orphaned records
-- depth caching
-- depth constraints
-- counter caches
-- Multiple strategies for moving nodes
-- Easy migration from `parent_id` based gems
-- Integrity checking
-- Integrity restoration
-- Most queries use indexes on `id` or `ancestry` column. (e.g.: `LIKE '#{ancestry}/%'`)
-
-Since a Btree index has a limitation of 2704 characters for the `ancestry` column,
-the maximum depth of an ancestry tree is 900 items at most. If ids are 4 digits long,
-then the max depth is 540 items.
-
-When using `STI` all classes are returned from the scopes unless you specify otherwise using `where(:type => "ChildClass")`.
-
-## Supported Rails versions
-
-- Ancestry 2.x supports Rails 4.1 and earlier
-- Ancestry 3.x supports Rails 4.2 and 5.0
-- Ancestry 4.x supports Rails 5.2 through 7.0
-- Ancestry 5.0 supports Rails 6.0 through 8.1
-- Ancestry 6.0 supports Rails 7.0 through 8.1
+- Single btree indexed query for [any relation](#tree-navigation): `ancestors`, `descendants`, `siblings`, `children`, `leaves`. [Benchmarks](https://github.com/kbrock/tree-bench)
+- No extra tables — hierarchy lives in a column on your existing table
+- Moving a node only updates its descendants, not the whole tree
+- **New:** Real ActiveRecord [associations](#cached-columns) (`belongs_to :parent`, `has_many :children`) with eager loading
+- [Multiple orphan strategies](#has_ancestry-options) for handling deleted nodes
+- [Depth caching and constraints](#selecting-nodes-by-depth), counter caches
+- [Integrity checking and restoration](CONFIGURATION.md)
+- STI support — all classes returned from scopes unless filtered with `where(type: "ChildClass")`
 
 # Installation
 
 Follow these steps to apply Ancestry to any ActiveRecord model:
 
-## Add to Gemfile
-
 ```ruby
 # Gemfile
-
 gem 'ancestry'
 ```
 
 ```bash
 $ bundle install
-```
-
-## Add ancestry column to your table
-
-```bash
 $ rails g migration add_ancestry_to_[table]
 ```
 
@@ -80,18 +42,13 @@ class AddAncestryToTable < ActiveRecord::Migration[7.0]
   def change
     change_table(:table) do |t|
       t.ancestry
+      # t.ancestry format: :materialized_path3, cache_depth: true, parent: true, counter_cache: true
     end
   end
 end
 ```
 
-The `t.ancestry` helper creates the column with the correct type, collation, and indexes
-for your database. It accepts options for [cached columns](#cached-columns) and
-[ancestry formats](#ancestry-formats):
-
-```ruby
-t.ancestry format: :materialized_path2, cache_depth: true, parent: true, counter_cache: true
-```
+The `t.ancestry` helper creates the column with the correct type, collation, and indexes for your database. It accepts options for [cached columns](#cached-columns) and [ancestry formats](#ancestry-formats).
 
 For manual column setup or advanced options, see [Ancestry Database Column](#ancestry-database-column).
 
@@ -102,12 +59,15 @@ $ rake db:migrate
 ## Configure ancestry defaults
 
 ```ruby
-# config/initializers/ancestry.rb
+# config/initializers/ancestry.rb (optional)
 
 # use the newer format
-Ancestry.default_ancestry_format = :materialized_path2
+Ancestry.default_ancestry_format = :materialized_path3
 # Ancestry.default_update_strategy = :sql
+# Ancestry.primary_key_format = :uuid
 ```
+
+You can set some default ancestry options, or add them to each `has_ancestry` call in your models.
 
 ## Add ancestry to your model
 
@@ -137,29 +97,30 @@ Children can be created through the children relation on a node: `node.children.
 The node with the large border is the reference node (the node from which the navigation method is invoked.)
 The yellow nodes are those returned by the method.
 
-|                               |                                                     |                                 |
-|:-:                            |:-:                                                  |:-:                              |
-|**parent**                     |**root**<sup><a href="#fn1" id="ref1">1</a></sup>    |**ancestors**                    |
-|![parent](/img/parent.png)     |![root](/img/root.png)                               |![ancestors](/img/ancestors.png) |
-| nil for a root node           |self for a root node                                 |root..parent                     |
-| `parent_id`                   |`root_id`                                            |`ancestor_ids`                   |
-| `has_parent?`                 |`is_root?`                                           |`ancestors?`                     |
-|`parent_of?`                   |`root_of?`                                           |`ancestor_of?`                   |
-|**children**                   |**descendants**                                      |**indirects**                    |
-|![children](/img/children.png) |![descendants](/img/descendants.png)                 |![indirects](/img/indirects.png) |
-| `child_ids`                   |`descendant_ids`                                     |`indirect_ids`                   |
-| `has_children?`               |                                                     |                                 |
-| `child_of?`                   |`descendant_of?`                                     |`indirect_of?`                   |
-|**siblings**                   |**subtree**                                          |**path**                         |
-|![siblings](/img/siblings.png) |![subtree](/img/subtree.png)                         |![path](/img/path.png)           |
-| excludes self                 |self..indirects                                      |root..self                       |
-|`sibling_ids`                  |`subtree_ids`                                        |`path_ids`                       |
-|`has_siblings?`                |                                                     |                                 |
-|`sibling_of?(node)`            |`in_subtree_of?`                                     |                                 |
+|                               |                                                     |                                 |                             |
+|:-:                            |:-:                                                  |:-:                              |:-:                          |
+|**parent**                     |**ancestors**                                        |**path**                         |**root**                     |
+|![parent](/img/parent.png)     |![ancestors](/img/ancestors.png)                     |![path](/img/path.png)           |![root](/img/root.png)       |
+| nil for a root node           | root..parent                                        | root..self                      | self for a root node        |
+| `parent_id`                   | `ancestor_ids`                                      | `path_ids`                      | `root_id`                   |
+| `has_parent?`                 |                                                     |                                 | `is_root?`                  |
+| `parent_of?`                  | `ancestor_of?`                                      |                                 | `root_of?`                  |
+|**children**                   |**descendants**                                      |**subtree**                      |**leaves**                   |
+|![children](/img/children.png) |![descendants](/img/descendants.png)                 |![subtree](/img/subtree.png)     |![leaves](/img/leaves.png)   |
+| direct children               | all below                                           | self + descendants              | descendants with no children|
+| `child_ids`                   | `descendant_ids`                                    | `subtree_ids`                   | `leaf_ids`                  |
+| `has_children?`               |                                                     |                                 | `is_leaf?`                  |
+| `child_of?`                   | `descendant_of?`                                    | `in_subtree_of?`                |                             |
+|**siblings**<sup><a href="#fn1" id="ref1">1</a></sup>                                |**indirects**                    |                             |
+|![siblings](/img/siblings.png) |![indirects](/img/indirects.png)                     |                                 |                             |
+| excludes self                 | descendants - children                              |                                 |                             |
+| `sibling_ids`                 | `indirect_ids`                                      |                                 |                             |
+| `has_siblings?`               |                                                     |                                 |                             |
+| `sibling_of?`                 | `indirect_of?`                                      |                                 |                             |
 
 When using `STI` all classes are returned from the scopes unless you specify otherwise using `where(:type => "ChildClass")`.
 
-<sup id="fn1">1. [other root records are considered siblings]<a href="#ref1" title="Jump back to footnote 1.">↩</a></sup>
+<sup id="fn1">1. [root nodes are siblings of each other]<a href="#ref1" title="Jump back to footnote 1.">↩</a></sup>
 
 # has_ancestry options
 
@@ -321,7 +282,7 @@ The `t.ancestry` migration helper handles column type, collation, and indexes au
 For most applications, `t.ancestry` is all you need.
 
 For manual column setup, database-specific collation options, and migrating collation on
-existing columns, see [Formats and Columns](FORMATS_AND_COLUMNS.md).
+existing columns, see [Configuration Reference](CONFIGURATION.md).
 
 # Ancestry Formats
 
@@ -331,12 +292,11 @@ You can choose from the following ancestry formats:
 - `:materialized_path2` - recommended for new columns
 - `:materialized_path3` - like mp2 but root is `""` instead of `"/"`
 - `:ltree` - PostgreSQL ltree type with GiST indexing
-- `:array` - PostgreSQL integer array. No string parsing, native array operations
 
 If you are unsure, choose `:materialized_path2`. It allows a `NOT NULL` column and
 faster descendant queries (one less `OR` condition).
 
-For PostgreSQL users who want native indexing, `:ltree` and `:array` avoid string
+For PostgreSQL users who want native indexing, `:ltree` avoids string
 parsing and collation issues entirely:
 
 ```ruby
@@ -345,164 +305,20 @@ enable_extension 'ltree'
 create_table :tree_nodes do |t|
   t.ancestry format: :ltree
 end
-
-# array — integer[], GIN-indexed @> containment
-create_table :tree_nodes do |t|
-  t.ancestry format: :array
-end
 ```
 
 For detailed format comparison, migration between formats, and database-specific
-column options, see [Formats and Columns](FORMATS_AND_COLUMNS.md).
+column options, see [Configuration Reference](CONFIGURATION.md#ancestry-formats).
 
-# Migrating from plugin that uses parent_id column
+# Supported Rails Versions
 
-It should be relatively simple to migrating from a plugin that uses a `parent_id`
-column, (e.g.: `awesome_nested_set`, `better_nested_set`, `acts_as_nested_set`).
-
-When running the installation steps, also remove the old gem from your `Gemfile`,
-and remove the old gem's macros from the model.
-
-Then populate the `ancestry` column from rails console:
-
-```ruby
-Model.build_ancestry_from_parent_ids!
-# Model.rebuild_depth_cache!
-Model.check_ancestry_integrity!
-```
-
-It is time to run your code. Most tree methods should work fine with ancestry
-and hopefully your tests only require a few minor tweaks to get up and running.
-
-Once you are happy with how your app is running, remove the old `parent_id` column:
-
-```bash
-$ rails g migration remove_parent_id_from_[table]
-```
-
-```ruby
-class RemoveParentIdFromToTable < ActiveRecord::Migration[6.1]
-  def change
-    remove_column "table", "parent_id", type: :integer
-  end
-end
-```
-
-```bash
-$ rake db:migrate
-```
-
-# Cached columns
-
-Ancestry derives `parent_id`, `root_id`, and `depth` by parsing the ancestry column.
-These options store those values in real database columns for use in queries, joins, and indexing.
-
-| Option         | Default column   | Rebuild method                  |
-|----------------|------------------|---------------------------------|
-| `cache_depth: true` | `ancestry_depth` | `Model.rebuild_depth_cache!` |
-| `parent: true` | `parent_id`      | `Model.rebuild_parent_id_cache!`|
-| `root: true`   | `root_id`        | `Model.rebuild_root_id_cache!`  |
-
-Each option also accepts `:virtual` to use a database
-[generated column](https://dev.mysql.com/doc/refman/8.0/en/create-table-generated-columns.html)
-instead of callbacks. Generated columns are defined in your migration and computed automatically
-by the database from the ancestry column — no rebuild step is needed. Requires Rails 7.2+ for
-SQLite, or Rails 7.0+ for PostgreSQL and MySQL.
-
-The `parent_id` and `root_id` are already derived efficiently from the ancestry column, so most
-applications do not need `parent: true` or `root: true`. Use `:virtual` if you want these columns
-for database-level joins or foreign keys without callback overhead.
-
-Note: `root: :virtual` is not supported on MySQL. MySQL generated columns cannot reference
-auto-increment columns, and `root_id` must equal `id` for root nodes. Use `root: true`
-(callback-maintained) on MySQL instead.
-
-Note: `root: true` requires an extra UPDATE after creating root nodes, since the `root_id` of a
-root node is its own `id`, which is not available until after the record is inserted.
-
-## Associations
-
-When `parent: true` is set, ancestry defines real ActiveRecord associations:
-
-- `belongs_to :parent` — enables `includes(:parent)` and `joins(:parent)`
-- `has_many :children` — enables `includes(:children)` and `joins(:children)`
-
-When `root: true` is set:
-
-- `belongs_to :root` — enables `includes(:root)` and `joins(:root)`
-
-These are standard ActiveRecord associations backed by real database columns, so they support
-eager loading, preloading, and inverse caching:
-
-```ruby
-class TreeNode < ActiveRecord::Base
-  has_ancestry parent: true
-end
-
-# Eager load parents to avoid N+1
-TreeNode.where(depth: 2).includes(:parent)
-
-# Eager load children
-roots = TreeNode.roots.includes(:children)
-roots.each { |r| r.children } # no extra queries
-
-# Join queries
-TreeNode.joins(:parent).where(parents_tree_nodes: { name: "Root" })
-```
-
-Virtual columns (`parent: :virtual`, `root: :virtual`) also define associations. Since the database
-computes these columns automatically, they support eager loading and joins without callback overhead.
-
-## Migration
-
-Cache columns can be added with `t.ancestry` when creating the table:
-
-```ruby
-create_table :table do |t|
-  t.ancestry cache_depth: true, parent: true
-end
-```
-
-Or added to an existing table manually:
-
-```ruby
-class AddDepthCacheToTable < ActiveRecord::Migration[7.0]
-  def change
-    change_table(:table) do |t|
-      t.integer "ancestry_depth", default: 0
-    end
-  end
-end
-```
-
-## Model
-
-```ruby
-class [Model] < ActiveRecord::Base
-  has_ancestry cache_depth: true
-end
-```
-
-## Populating existing data
-
-After adding a cached column to an existing table, populate it from the console or a script:
-
-```ruby
-Model.rebuild_depth_cache!
-```
-
-## Depth Constraints
-
-You can use standard Rails validations on your depth cache column to restrict the depth of your tree. For example, to ensure no nodes are deeper than 2:
-
-```ruby
-class TreeNode < ActiveRecord::Base
-  has_ancestry cache_depth: true
-  validates :ancestry_depth, numericality: { less_than_or_equal_to: 2 }
-end
-```
-
-Ancestry will automatically validate not just the node itself, but also ensure that moving a subtree does not cause any of its descendants to exceed the maximum depth.
+| Ancestry | Rails              |
+|----------|---------------------|
+| 2.x      | 4.1 and earlier     |
+| 3.x      | 4.2 – 5.0          |
+| 4.x      | 5.2 – 7.0          |
+| 5.x      | 6.0 – 8.1          |
+| 6.x      | 7.0 – 8.1          |
 
 # Running Tests
 

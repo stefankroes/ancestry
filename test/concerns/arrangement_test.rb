@@ -325,4 +325,24 @@ class ArrangementTest < ActiveSupport::TestCase
       assert_match(/\|_ grandchild/, lines[2])
     end
   end
+
+  def test_flatten_arranged_nodes
+    AncestryTestDatabase.with_model do |model|
+      root = model.create!
+      child1 = model.create!(:parent => root)
+      child2 = model.create!(:parent => root)
+      grandchild = model.create!(:parent => child1)
+
+      arranged = model.arrange
+      flat = model.flatten_arranged_nodes(arranged)
+
+      assert_equal 4, flat.size
+      assert_equal root, flat.first
+
+      # parent always comes before children
+      assert flat.index(root) < flat.index(child1)
+      assert flat.index(root) < flat.index(child2)
+      assert flat.index(child1) < flat.index(grandchild)
+    end
+  end
 end
