@@ -479,21 +479,18 @@ module Ancestry
         end
 
         def descendants_of(object)
-          where(descendant_conditions(object))
-        end
-
-        def descendants_by_ancestry(child_ancestry)
-          #{format_module}.descendants_condition(arel_table[:#{column}], child_ancestry)
+          node = to_node(object)
+          where(#{format_module}.descendants_condition(arel_table[:#{column}], node.child_ancestry))
         end
 
         def descendant_conditions(object)
           node = to_node(object)
-          descendants_by_ancestry(node.child_ancestry)
+          #{format_module}.descendants_condition(arel_table[:#{column}], node.child_ancestry)
         end
 
         def descendant_before_last_save_conditions(object)
           node = to_node(object)
-          descendants_by_ancestry(node.child_ancestry_before_last_save)
+          #{format_module}.descendants_condition(arel_table[:#{column}], node.child_ancestry_before_last_save)
         end
 
         def subtree_of(object)
