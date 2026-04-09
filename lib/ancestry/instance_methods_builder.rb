@@ -438,6 +438,16 @@ module Ancestry
         def touch_ancestors_callback
           Ancestry::ClassMethods._touch_ancestors_callback(self)
         end
+
+        private
+
+        def unscoped_descendants
+          unscoped_where { |scope| scope.where(#{format_module}.descendants_condition(scope.arel_table[:#{column}], child_ancestry)) }
+        end
+
+        def unscoped_descendants_before_last_save
+          unscoped_where { |scope| scope.where(#{format_module}.descendants_condition(scope.arel_table[:#{column}], child_ancestry_before_last_save)) }
+        end
       RUBY
 
       # Class methods submodule — auto-extended when the main module is included
@@ -481,16 +491,6 @@ module Ancestry
         def descendants_of(object)
           node = to_node(object)
           where(#{format_module}.descendants_condition(arel_table[:#{column}], node.child_ancestry))
-        end
-
-        def descendant_conditions(object)
-          node = to_node(object)
-          #{format_module}.descendants_condition(arel_table[:#{column}], node.child_ancestry)
-        end
-
-        def descendant_before_last_save_conditions(object)
-          node = to_node(object)
-          #{format_module}.descendants_condition(arel_table[:#{column}], node.child_ancestry_before_last_save)
         end
 
         def subtree_of(object)

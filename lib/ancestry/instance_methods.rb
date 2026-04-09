@@ -82,18 +82,6 @@ module Ancestry
 
     private
 
-    def unscoped_descendants
-      unscoped_where do |scope|
-        scope.where(self.class.ancestry_base_class.descendant_conditions(self))
-      end
-    end
-
-    def unscoped_descendants_before_last_save
-      unscoped_where do |scope|
-        scope.where(self.class.ancestry_base_class.descendant_before_last_save_conditions(self))
-      end
-    end
-
     # works with after save context (hence before_last_save)
     def unscoped_current_and_previous_ancestors
       unscoped_where do |scope|
