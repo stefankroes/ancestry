@@ -12,14 +12,22 @@ module Ancestry
     end
 
     # Scope on relative depth options
+    # Writes depth constraints directly against depth_cache_sql rather than
+    # dispatching through the 5 named scopes.
+    DEPTH_OPERATORS = {
+      before_depth: '<',
+      to_depth:     '<=',
+      at_depth:     '=',
+      from_depth:   '>=',
+      after_depth:  '>',
+    }.freeze
+
     def scope_depth(depth_options, depth)
-      depth_options.inject(ancestry_base_class) do |scope, option|
-        scope_name, relative_depth = option
-        if [:before_depth, :to_depth, :at_depth, :from_depth, :after_depth].include? scope_name
-          scope.send scope_name, depth + relative_depth
-        else
-          raise Ancestry::AncestryException, I18n.t("ancestry.unknown_depth_option", scope_name: scope_name)
-        end
+      depth_sql = ancestry_depth_sql
+      depth_options.inject(ancestry_base_class) do |scope, (scope_name, relative_depth)|
+        operator = DEPTH_OPERATORS[scope_name]
+        raise Ancestry::AncestryException, I18n.t("ancestry.unknown_depth_option", scope_name: scope_name) unless operator
+        scope.where("#{depth_sql} #{operator} ?", depth + relative_depth)
       end
     end
 
@@ -297,6 +305,70 @@ module Ancestry
       end
 
       fixed
+    end
+
+    # Static helpers for callback methods.
+    # Builder generates thin wrappers that delegate here with baked-in column.
+
+    def self._ancestry_exclude_self(record)
+      record.errors.add(:base, I18n.t("ancestry.exclude_self", class_name: record.class.model_name.human)) if record.ancestor_ids.include?(record.id)
+    end
+
+    def self._update_descendants_with_new_ancestry(record)
+      return if record.ancestry_callbacks_disabled? || !record.sane_ancestor_ids?
+
+      record.send(:unscoped_descendants_before_last_save).each do |descendant|
+        descendant.without_ancestry_callbacks do
+          new_ancestor_ids = record.path_ids + (descendant.ancestor_ids - record.path_ids_before_last_save)
+          descendant.update_attribute(:ancestor_ids, new_ancestor_ids)
+        end
+      end
+    end
+
+    def self._apply_orphan_strategy_rootify(record)
+      return if record.ancestry_callbacks_disabled? || record.new_record?
+
+      record.send(:unscoped_descendants).each do |descendant|
+        descendant.without_ancestry_callbacks do
+          descendant.update_attribute :ancestor_ids, descendant.ancestor_ids - record.path_ids
+        end
+      end
+    end
+
+    def self._apply_orphan_strategy_destroy(record)
+      return if record.ancestry_callbacks_disabled? || record.new_record?
+
+      record.send(:unscoped_descendants).ordered_by_ancestry.reverse_order.each do |descendant|
+        descendant.without_ancestry_callbacks do
+          descendant.destroy
+        end
+      end
+    end
+
+    def self._apply_orphan_strategy_adopt(record)
+      return if record.ancestry_callbacks_disabled? || record.new_record?
+
+      record.class.ancestry_base_class.descendants_of(record).each do |descendant|
+        descendant.without_ancestry_callbacks do
+          descendant.update_attribute :ancestor_ids, descendant.ancestor_ids - [record.id]
+        end
+      end
+    end
+
+    def self._apply_orphan_strategy_restrict(record)
+      return if record.ancestry_callbacks_disabled? || record.new_record?
+
+      raise(Ancestry::AncestryException, I18n.t("ancestry.cannot_delete_descendants")) unless record.is_childless?
+    end
+
+    def self._touch_ancestors_callback(record)
+      return if record.ancestry_callbacks_disabled?
+
+      record.send(:unscoped_current_and_previous_ancestors).each do |ancestor|
+        ancestor.without_ancestry_callbacks do
+          ancestor.touch
+        end
+      end
     end
 
     def unscoped_where

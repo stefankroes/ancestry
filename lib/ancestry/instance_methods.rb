@@ -2,79 +2,6 @@
 
 module Ancestry
   module InstanceMethods
-    # Validate that the ancestors don't include itself
-    def ancestry_exclude_self
-      errors.add(:base, I18n.t("ancestry.exclude_self", class_name: self.class.model_name.human)) if ancestor_ids.include?(id)
-    end
-
-    # Update descendants with new ancestry (after update)
-    def update_descendants_with_new_ancestry
-      # If enabled and the new ancestry is sane ...
-      # The only way the ancestry could be bad is via `update_attribute` with a bad value
-      if !ancestry_callbacks_disabled? && sane_ancestor_ids?
-        # ... for each descendant ...
-        unscoped_descendants_before_last_save.each do |descendant|
-          # ... replace old ancestry with new ancestry
-          descendant.without_ancestry_callbacks do
-            new_ancestor_ids = path_ids + (descendant.ancestor_ids - path_ids_before_last_save)
-            descendant.update_attribute(:ancestor_ids, new_ancestor_ids)
-          end
-        end
-      end
-    end
-
-    # make all children root if orphan strategy is rootify
-    def apply_orphan_strategy_rootify
-      return if ancestry_callbacks_disabled? || new_record?
-
-      unscoped_descendants.each do |descendant|
-        descendant.without_ancestry_callbacks do
-          descendant.update_attribute :ancestor_ids, descendant.ancestor_ids - path_ids
-        end
-      end
-    end
-
-    # destroy all descendants if orphan strategy is destroy
-    def apply_orphan_strategy_destroy
-      return if ancestry_callbacks_disabled? || new_record?
-
-      unscoped_descendants.ordered_by_ancestry.reverse_order.each do |descendant|
-        descendant.without_ancestry_callbacks do
-          descendant.destroy
-        end
-      end
-    end
-
-    # make child elements of this node, child of its parent
-    def apply_orphan_strategy_adopt
-      return if ancestry_callbacks_disabled? || new_record?
-
-      descendants.each do |descendant|
-        descendant.without_ancestry_callbacks do
-          descendant.update_attribute :ancestor_ids, descendant.ancestor_ids - [id]
-        end
-      end
-    end
-
-    # throw an exception if it has children
-    def apply_orphan_strategy_restrict
-      return if ancestry_callbacks_disabled? || new_record?
-
-      raise(Ancestry::AncestryException, I18n.t("ancestry.cannot_delete_descendants")) unless is_childless?
-    end
-
-    # Touch each of this record's ancestors (after save)
-    def touch_ancestors_callback
-      if !ancestry_callbacks_disabled?
-        # Touch each of the old *and* new ancestors
-        unscoped_current_and_previous_ancestors.each do |ancestor|
-          ancestor.without_ancestry_callbacks do
-            ancestor.touch
-          end
-        end
-      end
-    end
-
     # Validate that descendants' depths don't exceed max depth when moving them
     # Called from generated ancestry_depth_of_descendants with baked column names
     def validate_depth_of_descendants(depth_cache_column, depth_change)
@@ -95,30 +22,30 @@ module Ancestry
     end
 
     # Sync parent cache column and reset association after ancestry change
-    def ancestry_sync_parent_cache(parent_cache_column, value)
+    def ancestry_sync_parent_cache(parent_cache_column, value, association_name = :parent)
       write_attribute(parent_cache_column, value.last) if parent_cache_column
-      association(:parent).reset if association_cached?(:parent)
+      association(association_name).reset if association_cached?(association_name)
     end
 
     # Sync root cache column and reset association after ancestry change
-    def ancestry_sync_root_cache(root_cache_column, value)
+    def ancestry_sync_root_cache(root_cache_column, value, association_name = :root)
       write_attribute(root_cache_column, value.first || id) if root_cache_column
-      association(:root).reset if association_cached?(:root)
+      association(association_name).reset if association_cached?(association_name)
     end
 
     # Look up parent, using association cache when available
-    def ancestry_lookup_parent
-      if association(:parent).loaded?
-        association(:parent).target
+    def ancestry_lookup_parent(association_name = :parent)
+      if association(association_name).loaded?
+        association(association_name).target
       else
         unscoped_where { |scope| scope.find_by(scope.primary_key => parent_id) }
       end
     end
 
     # Look up root, using association cache when available
-    def ancestry_lookup_root
-      if association(:root).loaded?
-        association(:root).target || self
+    def ancestry_lookup_root(association_name = :root)
+      if association(association_name).loaded?
+        association(association_name).target || self
       else
         unscoped_where { |scope| scope.find_by(scope.primary_key => root_id) } || self
       end
