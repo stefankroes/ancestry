@@ -409,6 +409,35 @@ module Ancestry
             end
           RUBY
         end}
+
+        # Callback wrappers — delegate to static helpers in ClassMethods
+        def ancestry_exclude_self
+          Ancestry::ClassMethods._ancestry_exclude_self(self)
+        end
+
+        def update_descendants_with_new_ancestry
+          Ancestry::ClassMethods._update_descendants_with_new_ancestry(self)
+        end
+
+        def apply_orphan_strategy_rootify
+          Ancestry::ClassMethods._apply_orphan_strategy_rootify(self)
+        end
+
+        def apply_orphan_strategy_destroy
+          Ancestry::ClassMethods._apply_orphan_strategy_destroy(self)
+        end
+
+        def apply_orphan_strategy_adopt
+          Ancestry::ClassMethods._apply_orphan_strategy_adopt(self)
+        end
+
+        def apply_orphan_strategy_restrict
+          Ancestry::ClassMethods._apply_orphan_strategy_restrict(self)
+        end
+
+        def touch_ancestors_callback
+          Ancestry::ClassMethods._touch_ancestors_callback(self)
+        end
       RUBY
 
       # Class methods submodule — auto-extended when the main module is included
