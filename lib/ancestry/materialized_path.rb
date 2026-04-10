@@ -44,12 +44,11 @@ module Ancestry
       attr.eq(root)
     end
 
-    # SQL condition: nodes with no children
-    # child_ancestry_sql: SQL expression that computes this node's child_ancestry
+    # Arel condition: nodes with no children
     def self.leaves_condition(attr, child_ancestry_sql)
-      table_name = attr.relation.name
-      column_name = attr.name
-      "NOT EXISTS (SELECT 1 FROM #{table_name} c WHERE c.#{column_name} = (#{child_ancestry_sql}))"
+      child_table = Arel::Table.new(attr.relation.name, as: 'c')
+      subquery = child_table.where(child_table[attr.name].eq(Arel.sql(child_ancestry_sql))).project(1)
+      Arel::Nodes::Not.new(Arel::Nodes::Exists.new(subquery.ast))
     end
 
     # Arel condition: children have ancestry equal to child_ancestry
