@@ -35,6 +35,24 @@ module Ancestry
       end
     end
 
+    def self.roots_condition(attr)
+      attr.eq(root)
+    end
+
+    def self.leaves_condition(attr, child_ancestry_sql)
+      table_name = attr.relation.name
+      column_name = attr.name
+      "NOT EXISTS (SELECT 1 FROM #{table_name} c WHERE c.#{column_name} = (#{child_ancestry_sql}))"
+    end
+
+    def self.children_condition(attr, child_ancestry)
+      attr.eq(child_ancestry)
+    end
+
+    def self.siblings_condition(attr, ancestry_value)
+      attr.eq(ancestry_value)
+    end
+
     # Arel condition: descendants have ancestry starting with child_ancestry prefix
     # Uses slice comparison (ancestry[1:N] = ARRAY[...]) for correct prefix matching.
     # @> containment is faster (GIN-indexable) but order-independent — it returns

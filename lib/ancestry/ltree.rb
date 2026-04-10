@@ -39,6 +39,10 @@ module Ancestry
       ancestry_value.blank? ? id.to_s : "#{ancestry_value}.#{id}"
     end
 
+    def self.siblings_condition(attr, ancestry_value)
+      attr.eq(ancestry_value)
+    end
+
     # Arel condition: descendants using ltree <@ (descendant-of) operator
     def self.descendants_condition(attr, child_ancestry)
       Arel::Nodes::InfixOperation.new('<@', attr, Arel.sql("'#{child_ancestry}'"))

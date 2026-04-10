@@ -42,6 +42,10 @@ module Ancestry
       concat(adapter, "#{table_name}.#{ancestry_column}", "#{table_name}.#{primary_key}", "'/'")
     end
 
+    def self.siblings_condition(attr, ancestry_value)
+      attr.eq(ancestry_value)
+    end
+
     # mp2: descendants just use LIKE (trailing delimiter prevents false prefix matches)
     def self.descendants_condition(attr, child_ancestry)
       attr.matches("#{child_ancestry}%", nil, true)

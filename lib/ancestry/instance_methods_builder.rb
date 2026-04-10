@@ -465,7 +465,7 @@ module Ancestry
         end
 
         def roots
-          where(arel_table[:#{column}].eq(#{root.inspect}))
+          where(#{format_module}.roots_condition(arel_table[:#{column}]))
         end
 
         def ancestors_of(object)
@@ -480,7 +480,7 @@ module Ancestry
 
         def children_of(object)
           node = to_node(object)
-          where(arel_table[:#{column}].eq(node.child_ancestry))
+          where(#{format_module}.children_condition(arel_table[:#{column}], node.child_ancestry))
         end
 
         def indirects_of(object)
@@ -500,11 +500,11 @@ module Ancestry
 
         def siblings_of(object)
           node = to_node(object)
-          where(arel_table[:#{column}].eq(node[#{column.inspect}]#{ ".presence" if root.nil? }))
+          where(#{format_module}.siblings_condition(arel_table[:#{column}], node[#{column.inspect}]))
         end
 
         def leaves
-          where("NOT EXISTS (SELECT 1 FROM \#{table_name} c WHERE c.#{column} = (\#{child_ancestry_sql}))")
+          where(#{format_module}.leaves_condition(arel_table[:#{column}], child_ancestry_sql))
         end
 
         def leaves_of(object)
