@@ -35,6 +35,24 @@ module Ancestry
       end
     end
 
+    def self.roots_condition(attr)
+      attr.eq(root)
+    end
+
+    def self.leaves_condition(attr, child_ancestry_sql)
+      child_table = Arel::Table.new(attr.relation.name, as: 'c')
+      subquery = child_table.where(child_table[attr.name].eq(Arel.sql(child_ancestry_sql))).project(1)
+      Arel::Nodes::Not.new(Arel::Nodes::Exists.new(subquery.ast))
+    end
+
+    def self.children_condition(attr, child_ancestry)
+      attr.eq(child_ancestry)
+    end
+
+    def self.siblings_condition(attr, ancestry_value)
+      attr.eq(ancestry_value)
+    end
+
     # Arel condition: descendants have ancestry starting with child_ancestry prefix
     # Uses slice comparison (ancestry[1:N] = ARRAY[...]) for correct prefix matching.
     # @> containment is faster (GIN-indexable) but order-independent — it returns

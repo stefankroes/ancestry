@@ -39,6 +39,28 @@ module Ancestry
       [ancestry_value, id].compact.join(DELIMITER)
     end
 
+    # Arel condition: root nodes have ancestry equal to the root value
+    def self.roots_condition(attr)
+      attr.eq(root)
+    end
+
+    # Arel condition: nodes with no children
+    def self.leaves_condition(attr, child_ancestry_sql)
+      child_table = Arel::Table.new(attr.relation.name, as: 'c')
+      subquery = child_table.where(child_table[attr.name].eq(Arel.sql(child_ancestry_sql))).project(1)
+      Arel::Nodes::Not.new(Arel::Nodes::Exists.new(subquery.ast))
+    end
+
+    # Arel condition: children have ancestry equal to child_ancestry
+    def self.children_condition(attr, child_ancestry)
+      attr.eq(child_ancestry)
+    end
+
+    # Arel condition: siblings share the same ancestry value
+    def self.siblings_condition(attr, ancestry_value)
+      attr.eq(ancestry_value.presence)
+    end
+
     # Arel condition: descendants have ancestry matching child_ancestry or starting with child_ancestry/
     def self.descendants_condition(attr, child_ancestry)
       attr.matches("#{child_ancestry}/%", nil, true).or(attr.eq(child_ancestry))
