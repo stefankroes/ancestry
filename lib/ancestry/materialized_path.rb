@@ -5,6 +5,8 @@ module Ancestry
   # root a=nil,id=1   children=id,id/%      == 1, 1/%
   # 3: a=1/2,id=3     children=a/id,a/id/%  == 1/2/3, 1/2/3/%
   class MaterializedPath
+    extend Ancestry::Adapter
+
     def self.root
       nil
     end
@@ -69,14 +71,6 @@ module Ancestry
     # Arel condition: indirects have ancestry matching child_ancestry/*/
     def self.indirects_condition(attr, child_ancestry)
       attr.matches("#{child_ancestry}/%", nil, true)
-    end
-
-    def self.concat(adapter, *args)
-      if %w(sqlite sqlite3).include?(adapter)
-        args.join('||')
-      else
-        %{CONCAT(#{args.join(', ')})}
-      end
     end
 
     # SQL to replace old ancestry prefix with new ancestry prefix in descendants

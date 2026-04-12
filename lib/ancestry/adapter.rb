@@ -12,25 +12,25 @@ module Ancestry
     SQLITE = %w(sqlite sqlite3).freeze
 
     def pg?(adapter = current)
-      PG.include?(normalize(adapter))
+      PG.include?(adapter.to_s.downcase)
     end
 
     def mysql?(adapter = current)
-      MYSQL.include?(normalize(adapter))
+      MYSQL.include?(adapter.to_s.downcase)
     end
 
     def sqlite?(adapter = current)
-      SQLITE.include?(normalize(adapter))
+      SQLITE.include?(adapter.to_s.downcase)
     end
 
     def current
       ActiveRecord::Base.connection.adapter_name
     end
 
-    private
-
-    def normalize(adapter)
-      adapter.to_s.downcase
+    # Cross-DB string concatenation. SQLite uses ||; PG/MySQL use CONCAT().
+    # Returns a SQL fragment as a String — not an Arel node.
+    def concat(adapter, *args)
+      sqlite?(adapter) ? args.join('||') : "CONCAT(#{args.join(', ')})"
     end
   end
 end
