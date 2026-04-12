@@ -45,16 +45,15 @@ module Ancestry
 
     # Arel condition: descendants using ltree <@ (descendant-of) operator
     def self.descendants_condition(attr, child_ancestry)
-      Arel::Nodes::InfixOperation.new('<@', attr, Arel.sql("'#{child_ancestry}'"))
+      Arel::Nodes::InfixOperation.new('<@', attr, Arel::Nodes::Quoted.new(child_ancestry))
     end
 
     # Arel condition: indirects (descendants excluding children)
     def self.indirects_condition(attr, child_ancestry)
-      table_name = attr.relation.name
-      column_name = attr.name
       desc = descendants_condition(attr, child_ancestry)
-      depth_check = Arel.sql("nlevel(#{table_name}.#{column_name}) > nlevel('#{child_ancestry}')")
-      Arel::Nodes::And.new([desc, depth_check])
+      attr_nlevel  = Arel::Nodes::NamedFunction.new('nlevel', [attr])
+      value_nlevel = Arel::Nodes::NamedFunction.new('nlevel', [Arel::Nodes::Quoted.new(child_ancestry)])
+      Arel::Nodes::And.new([desc, attr_nlevel.gt(value_nlevel)])
     end
 
     # SQL to replace old ancestry prefix with new ancestry prefix in descendants
