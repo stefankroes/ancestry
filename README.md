@@ -2,6 +2,11 @@
 
 # Ancestry
 
+> **Reading these docs on GitHub?** The `master` branch reflects bleeding-edge
+> development and may describe features not yet released. Use the branch
+> selector above to switch to the [tag](https://github.com/stefankroes/ancestry/tags)
+> matching the version of the gem you have installed.
+
 ## Overview
 
 Ancestry is a gem that allows rails ActiveRecord models to be organized as
