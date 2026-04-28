@@ -5,6 +5,11 @@ Full reference for `has_ancestry` options, global defaults, and advanced setup.
 For getting started, see the [README](README.md).
 For upgrading between versions, see [Upgrading](docs/UPGRADING.md).
 
+> **Reading these docs on GitHub?** The `master` branch reflects bleeding-edge
+> development and may describe features not yet released. Use the branch
+> selector above to switch to the [tag](https://github.com/stefankroes/ancestry/tags)
+> matching the version of the gem you have installed.
+
 ## Table of Contents
 
 - [Ancestry Formats](#ancestry-formats)
@@ -77,12 +82,20 @@ klass = YourModel
 klass.where.not(ancestry: '/').update_all("ancestry = SUBSTRING(ancestry, 2)")
 # Convert root nodes: "/" → ""
 klass.where(ancestry: '/').update_all("ancestry = ''")
+```
 
 ## Cached Columns
 
 Ancestry derives `parent_id`, `root_id`, and `depth` by parsing the ancestry
 column. These options store those values in real database columns for queries,
 joins, and indexing.
+
+Each of the options below also accepts `:virtual` to use a database generated
+column instead of callbacks. Generated columns are defined in your migration
+and computed automatically by the database from the ancestry column — no
+rebuild step is needed. See your database's docs for details:
+[MySQL](https://dev.mysql.com/doc/refman/8.0/en/create-table-generated-columns.html),
+[PostgreSQL](https://www.postgresql.org/docs/current/ddl-generated-columns.html).
 
 ### Depth Cache
 
