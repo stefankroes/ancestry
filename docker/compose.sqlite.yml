@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        BUNDLE_INSTALL_SQLITE3: "1"
+    image: ancestry-dev:sqlite
+    working_dir: /app
+    command: ["sleep", "infinity"]
+    volumes:
+      - ..:/app:Z

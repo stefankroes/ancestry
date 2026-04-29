@@ -2,6 +2,7 @@
 
 require 'rubygems'
 require 'bundler/setup'
+require 'erb'
 
 if ENV["COVERAGE"]
   require 'simplecov'
@@ -281,11 +282,13 @@ class AncestryTestDatabase
                      File.expand_path('../database.ci.yml', __FILE__)
                    end
 
+        yaml = ERB.new(File.read(filename)).result
+
         all_config =
-          if YAML.respond_to?(:safe_load_file)
-            YAML.safe_load_file(filename, aliases: true)
+          if YAML.respond_to?(:safe_load)
+            YAML.safe_load(yaml, aliases: true)
           else
-            YAML.load_file(filename)
+            YAML.load(yaml)
           end
 
         # Setup database connection
