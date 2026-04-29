@@ -13,7 +13,7 @@ module Ancestry
     # @param parent_cache_column [String, nil] column name for parent cache, or nil
     # @param root_cache_column [String, nil] column name for root cache, or nil
     # @return [Module] a named module with baked-in instance methods
-    def self.build(format_module, column, root, primary_key: :id, integer_pk: nil, depth_cache_column: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil, parent_association: false, root_association: false)
+    def self.build(format_module, column, root, primary_key:, integer_pk: nil, depth_cache_column: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil, parent_association: false, root_association: false)
       pk = primary_key
       parse_method = integer_pk ? :parse_integer : :parse
       format_name = format_module.name.split("::").last
@@ -84,7 +84,7 @@ module Ancestry
         def child_ancestry
           raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")) if new_record?
 
-          #{format_module}.child_ancestry_value(attribute_in_database(:#{column}), id)
+          #{format_module}.child_ancestry_value(attribute_in_database(:#{column}), ancestry_id)
         end
 
         def child_ancestry_before_last_save
@@ -92,7 +92,7 @@ module Ancestry
             raise Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")
           end
 
-          #{format_module}.child_ancestry_value(attribute_before_last_save(:#{column}), id)
+          #{format_module}.child_ancestry_value(attribute_before_last_save(:#{column}), ancestry_id)
         end
 
         def ancestry_changed?
@@ -123,7 +123,7 @@ module Ancestry
         alias parent_id? ancestors?
 
         def root_id
-          has_parent? ? ancestor_ids.first : id
+          has_parent? ? ancestor_ids.first : ancestry_id
         end
 
         def depth
@@ -136,45 +136,45 @@ module Ancestry
         alias root? is_root?
 
         def path_ids
-          ancestor_ids + [id]
+          ancestor_ids + [ancestry_id]
         end
 
         def path_ids_before_last_save
-          ancestor_ids_before_last_save + [id]
+          ancestor_ids_before_last_save + [ancestry_id]
         end
 
         def path_ids_in_database
-          ancestor_ids_in_database + [id]
+          ancestor_ids_in_database + [ancestry_id]
         end
 
         # Predicates
 
         def ancestor_of?(node)
-          node.ancestor_ids.include?(id)
+          node.ancestor_ids.include?(ancestry_id)
         end
 
         def parent_of?(node)
-          id == node.parent_id
+          ancestry_id == node.parent_id
         end
 
         def child_of?(node)
-          parent_id == node.id
+          parent_id == node.ancestry_id
         end
 
         def root_of?(node)
-          id == node.root_id
+          ancestry_id == node.root_id
         end
 
         def descendant_of?(node)
-          ancestor_ids.include?(node.id)
+          ancestor_ids.include?(node.ancestry_id)
         end
 
         def indirect_of?(node)
-          ancestor_ids[0..-2].include?(node.id)
+          ancestor_ids[0..-2].include?(node.ancestry_id)
         end
 
         def in_subtree_of?(node)
-          id == node.id || descendant_of?(node)
+          ancestry_id == node.ancestry_id || descendant_of?(node)
         end
 
         # Scope-delegating navigation methods
@@ -238,7 +238,7 @@ module Ancestry
         end
 
         def siblings
-          self.class.ancestry_base_class.siblings_of(self).where.not(:#{pk} => id)
+          self.class.ancestry_base_class.siblings_of(self).where.not(:#{pk} => ancestry_id)
         end
 
         def sibling_ids
