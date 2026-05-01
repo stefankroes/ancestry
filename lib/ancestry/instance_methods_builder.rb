@@ -38,9 +38,8 @@ module Ancestry
       Ancestry.const_set(mod_name, mod)
 
       mod.class_eval <<~RUBY, __FILE__, __LINE__ + 1
-        # optimization - better to go directly to column and avoid parsing
         def ancestors?
-          read_attribute(:#{column}) != #{root.inspect}
+          ancestor_ids.present?
         end
         alias has_parent? ancestors?
 
@@ -69,16 +68,15 @@ module Ancestry
         end
 
         def parent_id_in_database
-          #{format_module}.#{parse_method}(attribute_in_database(:#{column})).last
+          ancestor_ids_in_database.last
         end
 
         def parent_id_before_last_save
-          #{format_module}.#{parse_method}(attribute_before_last_save(:#{column})).last
+          ancestor_ids_before_last_save.last
         end
 
-        # optimization - better to go directly to column and avoid parsing
         def sibling_of?(node)
-          read_attribute(:#{column}) == node.read_attribute(:#{column})
+          ancestor_ids == node.ancestor_ids
         end
 
         def child_ancestry
@@ -332,7 +330,7 @@ module Ancestry
           <<~RUBY
             def ancestry_depth_of_descendants
               return if new_record? || (respond_to?(:previously_new_record?) && previously_new_record?)
-              validate_depth_of_descendants(:#{depth_cache_column}, self.class.ancestry_depth_change(attribute_in_database(:#{column}), read_attribute(:#{column})))
+              validate_depth_of_descendants(:#{depth_cache_column}, ancestor_ids.size - ancestor_ids_in_database.size)
             end
           RUBY
         else
