@@ -25,14 +25,14 @@ class ArrayTest < ActiveSupport::TestCase
   def test_ancestry_column_array
     skip "requires PostgreSQL 7.0+" unless AncestryTestDatabase.postgres? && ActiveRecord::VERSION::STRING >= "7.0"
 
-    AncestryTestDatabase.with_model(ancestry_format: :array) do |model|
+    AncestryTestDatabase.with_model(ancestry_format: :array, ancestry_column: :ancestor_ids) do |model|
       root = model.create!
       child = model.create!(parent: root)
       grand = model.create!(parent: child)
 
-      assert_equal [],                root.read_attribute(AncestryTestDatabase.ancestry_column)
-      assert_equal [root.id],         child.read_attribute(AncestryTestDatabase.ancestry_column)
-      assert_equal [root.id, child.id], grand.read_attribute(AncestryTestDatabase.ancestry_column)
+      assert_equal [],                  root.read_attribute(:ancestor_ids)
+      assert_equal [root.id],           child.read_attribute(:ancestor_ids)
+      assert_equal [root.id, child.id], grand.read_attribute(:ancestor_ids)
 
       assert_equal [root.id, child.id], grand.ancestor_ids
       assert_equal child.id, grand.parent_id
@@ -43,7 +43,7 @@ class ArrayTest < ActiveSupport::TestCase
   def test_update_strategy_sql
     skip "requires PostgreSQL 7.0+" unless AncestryTestDatabase.postgres? && ActiveRecord::VERSION::STRING >= "7.0"
 
-    AncestryTestDatabase.with_model(ancestry_format: :array, depth: 3, width: 1, update_strategy: :sql) do |model, _roots|
+    AncestryTestDatabase.with_model(ancestry_format: :array, ancestry_column: :ancestor_ids, depth: 3, width: 1, update_strategy: :sql) do |model, _roots|
       node = model.at_depth(1).first
       root = model.roots.first
       new_root = model.create!
@@ -62,7 +62,7 @@ class ArrayTest < ActiveSupport::TestCase
   def test_move_root_to_child_and_back_sql
     skip "requires PostgreSQL 7.0+" unless AncestryTestDatabase.postgres? && ActiveRecord::VERSION::STRING >= "7.0"
 
-    AncestryTestDatabase.with_model(ancestry_format: :array, depth: 2, width: 2, update_strategy: :sql) do |model, _roots|
+    AncestryTestDatabase.with_model(ancestry_format: :array, ancestry_column: :ancestor_ids, depth: 2, width: 2, update_strategy: :sql) do |model, _roots|
       root = model.roots.first
       other_root = model.roots.last
       child = root.children.first
@@ -83,7 +83,7 @@ class ArrayTest < ActiveSupport::TestCase
   def test_ancestry_validation_exclude_self
     skip "requires PostgreSQL 7.0+" unless AncestryTestDatabase.postgres? && ActiveRecord::VERSION::STRING >= "7.0"
 
-    AncestryTestDatabase.with_model(ancestry_format: :array) do |model|
+    AncestryTestDatabase.with_model(ancestry_format: :array, ancestry_column: :ancestor_ids) do |model|
       parent = model.create!
       child = parent.children.create!
       assert_raise ActiveRecord::RecordInvalid do
@@ -97,7 +97,7 @@ class ArrayTest < ActiveSupport::TestCase
   def test_reparent_across_trees
     skip "requires PostgreSQL 7.0+" unless AncestryTestDatabase.postgres? && ActiveRecord::VERSION::STRING >= "7.0"
 
-    AncestryTestDatabase.with_model(ancestry_format: :array, depth: 3, width: 3) do |model, roots|
+    AncestryTestDatabase.with_model(ancestry_format: :array, ancestry_column: :ancestor_ids, depth: 3, width: 3) do |model, roots|
       root1, root2, root3 = roots.map(&:first)
 
       root1.update!(parent: root2)

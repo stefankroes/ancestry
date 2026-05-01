@@ -25,40 +25,46 @@ class LtreeTest < ActiveSupport::TestCase
   def test_ancestry_column_ltree
     skip "requires PostgreSQL" unless AncestryTestDatabase.postgres?
 
-    AncestryTestDatabase.with_model(ancestry_format: :ltree) do |model|
+    AncestryTestDatabase.with_model(ancestry_format: :ltree, ancestry_column: :tree_path) do |model|
       root = model.create!
       node = model.new
 
       # new node (default is "" not nil since ltree column has default)
-      assert_ancestry node, ""
+      assert_equal "", node.tree_path
       assert_raises(Ancestry::AncestryException) { node.child_ancestry }
 
       # saved
       node.save!
-      assert_ancestry node, "", child: node.id.to_s
+      assert_equal "", node.tree_path
+      assert_equal node.id.to_s, node.child_ancestry
 
       # changed
       node.ancestor_ids = [root.id]
-      assert_ancestry node, root.id.to_s, db: "", child: node.id.to_s
+      assert_equal root.id.to_s, node.tree_path
+      assert_equal "", node.tree_path_in_database
+      assert_equal node.id.to_s, node.child_ancestry
 
       # changed saved
       node.save!
-      assert_ancestry node, root.id.to_s, child: "#{root.id}.#{node.id}"
+      assert_equal root.id.to_s, node.tree_path
+      assert_equal "#{root.id}.#{node.id}", node.child_ancestry
 
       # reloaded
       node.reload
-      assert_ancestry node, root.id.to_s, child: "#{root.id}.#{node.id}"
+      assert_equal root.id.to_s, node.tree_path
+      assert_equal "#{root.id}.#{node.id}", node.child_ancestry
 
       # fresh node
       node = model.find(node.id)
-      assert_ancestry node, root.id.to_s, child: "#{root.id}.#{node.id}"
+      assert_equal root.id.to_s, node.tree_path
+      assert_equal "#{root.id}.#{node.id}", node.child_ancestry
     end
   end
 
   def test_update_strategy_sql
     skip "requires PostgreSQL" unless AncestryTestDatabase.postgres?
 
-    AncestryTestDatabase.with_model(ancestry_format: :ltree, depth: 3, width: 1, update_strategy: :sql) do |model, _roots|
+    AncestryTestDatabase.with_model(ancestry_format: :ltree, ancestry_column: :tree_path, depth: 3, width: 1, update_strategy: :sql) do |model, _roots|
       node = model.at_depth(1).first
       root = model.roots.first
       new_root = model.create!
@@ -77,7 +83,7 @@ class LtreeTest < ActiveSupport::TestCase
   def test_move_root_to_child_and_back_sql
     skip "requires PostgreSQL" unless AncestryTestDatabase.postgres?
 
-    AncestryTestDatabase.with_model(ancestry_format: :ltree, depth: 2, width: 2, update_strategy: :sql) do |model, _roots|
+    AncestryTestDatabase.with_model(ancestry_format: :ltree, ancestry_column: :tree_path, depth: 2, width: 2, update_strategy: :sql) do |model, _roots|
       root = model.roots.first
       other_root = model.roots.last
       child = root.children.first
@@ -98,7 +104,7 @@ class LtreeTest < ActiveSupport::TestCase
   def test_ancestry_validation_exclude_self
     skip "requires PostgreSQL" unless AncestryTestDatabase.postgres?
 
-    AncestryTestDatabase.with_model(ancestry_format: :ltree) do |model|
+    AncestryTestDatabase.with_model(ancestry_format: :ltree, ancestry_column: :tree_path) do |model|
       parent = model.create!
       child = parent.children.create!
       assert_raise ActiveRecord::RecordInvalid do
