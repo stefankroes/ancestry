@@ -32,11 +32,6 @@ module Ancestry
       end
     end
 
-    # trailing delimiter: /1/2/ + 3 + / → /1/2/3/
-    def self.child_ancestry_value(ancestry_value, id)
-      "#{ancestry_value}#{id}/"
-    end
-
     # trailing delimiter: col || pk || '/'
     def self.child_ancestry_sql(table_name, ancestry_column, primary_key, adapter, integer_pk: true)
       concat(adapter, "#{table_name}.#{ancestry_column}", "#{table_name}.#{primary_key}", "'/'")

@@ -37,10 +37,6 @@ module Ancestry
       obj.split(DELIMITER).map!(&:to_i)
     end
 
-    def self.child_ancestry_value(ancestry_value, id)
-      [ancestry_value, id].compact.join(DELIMITER)
-    end
-
     # Arel condition: root nodes have ancestry equal to the root value
     def self.roots_condition(attr)
       attr.eq(root)

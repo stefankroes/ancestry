@@ -20,13 +20,6 @@ class ArrayTest < ActiveSupport::TestCase
     assert_equal %w[1 2 3], mod.parse([1, 2, 3])
   end
 
-  def test_child_ancestry_value
-    mod = Ancestry::MaterializedPathArray
-    assert_equal [1],       mod.child_ancestry_value([], 1)
-    assert_equal [1, 2],    mod.child_ancestry_value([1], 2)
-    assert_equal [1, 2, 3], mod.child_ancestry_value([1, 2], 3)
-  end
-
   # DB tests — require PostgreSQL (integer[] column type)
 
   def test_ancestry_column_array

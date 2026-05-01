@@ -20,13 +20,6 @@ class LtreeTest < ActiveSupport::TestCase
     assert_equal %w[a b c], mod.parse("a.b.c")
   end
 
-  def test_child_ancestry_value
-    mod = Ancestry::Ltree
-    assert_equal "1",     mod.child_ancestry_value("", 1)
-    assert_equal "1.2",   mod.child_ancestry_value("1", 2)
-    assert_equal "1.2.3", mod.child_ancestry_value("1.2", 3)
-  end
-
   # DB tests — require PostgreSQL with ltree extension
 
   def test_ancestry_column_ltree

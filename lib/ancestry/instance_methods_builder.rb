@@ -82,7 +82,7 @@ module Ancestry
         def child_ancestry
           raise(Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")) if new_record?
 
-          #{format_module}.child_ancestry_value(attribute_in_database(:#{column}), id)
+          self.class.generate_ancestry(path_ids_in_database)
         end
 
         def child_ancestry_before_last_save
@@ -90,7 +90,7 @@ module Ancestry
             raise Ancestry::AncestryException, I18n.t("ancestry.no_child_for_new_record")
           end
 
-          #{format_module}.child_ancestry_value(attribute_before_last_save(:#{column}), id)
+          self.class.generate_ancestry(path_ids_before_last_save)
         end
 
         def ancestry_changed?
