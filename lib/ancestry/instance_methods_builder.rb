@@ -45,14 +45,6 @@ module Ancestry
 
         #{ if column.to_s == "ancestor_ids"
         <<~RUBY
-          def ancestry
-            read_attribute(:#{column})&.join("/")
-          end
-
-          def ancestry=(value)
-            write_attribute(:#{column}, value&.split("/") || [])
-          end
-
           def ancestor_ids=(value)
             super
             #{"ancestry_sync_parent_cache(#{parent_cache_column.inspect}, value)" if parent_cache_column || parent_association}
