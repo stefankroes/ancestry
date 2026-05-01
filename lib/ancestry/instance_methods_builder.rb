@@ -43,6 +43,24 @@ module Ancestry
         end
         alias has_parent? ancestors?
 
+        #{ if column.to_s == "ancestor_ids"
+        <<~RUBY
+          def ancestry
+            read_attribute(:#{column})&.join("/")
+          end
+
+          def ancestry=(value)
+            write_attribute(:#{column}, value&.split("/") || [])
+          end
+
+          def ancestor_ids=(value)
+            super
+            #{"ancestry_sync_parent_cache(#{parent_cache_column.inspect}, value)" if parent_cache_column || parent_association}
+            #{"ancestry_sync_root_cache(#{root_cache_column.inspect}, value)" if root_cache_column || root_association}
+          end
+        RUBY
+        else
+        <<~RUBY
         def ancestor_ids=(value)
           @_ancestor_ids = value.freeze
           write_attribute(:#{column}, #{format_module}.generate(value))
@@ -66,6 +84,8 @@ module Ancestry
         def ancestor_ids_before_last_save
           #{format_module}.#{parse_method}(attribute_before_last_save(:#{column}))
         end
+        RUBY
+        end}
 
         def parent_id_in_database
           ancestor_ids_in_database.last

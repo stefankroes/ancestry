@@ -311,7 +311,7 @@ module Ancestry
     # Builder generates thin wrappers that delegate here with baked-in column.
 
     def self._ancestry_exclude_self(record)
-      record.errors.add(:base, I18n.t("ancestry.exclude_self", class_name: record.class.model_name.human)) if record.ancestor_ids.include?(record.id)
+      record.errors.add(:base, I18n.t("ancestry.exclude_self", class_name: record.class.model_name.human)) if record.ancestor_ids&.include?(record.id)
     end
 
     def self._update_descendants_with_new_ancestry(record)

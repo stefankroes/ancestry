@@ -46,7 +46,7 @@ class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
     AncestryTestDatabase.with_model do |model|
       # Check detection of conflicting parent id
       model.destroy_all
-      model.create!(:ancestor_ids => [model.create!(:ancestor_ids => [model.create!(:ancestor_ids => nil).id]).id])
+      model.create!(:ancestor_ids => [model.create!(:ancestor_ids => [model.create!(:ancestor_ids => []).id]).id])
       assert_raise Ancestry::AncestryIntegrityException do
         model.check_ancestry_integrity!
       end
@@ -107,7 +107,7 @@ class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
     # Check that integrity is restored for conflicting parent id
     AncestryTestDatabase.with_model do |model|
       model.destroy_all
-      model.create!(:ancestor_ids => [model.create!(:ancestor_ids => [model.create!(:ancestor_ids => nil).id]).id])
+      model.create!(:ancestor_ids => [model.create!(:ancestor_ids => [model.create!(:ancestor_ids => []).id]).id])
       assert_integrity_restoration model
     end
   end
