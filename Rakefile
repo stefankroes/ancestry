@@ -38,6 +38,21 @@ namespace :db do
   end
 end
 
+desc "Verify lib/ancestry loads without touching the database"
+task :check_no_db_at_load do
+  require "active_record"
+
+  ActiveRecord::Base.singleton_class.prepend(Module.new do
+    def connection(*)
+      raise "DB connection accessed at load time:\n  " +
+            caller.reject { |l| l.include?("active_record/") }.first(5).join("\n  ")
+    end
+  end)
+
+  require "ancestry"
+  puts "OK: lib/ancestry loaded without DB access"
+end
+
 desc "Show uncovered lines from coverage results"
 task :coverage do
   require 'json'
