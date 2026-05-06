@@ -35,7 +35,6 @@ module Ancestry
       extend Ancestry::ClassMethods
 
       format_module = Ancestry::HasAncestry.ancestry_format_module(ancestry_format)
-      root = format_module.root
 
       # Resolve depth cache column name (or nil if virtual/absent)
       if options[:cache_depth] == :virtual
@@ -112,7 +111,7 @@ module Ancestry
       # Include generated module with baked-in column/format
       # This extends ClassMethods (scopes, helpers) and includes instance methods
       generated_mod = Ancestry::InstanceMethodsBuilder.build(
-        format_module, column, root,
+        format_module, column, format_module.root,
         integer_pk: integer_pk,
         depth_cache_column: depth_cache_column,
         counter_cache_column: counter_cache_column,

@@ -24,10 +24,6 @@ module Ancestry
       obj.presence || []
     end
 
-    def self.child_ancestry_value(ancestry_value, id)
-      (ancestry_value.presence || []) + [id]
-    end
-
     # Build ARRAY[...] literal with proper quoting and cast for the given values
     def self.array_literal(values)
       if values.first.is_a?(Integer)
