@@ -35,10 +35,6 @@ module Ancestry
       end
     end
 
-    def self.child_ancestry_value(ancestry_value, id)
-      ancestry_value.blank? ? id.to_s : "#{ancestry_value}.#{id}"
-    end
-
     def self.siblings_condition(attr, ancestry_value)
       attr.eq(ancestry_value)
     end
