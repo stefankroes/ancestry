@@ -7,7 +7,7 @@ module Ancestry
       if object.is_a?(ancestry_base_class)
         object
       else
-        unscoped_where { |scope| scope.find(object.try(primary_key) || object) }
+        unscoped_where { |scope| scope.find_by!(primary_ancestry_key => object.try(primary_ancestry_key) || object) }
       end
     end
 
@@ -52,17 +52,17 @@ module Ancestry
     # @returns Hash{Node => {Node => {}, Node => {}}}
     # If a node's parent is not included, the node will be included as if it is a top level node
     def arrange_nodes(nodes, orphan_strategy: :rootify)
-      node_ids = Set.new(nodes.map(&:id))
+      node_ids = Set.new(nodes.map(&:ancestry_id))
       index = Hash.new { |h, k| h[k] = {} }
 
       if orphan_strategy == :rootify
         nodes.each_with_object({}) do |node, arranged|
-          index[node.parent_id][node] = children = index[node.id]
+          index[node.parent_id][node] = children = index[node.ancestry_id]
           arranged[node] = children unless node_ids.include?(node.parent_id)
         end
       else
         nodes.each_with_object({}) do |node, arranged|
-          index[node.parent_id][node] = children = index[node.id]
+          index[node.parent_id][node] = children = index[node.ancestry_id]
           if node.parent_id.nil?
             arranged[node] = children
           elsif !node_ids.include?(node.parent_id)
@@ -150,14 +150,14 @@ module Ancestry
           # ... check validity of ancestry column
           if !node.sane_ancestor_ids?
             raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.invalid_ancestry_column",
-                                                               :node_id => node.id,
+                                                               :node_id => node.ancestry_id,
                                                                :ancestry_column => node.read_attribute(column))
           end
           # ... check that all ancestors exist
           node.ancestor_ids.each do |ancestor_id|
-            unless klass.exists?(ancestor_id)
+            unless klass.exists?(klass.primary_ancestry_key => ancestor_id)
               raise Ancestry::AncestryIntegrityException, I18n.t("ancestry.reference_nonexistent_node",
-                                                                 :node_id => node.id,
+                                                                 :node_id => node.ancestry_id,
                                                                  :ancestor_id => ancestor_id)
             end
           end
@@ -197,20 +197,20 @@ module Ancestry
               end
             end
             # ... save parent id of this node in parent_ids array if it exists
-            parent_ids[node.id] = node.parent_id if exists? node.parent_id
+            parent_ids[node.ancestry_id] = node.parent_id if exists?(primary_ancestry_key => node.parent_id)
 
             # Reset parent id in array to nil if it introduces a cycle
-            parent_id = parent_ids[node.id]
-            until parent_id.nil? || parent_id == node.id
+            parent_id = parent_ids[node.ancestry_id]
+            until parent_id.nil? || parent_id == node.ancestry_id
               parent_id = parent_ids[parent_id]
             end
-            parent_ids[node.id] = nil if parent_id == node.id
+            parent_ids[node.ancestry_id] = nil if parent_id == node.ancestry_id
           end
 
           # For each node ...
           scope.find_each do |node|
             # ... rebuild ancestry from parent_ids array
-            ancestor_ids, parent_id = [], parent_ids[node.id]
+            ancestor_ids, parent_id = [], parent_ids[node.ancestry_id]
             until parent_id.nil?
               ancestor_ids, parent_id = [parent_id] + ancestor_ids, parent_ids[parent_id]
             end
@@ -229,7 +229,7 @@ module Ancestry
           node.without_ancestry_callbacks do
             node.update_attribute :ancestor_ids, ancestor_ids
           end
-          build_ancestry_from_parent_ids! column, node.id, ancestor_ids + [node.id]
+          build_ancestry_from_parent_ids! column, node.ancestry_id, ancestor_ids + [node.ancestry_id]
         end
       end
     end
@@ -274,7 +274,7 @@ module Ancestry
     def self._rebuild_counter_cache!(klass, column, counter_col, verbose: false)
       child_sql = klass.child_ancestry_sql
       tbl = klass.table_name
-      pk = klass.primary_key
+      pk = klass.primary_ancestry_key
 
       fixed =
         if verbose
@@ -311,7 +311,7 @@ module Ancestry
     # Builder generates thin wrappers that delegate here with baked-in column.
 
     def self._ancestry_exclude_self(record)
-      record.errors.add(:base, I18n.t("ancestry.exclude_self", class_name: record.class.model_name.human)) if record.ancestor_ids.include?(record.id)
+      record.errors.add(:base, I18n.t("ancestry.exclude_self", class_name: record.class.model_name.human)) if record.ancestor_ids.include?(record.ancestry_id)
     end
 
     def self._update_descendants_with_new_ancestry(record)
@@ -350,7 +350,7 @@ module Ancestry
 
       record.class.ancestry_base_class.descendants_of(record).each do |descendant|
         descendant.without_ancestry_callbacks do
-          descendant.update_attribute :ancestor_ids, descendant.ancestor_ids - [record.id]
+          descendant.update_attribute :ancestor_ids, descendant.ancestor_ids - [record.ancestry_id]
         end
       end
     end
