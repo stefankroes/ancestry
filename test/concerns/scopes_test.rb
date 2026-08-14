@@ -142,6 +142,42 @@ class ScopesTest < ActiveSupport::TestCase
     end
   end
 
+  def test_subtrees_of
+    AncestryTestDatabase.with_model do |model|
+      root = model.create!
+      child1 = model.create!(:parent => root)
+      child2 = model.create!(:parent => root)
+      grandchild1 = model.create!(:parent => child1)
+      grandchild2 = model.create!(:parent => child2)
+
+      # subtrees_of with multiple nodes returns the union of their subtrees
+      result = model.subtrees_of([child1, child2]).order(:id).to_a
+      assert_equal [child1, child2, grandchild1, grandchild2].sort_by(&:id), result.sort_by(&:id)
+
+      # subtrees_of with a single node matches subtree_of
+      assert_equal model.subtree_of(child1).order(:id).to_a, model.subtrees_of([child1]).order(:id).to_a
+
+      # subtrees_of with non-overlapping subtrees
+      result = model.subtrees_of([grandchild1, grandchild2]).order(:id).to_a
+      assert_equal [grandchild1, grandchild2].sort_by(&:id), result.sort_by(&:id)
+
+      # subtrees_of with the root returns everything
+      result = model.subtrees_of([root]).order(:id).to_a
+      assert_equal model.all.order(:id).to_a, result
+    end
+  end
+
+  def test_subtrees_of_with_many_nodes
+    AncestryTestDatabase.with_model do |model|
+      root = model.create!
+      children = 200.times.map { model.create!(:parent => root) }
+
+      # Should not raise SystemStackError with many nodes
+      result = model.subtrees_of(children)
+      assert_equal children.sort_by(&:id), result.order(:id).to_a.sort_by(&:id)
+    end
+  end
+
   def test_leaves_of
     AncestryTestDatabase.with_model do |model|
       root = model.create!

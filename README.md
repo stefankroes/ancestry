@@ -199,6 +199,7 @@ A couple of class-level named scopes are included:
     descendants_of(node)    Descendants of node, node can be either a record or an id
     indirects_of(node)      Indirect children of node, node can be either a record or an id
     subtree_of(node)        Subtree of node, node can be either a record or an id
+    subtrees_of(nodes)      Combined subtrees of multiple nodes in a single query
     siblings_of(node)       Siblings of node, node can be either a record or an id
 
 It is possible thanks to some convenient rails magic to create nodes through the children and siblings scopes:
