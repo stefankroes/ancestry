@@ -498,6 +498,15 @@ module Ancestry
           descendants_of(node).or(where(arel_table[:#{pk}].eq(node.#{pk})))
         end
 
+        def subtrees_of(objects)
+          nodes = objects.map { |o| to_node(o) }
+          conditions = nodes.map do |node|
+            #{format_module}.descendants_condition(arel_table[:#{column}], node.child_ancestry)
+              .or(arel_table[:#{pk}].eq(node.#{pk}))
+          end
+          where(Arel::Nodes::Or.new(conditions))
+        end
+
         def siblings_of(object)
           node = to_node(object)
           where(#{format_module}.siblings_condition(arel_table[:#{column}], node[#{column.inspect}]))
