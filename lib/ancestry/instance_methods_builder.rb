@@ -100,7 +100,6 @@ module Ancestry
         end
 
         def sane_ancestor_ids?
-          current_context, self.validation_context = validation_context, nil
           errors.clear
 
           ancestry_value = read_attribute(:#{column})
@@ -111,8 +110,6 @@ module Ancestry
           end
           ancestry_exclude_self
           errors.none?
-        ensure
-          self.validation_context = current_context
         end
 
         # Navigation
