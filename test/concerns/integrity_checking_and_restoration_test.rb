@@ -54,6 +54,25 @@ class IntegrityCheckingAndRestaurationTest < ActiveSupport::TestCase
     end
   end
 
+  def test_sane_ancestor_ids_does_not_rely_on_validation_context_writer
+    # Regression test for https://github.com/stefankroes/ancestry/issues/766:
+    # Rails main removed the private validation_context= writer that
+    # sane_ancestor_ids? used to save/restore around direct validator calls.
+    # Simulate that removal on a single instance and confirm the integrity
+    # check still runs without touching that writer at all.
+    AncestryTestDatabase.with_model :width => 2, :depth => 2 do |model, _roots|
+      instance = model.first
+
+      instance.define_singleton_method(:validation_context=) do |*_args|
+        raise NoMethodError, "validation_context= is not available (simulating Rails main)"
+      end
+
+      assert_nothing_raised do
+        assert instance.sane_ancestor_ids?
+      end
+    end
+  end
+
   def test_integrity_checking_echo
     # ltree and array columns reject invalid values at the DB level (type constraint)
     skip "DB enforces column type" if AncestryTestDatabase.ltree? || AncestryTestDatabase.array?
