@@ -335,6 +335,56 @@ class TreeNavigationTest < ActiveSupport::TestCase
     end
   end
 
+  def test_ancestor_ids_after_ancestry_column_assignment
+    AncestryTestDatabase.with_model do |model|
+      root1 = model.create!
+      root2 = model.create!
+      child = model.create!(parent: root1)
+
+      assert_equal [root1.id], child.ancestor_ids
+      child.send("#{AncestryTestDatabase.ancestry_column}=", root2.child_ancestry)
+      assert_equal [root2.id], child.ancestor_ids
+      assert_equal root2.id, child.parent_id
+    end
+  end
+
+  def test_ancestor_ids_after_assign_attributes
+    AncestryTestDatabase.with_model do |model|
+      root1 = model.create!
+      root2 = model.create!
+      child = model.create!(parent: root1)
+
+      assert_equal [root1.id], child.ancestor_ids
+      child.assign_attributes(AncestryTestDatabase.ancestry_column => root2.child_ancestry)
+      assert_equal [root2.id], child.ancestor_ids
+    end
+  end
+
+  def test_ancestor_ids_after_update_column
+    AncestryTestDatabase.with_model do |model|
+      root1 = model.create!
+      root2 = model.create!
+      child = model.create!(parent: root1)
+
+      assert_equal [root1.id], child.ancestor_ids
+      child.update_column(AncestryTestDatabase.ancestry_column, root2.child_ancestry)
+      assert_equal [root2.id], child.ancestor_ids
+    end
+  end
+
+  def test_ancestor_ids_after_restore_attributes
+    AncestryTestDatabase.with_model do |model|
+      root1 = model.create!
+      root2 = model.create!
+      child = model.create!(parent: root1)
+
+      child.parent = root2
+      assert_equal [root2.id], child.ancestor_ids
+      child.restore_attributes
+      assert_equal [root1.id], child.ancestor_ids
+    end
+  end
+
   def test_derived_methods_reflect_parent_change
     AncestryTestDatabase.with_model do |model|
       root = model.create!

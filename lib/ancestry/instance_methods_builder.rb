@@ -38,26 +38,26 @@ module Ancestry
       Ancestry.const_set(mod_name, mod)
 
       mod.class_eval <<~RUBY, __FILE__, __LINE__ + 1
+        # frozen_string_literal: true
         # optimization - better to go directly to column and avoid parsing
         def ancestors?
-          read_attribute(:#{column}) != #{root.inspect}
+          read_attribute("#{column}") != #{root.inspect}
         end
         alias has_parent? ancestors?
 
         def ancestor_ids=(value)
-          @_ancestor_ids = value.freeze
           write_attribute(:#{column}, #{format_module}.generate(value))
           #{"ancestry_sync_parent_cache(#{parent_cache_column.inspect}, value)" if parent_cache_column || parent_association}
           #{"ancestry_sync_root_cache(#{root_cache_column.inspect}, value)" if root_cache_column || root_association}
         end
 
+        # memoized per column value: any write (ancestry=, update_column, restore_attributes) re-parses
         def ancestor_ids
-          @_ancestor_ids ||= #{format_module}.#{parse_method}(read_attribute(:#{column})).freeze
-        end
+          ancestry_value = read_attribute("#{column}")
+          return @_ancestor_ids if @_ancestor_ids && @_ancestor_ids_source == ancestry_value
 
-        def reload(*)
-          @_ancestor_ids = nil
-          super
+          @_ancestor_ids_source = ancestry_value.frozen? ? ancestry_value : ancestry_value.dup.freeze
+          @_ancestor_ids = #{format_module}.#{parse_method}(ancestry_value).freeze
         end
 
         def ancestor_ids_in_database
@@ -78,7 +78,7 @@ module Ancestry
 
         # optimization - better to go directly to column and avoid parsing
         def sibling_of?(node)
-          read_attribute(:#{column}) == node.read_attribute(:#{column})
+          read_attribute("#{column}") == node.read_attribute("#{column}")
         end
 
         def child_ancestry
@@ -103,7 +103,7 @@ module Ancestry
           current_context, self.validation_context = validation_context, nil
           errors.clear
 
-          ancestry_value = read_attribute(:#{column})
+          ancestry_value = read_attribute("#{column}")
           return true unless ancestry_value
 
           self.class.validators_on(:#{column}).each do |validator|
@@ -332,7 +332,7 @@ module Ancestry
           <<~RUBY
             def ancestry_depth_of_descendants
               return if new_record? || (respond_to?(:previously_new_record?) && previously_new_record?)
-              validate_depth_of_descendants(:#{depth_cache_column}, self.class.ancestry_depth_change(attribute_in_database(:#{column}), read_attribute(:#{column})))
+              validate_depth_of_descendants(:#{depth_cache_column}, self.class.ancestry_depth_change(attribute_in_database(:#{column}), read_attribute("#{column}")))
             end
           RUBY
         else
