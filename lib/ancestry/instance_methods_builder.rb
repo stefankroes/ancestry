@@ -45,19 +45,18 @@ module Ancestry
         alias has_parent? ancestors?
 
         def ancestor_ids=(value)
-          @_ancestor_ids = value.freeze
           write_attribute(:#{column}, #{format_module}.generate(value))
           #{"ancestry_sync_parent_cache(#{parent_cache_column.inspect}, value)" if parent_cache_column || parent_association}
           #{"ancestry_sync_root_cache(#{root_cache_column.inspect}, value)" if root_cache_column || root_association}
         end
 
+        # memoized per column value: any write (ancestry=, update_column, restore_attributes) re-parses
         def ancestor_ids
-          @_ancestor_ids ||= #{format_module}.#{parse_method}(read_attribute(:#{column})).freeze
-        end
+          ancestry_value = read_attribute(:#{column})
+          return @_ancestor_ids if @_ancestor_ids && @_ancestor_ids_source == ancestry_value
 
-        def reload(*)
-          @_ancestor_ids = nil
-          super
+          @_ancestor_ids_source = ancestry_value.frozen? ? ancestry_value : ancestry_value.dup.freeze
+          @_ancestor_ids = #{format_module}.#{parse_method}(ancestry_value).freeze
         end
 
         def ancestor_ids_in_database
