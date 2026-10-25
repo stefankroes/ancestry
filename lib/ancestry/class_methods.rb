@@ -23,7 +23,7 @@ module Ancestry
     }.freeze
 
     def scope_depth(depth_options, depth)
-      depth_sql = ancestry_depth_sql
+      depth_sql = ancestry_depth_scope_sql
       depth_options.inject(ancestry_base_class) do |scope, (scope_name, relative_depth)|
         operator = DEPTH_OPERATORS[scope_name]
         raise Ancestry::AncestryException, I18n.t("ancestry.unknown_depth_option", scope_name: scope_name) unless operator

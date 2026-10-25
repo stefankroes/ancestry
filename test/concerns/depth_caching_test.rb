@@ -48,6 +48,25 @@ class DepthCachingTest < ActiveSupport::TestCase
     end
   end
 
+  def test_depth_options_use_depth_cache
+    AncestryTestDatabase.with_model :depth => 3, :width => 2, :cache_depth => :depth_cache do |model, roots|
+      root = roots.first.first
+      assert_match(/depth_cache/, root.descendants(:to_depth => 1).to_sql)
+
+      model.update_all(:depth_cache => 0)
+      assert_empty root.descendants(:at_depth => 1)
+    end
+  end
+
+  def test_depth_options_qualify_depth_cache_column
+    AncestryTestDatabase.with_model :depth => 3, :width => 2, :cache_depth => :depth_cache do |model, roots|
+      root = roots.first.first
+      self_join = "INNER JOIN #{model.table_name} AS same_nodes ON same_nodes.id = #{model.table_name}.id"
+      assert_equal 2, root.descendants(:at_depth => 1).joins(self_join).count
+      assert_equal 4, model.at_depth(1).joins(self_join).count
+    end
+  end
+
   def test_rebuild_depth_cache
     AncestryTestDatabase.with_model :depth => 3, :width => 3, :cache_depth => :depth_cache do |model, _roots|
       model.update_all(:depth_cache => -1)

@@ -9,11 +9,12 @@ module Ancestry
     # @param column [Symbol] the ancestry column name (e.g., :ancestry)
     # @param root [nil, String] the root value (nil for mp1, "/" for mp2)
     # @param depth_cache_column [String, nil] column name for depth cache, or nil
+    # @param depth_cache_sql [String, nil] column holding the depth (cached or virtual), or nil
     # @param counter_cache_column [String, nil] column name for counter cache, or nil
     # @param parent_cache_column [String, nil] column name for parent cache, or nil
     # @param root_cache_column [String, nil] column name for root cache, or nil
     # @return [Module] a named module with baked-in instance methods
-    def self.build(format_module, column, root, primary_key: :id, integer_pk: nil, depth_cache_column: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil, parent_association: false, root_association: false)
+    def self.build(format_module, column, root, primary_key: :id, integer_pk: nil, depth_cache_column: nil, depth_cache_sql: nil, counter_cache_column: nil, parent_cache_column: nil, root_cache_column: nil, parent_association: false, root_association: false)
       pk = primary_key
       parse_method = integer_pk ? :parse_integer : :parse
       format_name = format_module.name.split("::").last
@@ -23,6 +24,7 @@ module Ancestry
         ("pk#{pk}" unless pk == :id),
         ("ipk" if integer_pk),
         ("d#{depth_cache_column}" if depth_cache_column),
+        ("dv#{depth_cache_sql}" if depth_cache_sql && !depth_cache_column),
         ("c#{counter_cache_column}" if counter_cache_column),
         ("p#{parent_cache_column}" if parent_cache_column),
         ("r#{root_cache_column}" if root_cache_column),
@@ -526,6 +528,18 @@ module Ancestry
         def ancestry_depth_sql
           @ancestry_depth_sql ||= #{format_module}.construct_depth_sql(table_name, #{column.inspect})
         end
+
+        #{ if depth_cache_sql
+          <<~RUBY
+            def ancestry_depth_scope_sql
+              @ancestry_depth_scope_sql ||= "\#{table_name}.#{depth_cache_sql}"
+            end
+          RUBY
+        else
+          <<~RUBY
+            alias ancestry_depth_scope_sql ancestry_depth_sql
+          RUBY
+        end}
 
         def generate_ancestry(ancestor_ids)
           #{format_module}.generate(ancestor_ids)

@@ -115,6 +115,7 @@ module Ancestry
         format_module, column, root,
         integer_pk: integer_pk,
         depth_cache_column: depth_cache_column,
+        depth_cache_sql: depth_cache_sql,
         counter_cache_column: counter_cache_column,
         parent_cache_column: parent_cache_column,
         root_cache_column: root_cache_column,
@@ -170,12 +171,11 @@ module Ancestry
       end
 
       # Depth scopes
-      depth_cache_sql ||= ancestry_depth_sql
-      scope :before_depth, lambda { |depth| where("#{depth_cache_sql} < ?", depth) }
-      scope :to_depth,     lambda { |depth| where("#{depth_cache_sql} <= ?", depth) }
-      scope :at_depth,     lambda { |depth| where("#{depth_cache_sql} = ?", depth) }
-      scope :from_depth,   lambda { |depth| where("#{depth_cache_sql} >= ?", depth) }
-      scope :after_depth,  lambda { |depth| where("#{depth_cache_sql} > ?", depth) }
+      scope :before_depth, lambda { |depth| where("#{ancestry_depth_scope_sql} < ?", depth) }
+      scope :to_depth,     lambda { |depth| where("#{ancestry_depth_scope_sql} <= ?", depth) }
+      scope :at_depth,     lambda { |depth| where("#{ancestry_depth_scope_sql} = ?", depth) }
+      scope :from_depth,   lambda { |depth| where("#{ancestry_depth_scope_sql} >= ?", depth) }
+      scope :after_depth,  lambda { |depth| where("#{ancestry_depth_scope_sql} > ?", depth) }
 
       # Counter cache callbacks
       if counter_cache_column
