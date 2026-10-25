@@ -118,12 +118,12 @@ module Ancestry
         # Navigation
 
         def parent_id
-          ancestor_ids.last if has_parent?
+          ancestor_ids.last
         end
         alias parent_id? ancestors?
 
         def root_id
-          has_parent? ? ancestor_ids.first : id
+          ancestor_ids.first || id
         end
 
         def depth

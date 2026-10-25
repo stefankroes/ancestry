@@ -57,15 +57,17 @@ module Ancestry
 
       if orphan_strategy == :rootify
         nodes.each_with_object({}) do |node, arranged|
-          index[node.parent_id][node] = children = index[node.id]
-          arranged[node] = children unless node_ids.include?(node.parent_id)
+          parent_id = node.parent_id
+          index[parent_id][node] = children = index[node.id]
+          arranged[node] = children unless node_ids.include?(parent_id)
         end
       else
         nodes.each_with_object({}) do |node, arranged|
-          index[node.parent_id][node] = children = index[node.id]
-          if node.parent_id.nil?
+          parent_id = node.parent_id
+          index[parent_id][node] = children = index[node.id]
+          if parent_id.nil?
             arranged[node] = children
-          elsif !node_ids.include?(node.parent_id)
+          elsif !node_ids.include?(parent_id)
             case orphan_strategy
             when :destroy
               # silently drop orphaned nodes and their children
