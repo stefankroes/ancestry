@@ -65,7 +65,7 @@ module Ancestry
       column_name = attr.name
       col = "#{table_name}.#{column_name}"
       len = child_ancestry.size
-      Arel.sql("#{col}[1:#{len}] = #{array_literal(child_ancestry)}")
+      Arel::Nodes::Grouping.new(Arel.sql("#{col}[1:#{len}] = #{array_literal(child_ancestry)}"))
     end
 
     # Arel condition: indirects (descendants excluding direct children)

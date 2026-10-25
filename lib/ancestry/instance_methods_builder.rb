@@ -256,7 +256,7 @@ module Ancestry
         alias only_child? is_only_child?
 
         def descendants(depth_options = {})
-          self.class.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).descendants_of(self)
+          ancestry_depth_scope(depth_options).descendants_of(self)
         end
 
         def descendant_ids(depth_options = {})
@@ -264,7 +264,7 @@ module Ancestry
         end
 
         def indirects(depth_options = {})
-          self.class.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).indirects_of(self)
+          ancestry_depth_scope(depth_options).indirects_of(self)
         end
 
         def indirect_ids(depth_options = {})
@@ -272,7 +272,7 @@ module Ancestry
         end
 
         def subtree(depth_options = {})
-          self.class.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth).subtree_of(self)
+          ancestry_depth_scope(depth_options).subtree_of(self)
         end
 
         def subtree_ids(depth_options = {})
@@ -441,6 +441,13 @@ module Ancestry
 
         private
 
+        # without depth options, scope_depth returns the bare class: skip building its ordered relation
+        def ancestry_depth_scope(depth_options)
+          return self.class.ancestry_base_class if depth_options.empty?
+
+          self.class.ancestry_base_class.ordered_by_ancestry.scope_depth(depth_options, depth)
+        end
+
         def unscoped_descendants
           unscoped_where { |scope| scope.where(#{format_module}.descendants_condition(scope.arel_table[:#{column}], child_ancestry)) }
         end
@@ -495,7 +502,7 @@ module Ancestry
 
         def subtree_of(object)
           node = to_node(object)
-          descendants_of(node).or(where(arel_table[:#{pk}].eq(node.#{pk})))
+          where(#{format_module}.descendants_condition(arel_table[:#{column}], node.child_ancestry).or(arel_table[:#{pk}].eq(node.#{pk})))
         end
 
         def siblings_of(object)
