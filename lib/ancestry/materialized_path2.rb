@@ -10,17 +10,24 @@ module Ancestry
     end
 
     # mp2 has leading delimiter: "/1/2/3/" → split gives ["", "1", "2", "3"]
-    # [1..] skips the leading empty string (2x faster than delete_if(&:blank?))
+    # shift drops the leading empty string in place (2x faster than delete_if(&:blank?))
     def self.parse(obj)
       return [] if obj.nil? || obj == root
 
-      obj.split(DELIMITER)[1..]
+      ids = obj.split(DELIMITER)
+      ids.shift
+      ids
     end
 
     def self.parse_integer(obj)
-      return [] if obj.nil? || obj == root
+      parse(obj).map!(&:to_i)
+    end
 
-      obj.split(DELIMITER)[1..].map!(&:to_i)
+    # "/1/2/3/" → 3
+    def self.depth(obj)
+      return 0 if obj.nil? || obj.empty?
+
+      obj.count(DELIMITER) - 1
     end
 
     # delimiter wraps: /1/2/3/

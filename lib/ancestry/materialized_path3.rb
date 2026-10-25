@@ -22,6 +22,11 @@ module Ancestry
       obj.split(DELIMITER).map!(&:to_i)
     end
 
+    # "1/2/3/" → 3
+    def self.depth(obj)
+      obj ? obj.count(DELIMITER) : 0
+    end
+
     # trailing delimiter: 1/2/3/
     def self.generate(ancestor_ids)
       if ancestor_ids.present? && ancestor_ids.any?

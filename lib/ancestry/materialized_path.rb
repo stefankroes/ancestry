@@ -37,8 +37,15 @@ module Ancestry
       obj.split(DELIMITER).map!(&:to_i)
     end
 
+    # counts delimiters instead of parsing: "1/2/3" → 3
+    def self.depth(obj)
+      return 0 if obj.nil? || obj.empty?
+
+      obj.count(delimiter) + 1
+    end
+
     def self.child_ancestry_value(ancestry_value, id)
-      [ancestry_value, id].compact.join(DELIMITER)
+      ancestry_value.nil? ? id.to_s : "#{ancestry_value}#{DELIMITER}#{id}"
     end
 
     # Arel condition: root nodes have ancestry equal to the root value

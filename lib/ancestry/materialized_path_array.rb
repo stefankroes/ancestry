@@ -24,6 +24,10 @@ module Ancestry
       obj.presence || []
     end
 
+    def self.depth(obj)
+      obj ? obj.size : 0
+    end
+
     def self.child_ancestry_value(ancestry_value, id)
       (ancestry_value.presence || []) + [id]
     end
