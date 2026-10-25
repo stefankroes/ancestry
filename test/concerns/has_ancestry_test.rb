@@ -106,6 +106,9 @@ class HasAncestryTreeTest < ActiveSupport::TestCase
   end
 
   def test_default_primary_key_format
+    # ltree and array columns reject invalid values at the DB level (type constraint)
+    skip "DB enforces column type" if AncestryTestDatabase.ltree? || AncestryTestDatabase.array?
+
     AncestryTestDatabase.with_model skip_ancestry: true do |model|
       old_value = Ancestry.default_primary_key_format
       begin
