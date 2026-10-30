@@ -33,7 +33,8 @@ jobs:
             --health-interval=10s
             --health-timeout=5s
             --health-retries=3
-    runs-on: ubuntu-latest
+    # ruby/setup-ruby has no Ruby < 3.2 for ubuntu-26.04, which ubuntu-latest now points to
+    runs-on: ${{ (matrix.ruby == 2.7 || matrix.ruby == '3.0') && 'ubuntu-24.04' || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
